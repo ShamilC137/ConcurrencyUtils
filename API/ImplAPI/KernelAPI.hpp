@@ -1,10 +1,14 @@
 #ifndef APPLICATION_API_IMPLAPI_KERNELAPI_HPP_
 #define APPLICATION_API_IMPLAPI_KERNELAPI_HPP_
-#include "../../Kernel/MMU/Usings.hpp"
+
+// current project
 #include "../Memory/VPtr.hpp"
 
+// STL
+#include <cstddef>
+
 namespace kernel {
-class Kernel; // singleton 
+class Kernel; // singleton
 }
 
 namespace api {
@@ -12,20 +16,14 @@ namespace kernel_api {
 // Return created kernel object; the only way to create such object
 [[nodiscard]] inline kernel::Kernel &GetKernel() noexcept;
 
-// Allocates continious memory block for the given number of objects of T type
+// allocates memory with the given alignment; takes nbytes to allocate
+// return virtual pointer to allocated memory
 // throws
-template <class T>
-[[nodiscard]] mmu::VPtr<T> Allocate(mmu::SizeType count) noexcept(false) {
-  return static_cast<mmu::VPtr<T>>(
-      GetKernel().Allocate(alignof(T), sizeof(T) * count)); // throws
-}
+[[nodiscard]] mmu::VPtr<void>
+Allocate(const std::size_t align, const std::size_t nbytes) noexcept(false);
 
-// Deallocates continious memory block for the given number of objects of type T
-// with the given pointer
-template <class T>
-void Deallocate(mmu::VPtr<T> &ptr, mmu::SizeType count) noexcept {
-  GetKernel().Deallocate(ptr, sizeof(T) * count);
-}
+// deallocates memory by the given pointer with the given size in bytes
+void Deallocate(mmu::VPtr<void> ptr, const std::size_t nbytes) noexcept;
 
 } // namespace kernel_api
 } // namespace api

@@ -8,6 +8,9 @@
 #include "../../API/ImplAPI/KernelAPI.hpp"
 #include "../MMU/VirtualMMU.hpp"
 
+// STL
+#include <cstddef>
+
 namespace kernel {
 
 static constexpr mmu::SizeType kMMUSize{16 * 1024 * 1024};
@@ -29,7 +32,7 @@ public:
   }
 
   // deallocates memory by the given pointer with the given size in bytes
-  inline void Deallocate(mmu::VPtr<void> &ptr, const size_t nbytes) {
+  inline void Deallocate(mmu::VPtr<void> &ptr, const size_t nbytes) noexcept {
     mmu_.Deallocate(ptr, nbytes);
   }
 

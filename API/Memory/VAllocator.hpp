@@ -1,7 +1,7 @@
 #ifndef APPLICATION_API_MEMORY_VALLOCATOR_HPP_
 #define APPLICATION_API_MEMORY_VALLOCATOR_HPP_
 
-#include "../ImplAPI/KernelAPI.hpp"
+#include "../../API/PublicAPI.h"
 #include "VPtr.hpp"
 
 namespace api {
@@ -31,12 +31,12 @@ public:
   constexpr VAllocator(const VAllocator<Other> &) noexcept {}
 
   [[nodiscard]] pointer allocate(const size_type count) {
-    decltype(auto) memory{kernel_api::Allocate<value_type>(count)};
+    decltype(auto) memory{api::Allocate<value_type>(count)};
     return memory;
   }
 
   void deallocate(pointer ptr, size_type count) {
-    kernel_api::Deallocate<value_type>(ptr, count);
+    api::Deallocate<value_type>(ptr, count);
   }
 };
 } // namespace api

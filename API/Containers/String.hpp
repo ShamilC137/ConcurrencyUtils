@@ -3,10 +3,10 @@
 
 #include "../Memory/VAllocator.hpp"
 
-#include <xstring>
+#include <string>
 
 namespace api {
-using String = std::basic_string<char, std::char_traits<char>,
-                                 /*VAllocator<char>*/ std::allocator<char>>;
-}
+using String =
+    std::basic_string<char, std::char_traits<char>, std::allocator<char>>;
+} // namespace api
 #endif // !APPLICATION_API_CONTAINERS_STRING_HPP_
