@@ -1,0 +1,6 @@
+#ifndef APPLICATION_API_DATASTRUCTURES_SLOT_HPP_
+#define APPLICATION_API_DATASTRUCTURES_SLOT_HPP_
+namespace api {
+class Slot {};
+}  // namespace api
+#endif // !APPLICATION_API_DATASTRUCTURES_SLOT_HPP_

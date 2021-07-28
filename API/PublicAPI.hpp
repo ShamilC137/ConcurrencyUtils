@@ -10,10 +10,10 @@
 namespace api {
 // iternal functions
 namespace kernel_api {
-extern [[nodiscard]] mmu::VPtr<void> Allocate(const std::size_t align,
-                                              const std::size_t nbytes);
+extern [[nodiscard]] mmu::VPtr<void>
+Allocate(const std::size_t align, const std::size_t nbytes) noexcept(false);
 
-extern void Deallocate(mmu::VPtr<void> ptr, const std::size_t nbytes);
+extern void Deallocate(mmu::VPtr<void> ptr, const std::size_t nbytes) noexcept;
 } // namespace kernel_api
 
 // Allocates continious memory block for the given number of objects of T type

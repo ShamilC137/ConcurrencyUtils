@@ -2,10 +2,12 @@
 #define APPLICATION_KERNEL_KERNEL_KERNEL_HPP_
 
 // Current project
-#include "../../API/Containers/HashMap.hpp"
-#include "../../API/Containers/String.hpp"
-#include "../../API/Containers/Vector.hpp"
+#include "../../API/DataStructures/Containers/HashMap.hpp"
+#include "../../API/DataStructures/Containers/String.hpp"
+#include "../../API/DataStructures/Containers/Vector.hpp"
+
 #include "../../API/ImplAPI/KernelAPI.hpp"
+
 #include "../MMU/VirtualMMU.hpp"
 
 // STL
@@ -19,7 +21,8 @@ static constexpr mmu::SizeType kMMUSize{16 * 1024 * 1024};
 class Kernel {
   // Ctors
 private:
-  Kernel();
+  // throws
+  Kernel() noexcept(false);
 
   // memory manage functions
 public:
@@ -38,14 +41,15 @@ public:
 
 private:
   // friends
-  // returns the kernel
+  // creates kernel if it does not exist; returns reference to the kernel;
   friend Kernel &api::kernel_api::GetKernel() noexcept;
 
   // fields
 private:
   // memory unit; all allocations pass through it
-  mmu::VirtualMMU<kMMUSize> mmu_; // containter of connection; connection model:
-                                  // signal -> container of slots
+  mmu::VirtualMMU<kMMUSize> mmu_;
+  // containter of connection; connection model:
+  // signal -> container of slots
   // contains signatures of connected functions
   // cannot work with objects now
   api::HashMap<api::String, api::Vector<api::String>> connections_signatures_;

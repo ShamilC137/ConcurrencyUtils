@@ -1,12 +1,16 @@
 #ifndef APPLICATION_API_MEMORY_VALLOCATOR_HPP_
 #define APPLICATION_API_MEMORY_VALLOCATOR_HPP_
-
-#include "../../API/PublicAPI.h"
+// current project
+#include "../../API/PublicAPI.hpp"
 #include "VPtr.hpp"
+
+// STL
+#include <type_traits>
 
 namespace api {
 template <class T> class VAllocator {
-  static_assert(!std::is_const_v<T>, "Container of const types is forbidden");
+  static_assert(!std::is_const_v<T>,
+                "Container of const types is forbidden");
 
 public:
   using value_type = T;

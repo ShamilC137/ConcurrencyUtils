@@ -2,7 +2,8 @@
 
 namespace kernel {
 // Ctors
-Kernel::Kernel() : mmu_(operator new(kMMUSize)) {} // FIXME: leak
+Kernel::Kernel() noexcept(false)
+    : mmu_(operator new(kMMUSize)) {} // throws
 } // namespace kernel
 
 namespace api {
@@ -20,6 +21,14 @@ Allocate(const std::size_t align, const std::size_t nbytes) noexcept(false) {
 
 void Deallocate(mmu::VPtr<void> ptr, const std::size_t nbytes) noexcept {
   GetKernel().Deallocate(ptr, nbytes);
+}
+
+::DWORD SuspendThread(::HANDLE thread_native_handler) noexcept {
+  return ::SuspendThread(thread_native_handler);
+}
+
+::DWORD ResumeThread(::HANDLE thread_native_handler) noexcept {
+  return ::ResumeThread(thread_native_handler);
 }
 } // namespace kernel_api
 } // namespace api
