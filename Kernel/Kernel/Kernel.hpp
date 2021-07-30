@@ -6,7 +6,7 @@
 #include "../../API/DataStructures/Containers/String.hpp"
 #include "../../API/DataStructures/Containers/Vector.hpp"
 
-#include "../../API/ImplAPI/KernelAPI.hpp"
+#include "../../ImplDetails/ImplAPI/KernelAPI.hpp"
 
 #include "../MMU/VirtualMMU.hpp"
 

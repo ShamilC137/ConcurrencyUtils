@@ -31,7 +31,7 @@ public:
 private:
   api::String id_; // module identifier; used to identify module; must be unique
   // contains slots signatures and binded handlers; signatures must be unique;
-  api::HashMap<api::String, api::Slot> slots_;
+  api::HashMap<api::String, impl::BaseSlot *> slots_;
 };
 } // namespace impl
 #endif // !APPLICATION_KERNEL_ABSTRACTMODULE_HPP_
