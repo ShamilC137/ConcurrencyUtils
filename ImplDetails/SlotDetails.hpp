@@ -8,10 +8,14 @@
 namespace impl {
 class BaseSlot {
 public:
-  BaseSlot(const int *idseq = nullptr) noexcept;
+  BaseSlot(const int *idseq, const int *retid, const int order = -1) noexcept;
 
   [[nodiscard]] inline const int *GetIDSequencePtr() const noexcept {
     return idseq_ptr_;
+  }
+
+  [[nodiscard]] inline const int *GetRetIDPtr() const noexcept {
+    return retid_ptr_;
   }
 
   void operator()(BaseTask *task) noexcept(false);
@@ -21,6 +25,10 @@ protected:
 
 private:
   const int *idseq_ptr_;
+  const int *retid_ptr_;
+
+protected:
+  const int order_;
 };
 } // namespace impl
 

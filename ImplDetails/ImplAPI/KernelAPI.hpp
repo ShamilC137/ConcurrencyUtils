@@ -28,11 +28,11 @@ namespace kernel_api {
 // allocates memory with the given alignment; takes nbytes to allocate
 // return virtual pointer to allocated memory
 // throws
-[[nodiscard]] mmu::VPtr<void>
+[[nodiscard]] api::VPtr<void>
 Allocate(const std::size_t align, const std::size_t nbytes) noexcept(false);
 
 // deallocates memory by the given pointer with the given size in bytes
-void Deallocate(mmu::VPtr<void> ptr, const std::size_t nbytes) noexcept;
+void Deallocate(api::VPtr<void> ptr, const std::size_t nbytes) noexcept;
 
 // OS dependent functions
 #if defined WINDOWS32 | defined WINDOWS64

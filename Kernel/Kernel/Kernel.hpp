@@ -29,13 +29,13 @@ public:
   // allocates memory with the given alignment; takes nbytes to allocate
   // return virtual pointer to allocated memory
   // throws
-  [[nodiscard]] inline mmu::VPtr<void>
+  [[nodiscard]] inline api::VPtr<void>
   Allocate(const std::size_t align, const std::size_t nbytes) noexcept(false) {
     return mmu_.Allocate(align, nbytes); // throws
   }
 
   // deallocates memory by the given pointer with the given size in bytes
-  inline void Deallocate(mmu::VPtr<void> &ptr, const size_t nbytes) noexcept {
+  inline void Deallocate(api::VPtr<void> &ptr, const size_t nbytes) noexcept {
     mmu_.Deallocate(ptr, nbytes);
   }
 

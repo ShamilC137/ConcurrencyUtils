@@ -51,8 +51,8 @@ public:
 private:
   // waiting for the completion of desired modify operation
   void WaitForModifyOperation() const {
-    while (want_to_modify_flag_.test(boost::memory_order::relaxed)) {
-      want_to_modify_flag_.wait(true, boost::memory_order::relaxed);
+    while (want_to_modify_flag_.test(MemoryOrder::relaxed)) {
+      want_to_modify_flag_.wait(true, MemoryOrder::relaxed);
     }
   }
 
@@ -60,9 +60,9 @@ private:
 public:
   [[nodiscard]] reference Front() noexcept(noexcept(container_.front())) {
     WaitForModifyOperation();
-    read_semaphore_.fetch_add(1u, boost::memory_order::acquire);
+    read_semaphore_.fetch_add(1u, MemoryOrder::acquire);
     decltype(auto) result(container_.front());
-    read_semaphore_.fetch_sub(1u, boost::memory_order::release);
+    read_semaphore_.fetch_sub(1u, MemoryOrder::release);
     read_semaphore_.notify_one(); // notifies write operation
     return result;
   }
@@ -70,18 +70,18 @@ public:
   [[nodiscard]] const_reference Front() const
       noexcept(noexcept(container_.front())) {
     WaitForModifyOperation();
-    read_semaphore_.fetch_add(1u, boost::memory_order::acquire);
+    read_semaphore_.fetch_add(1u, MemoryOrder::acquire);
     decltype(auto) result(container_.front());
-    read_semaphore_.fetch_sub(1u, boost::memory_order::release);
+    read_semaphore_.fetch_sub(1u, MemoryOrder::release);
     read_semaphore_.notify_one();
     return result;
   }
 
   [[nodiscard]] reference Back() noexcept(noexcept(container_.back())) {
     WaitForModifyOperation();
-    read_semaphore_.fetch_add(1u, boost::memory_order::acquire);
+    read_semaphore_.fetch_add(1u, MemoryOrder::acquire);
     decltype(auto) result(container_.back());
-    read_semaphore_.fetch_sub(1u, boost::memory_order::release);
+    read_semaphore_.fetch_sub(1u, MemoryOrder::release);
     read_semaphore_.notify_one();
     return result;
   }
@@ -89,27 +89,27 @@ public:
   [[nodiscard]] const_reference Back() const
       noexcept(noexcept(container_.back())) {
     WaitForModifyOperation();
-    read_semaphore_.fetch_add(1u, boost::memory_order::acquire);
+    read_semaphore_.fetch_add(1u, MemoryOrder::acquire);
     decltype(auto) result(container_.back());
-    read_semaphore_.fetch_sub(1u, boost::memory_order::release);
+    read_semaphore_.fetch_sub(1u, MemoryOrder::release);
     read_semaphore_.notify_one();
     return result;
   }
 
   [[nodiscard]] bool Empty() const noexcept(noexcept(container_.empty())) {
     WaitForModifyOperation();
-    read_semaphore_.fetch_add(1u, boost::memory_order::acquire);
+    read_semaphore_.fetch_add(1u, MemoryOrder::acquire);
     decltype(auto) result(container_.empty());
-    read_semaphore_.fetch_sub(1u, boost::memory_order::release);
+    read_semaphore_.fetch_sub(1u, MemoryOrder::release);
     read_semaphore_.notify_one();
     return result;
   }
 
   [[nodiscard]] size_type Size() const noexcept(noexcept(container_.size())) {
     WaitForModifyOperation();
-    read_semaphore_.fetch_add(1, boost::memory_order::acquire);
+    read_semaphore_.fetch_add(1, MemoryOrder::acquire);
     decltype(auto) result(container_.size());
-    read_semaphore_.fetch_sub(1, boost::memory_order::release);
+    read_semaphore_.fetch_sub(1, MemoryOrder::release);
     read_semaphore_.notify_one();
     return result;
   }
@@ -128,9 +128,9 @@ private:
   // waiting for the completion of all exectuted read operation
   void WaitForReadOperations() const {
     // waiting until read_semaphore value will be 0
-    for (auto old{read_semaphore_.load(boost::memory_order::relaxed)};
-         old != 0u; old = read_semaphore_.load(boost::memory_order::relaxed)) {
-      read_semaphore_.wait(old, boost::memory_order::relaxed);
+    for (auto old{read_semaphore_.load(MemoryOrder::relaxed)}; old != 0u;
+         old = read_semaphore_.load(MemoryOrder::relaxed)) {
+      read_semaphore_.wait(old, MemoryOrder::relaxed);
     }
   }
 
@@ -139,12 +139,12 @@ public:
   void Push(const_reference value) {
     ScopedLock<api::Mutex> lock(mutex_); // disable other modifications
     // disable new read operations
-    want_to_modify_flag_.test_and_set(boost::memory_order::acquire);
+    want_to_modify_flag_.test_and_set(MemoryOrder::acquire);
     WaitForReadOperations();
     container_.push_back(value);
     CorrectInsertion(); // correct insert position with priority
     // enable new read operations
-    want_to_modify_flag_.clear(boost::memory_order::acquire);
+    want_to_modify_flag_.clear(MemoryOrder::release);
     want_to_modify_flag_.notify_all(); // notify read ops
     rw_sync_cvar_.notify_one();
   }
@@ -152,11 +152,11 @@ public:
   void Push(value_type &&value) {
     ScopedLock<api::Mutex> lock(mutex_); // disable other modifications
     // disable new read operations
-    want_to_modify_flag_.test_and_set(boost::memory_order::acquire);
+    want_to_modify_flag_.test_and_set(MemoryOrder::acquire);
     WaitForReadOperations();
     container_.push_back(std::move(value));
     CorrectInsertion(); // correct insert position with priority
-    want_to_modify_flag_.clear(boost::memory_order::release); // enable read ops
+    want_to_modify_flag_.clear(MemoryOrder::release); // enable read ops
     want_to_modify_flag_.notify_all();
     rw_sync_cvar_.notify_all();
   }
@@ -167,11 +167,11 @@ public:
     // because of elements reordering
 
     // disable new read operations
-    want_to_modify_flag_.test_and_set(boost::memory_order::acquire);
+    want_to_modify_flag_.test_and_set(MemoryOrder::acquire);
     WaitForReadOperations();
     container_.emplace_back(std::forward<Args>(args)...);
     CorrectInsertion();
-    want_to_modify_flag_.clear(boost::memory_order::release); // enable read ops
+    want_to_modify_flag_.clear(MemoryOrder::release); // enable read ops
     want_to_modify_flag_.notify_all();
     rw_sync_cvar_.notify_all();
   }
@@ -182,11 +182,11 @@ public:
       rw_sync_cvar_.wait(lock);
     }
     // disable new read operations
-    want_to_modify_flag_.test_and_set(boost::memory_order::acquire);
+    want_to_modify_flag_.test_and_set(MemoryOrder::acquire);
     WaitForReadOperations();
     auto last{std::move(container_.front())};
     container_.pop_front();
-    want_to_modify_flag_.clear(boost::memory_order::release); // enable read ops
+    want_to_modify_flag_.clear(MemoryOrder::release); // enable read ops
     want_to_modify_flag_.notify_all();
     return last;
   }

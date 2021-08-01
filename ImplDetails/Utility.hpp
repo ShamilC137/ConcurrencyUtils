@@ -38,12 +38,32 @@ private:
   static inline bool is_ids_createad;
   static inline int ids[sizeof...(Args)];
 };
+} // namespace impl
 
+namespace api {
 struct BadSlotCall : std::exception {
   using Base = std::exception;
   using Base::Base;
   using Base::what;
 };
-} // namespace impl
+
+struct BrokenReturnTask : std::exception {
+  using Base = std::exception;
+  using Base::Base;
+  using Base::what;
+};
+
+struct AliveTaskDeletion : std::exception {
+  using Base = std::exception;
+  using Base::Base;
+  using Base::what;
+};
+
+struct Deadlock : std::exception {
+  using Base = std::exception;
+  using Base::Base;
+  using Base::what;
+};
+} // namespace api
 
 #endif // !APPLICATION_IMPLDETAILS_UTILITY_HPP_

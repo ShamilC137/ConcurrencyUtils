@@ -10,24 +10,24 @@
 namespace api {
 // iternal functions
 namespace kernel_api {
-extern [[nodiscard]] mmu::VPtr<void>
+extern [[nodiscard]] VPtr<void>
 Allocate(const std::size_t align, const std::size_t nbytes) noexcept(false);
 
-extern void Deallocate(mmu::VPtr<void> ptr, const std::size_t nbytes) noexcept;
+extern void Deallocate(VPtr<void> ptr, const std::size_t nbytes) noexcept;
 } // namespace kernel_api
 
 // Allocates continious memory block for the given number of objects of T type
 // throws
 template <class T>
-[[nodiscard]] mmu::VPtr<T> Allocate(std::size_t count) noexcept(false) {
-  return static_cast<mmu::VPtr<T>>(
+[[nodiscard]] VPtr<T> Allocate(std::size_t count) noexcept(false) {
+  return static_cast<VPtr<T>>(
       kernel_api::Allocate(alignof(T), sizeof(T) * count)); // throws
 }
 
 // Deallocates continious memory block for the given number of objects of type T
 // with the given pointer
 template <class T>
-void Deallocate(mmu::VPtr<T> &ptr, std::size_t count) noexcept {
+void Deallocate(VPtr<T> &ptr, std::size_t count) noexcept {
   kernel_api::Deallocate(ptr, sizeof(T) * count);
 }
 } // namespace api

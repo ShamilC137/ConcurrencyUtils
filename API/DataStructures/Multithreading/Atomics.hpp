@@ -8,7 +8,7 @@
 namespace api {
 	template <class T>
 	using Atomic = boost::atomic<T>;
-
+	using MemoryOrder = boost::memory_order;
 	using AtomicFlag = boost::atomic_flag;
 }
 
