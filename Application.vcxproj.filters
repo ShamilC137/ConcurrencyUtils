@@ -13,5 +13,165 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Исходные файлы\Kernel">
+      <UniqueIdentifier>{0f76ffae-1c78-4dfb-8764-66e0f6c354df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\Kernel">
+      <UniqueIdentifier>{0cd77e91-0ca3-410a-8ea8-e5a995dc5fa8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\API">
+      <UniqueIdentifier>{7a982d17-0193-4283-a365-ed4bea071b52}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\Kernel\Kernel">
+      <UniqueIdentifier>{0039a3a2-6c9d-4974-9bfd-6938813012d4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\Kernel\Kernel">
+      <UniqueIdentifier>{f0933611-d1f7-467a-90dd-7bed64474f51}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\Kernel\MMU">
+      <UniqueIdentifier>{4454be7f-a0e6-4c85-bfe1-403e6b8b81cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\API\Memory">
+      <UniqueIdentifier>{11ffa8d0-2773-49d7-b14a-df7ccf0f2df3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\API\DataStructures">
+      <UniqueIdentifier>{f2771998-2a16-4cde-b2fc-6ff196c82c6d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\API\DataStructures\Containers">
+      <UniqueIdentifier>{72b5b245-2761-4da9-ba23-f3422a3f3521}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\API\DataStructures\Multithreading">
+      <UniqueIdentifier>{da102128-d460-4993-8e03-034777222df0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\ImplDetails">
+      <UniqueIdentifier>{65c14732-c61e-43e9-b9a5-9c772bf12514}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\ImplDetails">
+      <UniqueIdentifier>{54f0a56f-d4a1-4d2d-b7c9-3f472427f111}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\ImplDetails\ImplAPI">
+      <UniqueIdentifier>{4fc1eced-eaf1-461f-9207-89fd783465ca}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Kernel\Kernel\Kernel.cpp">
+      <Filter>Исходные файлы\Kernel\Kernel</Filter>
+    </ClCompile>
+    <ClCompile Include="Kernel\AbstractModule.cpp">
+      <Filter>Исходные файлы\Kernel</Filter>
+    </ClCompile>
+    <ClCompile Include="ImplDetails\SlotDetails.cpp">
+      <Filter>Исходные файлы\ImplDetails</Filter>
+    </ClCompile>
+    <ClCompile Include="ImplDetails\TaskDetails.cpp">
+      <Filter>Исходные файлы\ImplDetails</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Config.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="API\PublicAPI.hpp">
+      <Filter>Файлы заголовков\API</Filter>
+    </ClInclude>
+    <ClInclude Include="API\DataStructures\Containers\Deque.hpp">
+      <Filter>Файлы заголовков\API\DataStructures\Containers</Filter>
+    </ClInclude>
+    <ClInclude Include="API\DataStructures\Containers\HashMap.hpp">
+      <Filter>Файлы заголовков\API\DataStructures\Containers</Filter>
+    </ClInclude>
+    <ClInclude Include="API\DataStructures\Containers\HashSet.hpp">
+      <Filter>Файлы заголовков\API\DataStructures\Containers</Filter>
+    </ClInclude>
+    <ClInclude Include="API\DataStructures\Containers\List.hpp">
+      <Filter>Файлы заголовков\API\DataStructures\Containers</Filter>
+    </ClInclude>
+    <ClInclude Include="API\DataStructures\Containers\Map.hpp">
+      <Filter>Файлы заголовков\API\DataStructures\Containers</Filter>
+    </ClInclude>
+    <ClInclude Include="API\DataStructures\Containers\Queue.hpp">
+      <Filter>Файлы заголовков\API\DataStructures\Containers</Filter>
+    </ClInclude>
+    <ClInclude Include="API\DataStructures\Containers\Set.hpp">
+      <Filter>Файлы заголовков\API\DataStructures\Containers</Filter>
+    </ClInclude>
+    <ClInclude Include="API\DataStructures\Containers\String.hpp">
+      <Filter>Файлы заголовков\API\DataStructures\Containers</Filter>
+    </ClInclude>
+    <ClInclude Include="API\DataStructures\Containers\Vector.hpp">
+      <Filter>Файлы заголовков\API\DataStructures\Containers</Filter>
+    </ClInclude>
+    <ClInclude Include="API\DataStructures\Multithreading\Atomics.hpp">
+      <Filter>Файлы заголовков\API\DataStructures\Multithreading</Filter>
+    </ClInclude>
+    <ClInclude Include="API\DataStructures\Multithreading\ConditionVariable.hpp">
+      <Filter>Файлы заголовков\API\DataStructures\Multithreading</Filter>
+    </ClInclude>
+    <ClInclude Include="API\DataStructures\Multithreading\Mutex.hpp">
+      <Filter>Файлы заголовков\API\DataStructures\Multithreading</Filter>
+    </ClInclude>
+    <ClInclude Include="API\DataStructures\Multithreading\ScopedLock.hpp">
+      <Filter>Файлы заголовков\API\DataStructures\Multithreading</Filter>
+    </ClInclude>
+    <ClInclude Include="API\DataStructures\Multithreading\Thread.hpp">
+      <Filter>Файлы заголовков\API\DataStructures\Multithreading</Filter>
+    </ClInclude>
+    <ClInclude Include="API\DataStructures\Multithreading\ThreadPool.hpp">
+      <Filter>Файлы заголовков\API\DataStructures\Multithreading</Filter>
+    </ClInclude>
+    <ClInclude Include="API\DataStructures\Multithreading\UnboundedPriorityBlockingQueue.hpp">
+      <Filter>Файлы заголовков\API\DataStructures\Multithreading</Filter>
+    </ClInclude>
+    <ClInclude Include="API\DataStructures\Multithreading\UniqueLock.hpp">
+      <Filter>Файлы заголовков\API\DataStructures\Multithreading</Filter>
+    </ClInclude>
+    <ClInclude Include="API\DataStructures\Slot.hpp">
+      <Filter>Файлы заголовков\API\DataStructures</Filter>
+    </ClInclude>
+    <ClInclude Include="API\DataStructures\Task.hpp">
+      <Filter>Файлы заголовков\API\DataStructures</Filter>
+    </ClInclude>
+    <ClInclude Include="API\Memory\VAllocator.hpp">
+      <Filter>Файлы заголовков\API\Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="API\Memory\VPtr.hpp">
+      <Filter>Файлы заголовков\API\Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="ImplDetails\ImplAPI\KernelAPI.hpp">
+      <Filter>Файлы заголовков\ImplDetails\ImplAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="ImplDetails\SlotDetails.hpp">
+      <Filter>Файлы заголовков\ImplDetails</Filter>
+    </ClInclude>
+    <ClInclude Include="ImplDetails\TaskDetails.hpp">
+      <Filter>Файлы заголовков\ImplDetails</Filter>
+    </ClInclude>
+    <ClInclude Include="ImplDetails\Utility.hpp">
+      <Filter>Файлы заголовков\ImplDetails</Filter>
+    </ClInclude>
+    <ClInclude Include="Kernel\Kernel\Kernel.hpp">
+      <Filter>Файлы заголовков\Kernel\Kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="Kernel\MMU\AlignMMU.hpp">
+      <Filter>Файлы заголовков\Kernel\MMU</Filter>
+    </ClInclude>
+    <ClInclude Include="Kernel\MMU\AllocatorBlockMMU.hpp">
+      <Filter>Файлы заголовков\Kernel\MMU</Filter>
+    </ClInclude>
+    <ClInclude Include="Kernel\MMU\BlockMMU.hpp">
+      <Filter>Файлы заголовков\Kernel\MMU</Filter>
+    </ClInclude>
+    <ClInclude Include="Kernel\MMU\Usings.hpp">
+      <Filter>Файлы заголовков\Kernel\MMU</Filter>
+    </ClInclude>
+    <ClInclude Include="Kernel\MMU\VirtualMMU.hpp">
+      <Filter>Файлы заголовков\Kernel\MMU</Filter>
+    </ClInclude>
+    <ClInclude Include="Kernel\AbstractModule.hpp">
+      <Filter>Файлы заголовков\Kernel</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
