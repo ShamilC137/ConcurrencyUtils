@@ -49,11 +49,10 @@ public:
   operator=(const UnboundedPriorityBlockingQueue &) = delete;
 
 private:
-  // waiting for the completion of desired modify operation
+  // Waiting for the completion of desired modify operation. Potentially 
+  // block caller thread.
   void WaitForModifyOperation() const {
-    while (want_to_modify_flag_.test(MemoryOrder::relaxed)) {
-      want_to_modify_flag_.wait(true, MemoryOrder::relaxed);
-    }
+    want_to_modify_flag_.wait(true, MemoryOrder::relaxed);
   }
 
   // access operations
@@ -125,7 +124,8 @@ private:
     }
   }
 
-  // waiting for the completion of all exectuted read operation
+  // waiting for the completion of all exectuted read operation. Potentially 
+  // block caller thread.
   void WaitForReadOperations() const {
     // waiting until read_semaphore value will be 0
     for (auto old{read_semaphore_.load(MemoryOrder::relaxed)}; old != 0u;
@@ -177,7 +177,7 @@ public:
   }
 
   value_type Pop() {
-    UniqueLock<Mutex> lock(mutex_); // disable other modification
+    UniqueLock<Mutex> lock(mutex_); // disable other modifications
     while (container_.empty()) {
       rw_sync_cvar_.wait(lock);
     }

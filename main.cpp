@@ -1,46 +1,57 @@
-#include "API/DataStructures/Multithreading/UnboundedPriorityBlockingQueue.hpp"
+#include "API/DataStructures/Slot.hpp"
 #include <chrono>
 #include <functional>
 #include <iostream>
 #include <thread>
-#include "API/DataStructures/Slot.hpp"
 
-using Task = api::Task<int> *;
-api::UnboundedPriorityBlockingQueue<Task> cont;
 
 int zoo(int a1) {
+  std::cout << a1 << '\n';
   return a1;
 };
 
-void foo() {
+impl::BaseTask *tasks[10];
 
-  while (true) {
+void foo() {
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+  for (int index{}; index < 10; ++index) {
     impl::BaseSlot *slot(new api::Slot<int, int>(zoo));
-    cont.Size();
-    cont.Empty();
-    auto task{cont.Pop()};
-    if (!task) {
-      return;
-    }
-    (*slot)(task);
-    std::cout << static_cast<api::ReturnTask<int, int> *>(task)->GetResult()
-              << '\n';
-    delete task;
+    slot->SetPriority(1);
+    (*slot)(tasks[index]);
   }
 }
+
+void foo1() {
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+  for (int index{}; index < 10; ++index) {
+    impl::BaseSlot *slot(new api::Slot<int, int>(zoo));
+    slot->SetPriority(2);
+    (*slot)(tasks[index]);
+  }
+}
+
 void boo() {
   for (int index{}; index < 10; ++index) {
-    auto task = new api::ReturnTask<int, int>("mod", index); // BaseTask *
-    task->SetNumOfAcceptors(1);
-    cont.Push(task);
+    auto task = new api::Task<int>("mod", true, index); // BaseTask *
+    task->SetNumOfAcceptors(2);
+    tasks[index] = task;
   }
-  cont.Push(nullptr);
+}
+
+void Delete() {
+  for (int index{}; index < 10; ++index) {
+    delete tasks[index];
+  }
 }
 
 int main() {
+  boo();
+  std::thread thread2(Delete);
   std::thread thread1(foo);
-  std::thread thread2(boo);
-  thread1.join();
+  std::thread thread3(foo1);
   thread2.join();
+  thread3.join();
+  thread1.join();
+
   return 0;
 }

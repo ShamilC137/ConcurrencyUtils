@@ -46,15 +46,15 @@ protected:
       } else {
         // since code above may throw exception this check appear in both
         // situations
-        if (order_ != -1) {
-          task->Wait(order);
+        if (priority_ != -1) {
+          task->Wait(priority_);
         }
         ReturningCall(static_cast<ReturnTask<ReturnType, Args...> *>(task),
                       std::make_index_sequence<sizeof...(Args)>{});
       }
     } else {
-      if (order_ != -1) {
-        task->Wait(order);
+      if (priority_ != -1) {
+        task->Wait(priority_);
       }
       NonReturningCall(static_cast<Task<Args...> *>(task),
                        std::make_index_sequence<sizeof...(Args)>{});

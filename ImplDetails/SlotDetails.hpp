@@ -8,7 +8,7 @@
 namespace impl {
 class BaseSlot {
 public:
-  BaseSlot(const int *idseq, const int *retid, const int order = -1) noexcept;
+  BaseSlot(const int *idseq, const int *retid, const int priority = -1) noexcept;
 
   [[nodiscard]] inline const int *GetIDSequencePtr() const noexcept {
     return idseq_ptr_;
@@ -17,6 +17,8 @@ public:
   [[nodiscard]] inline const int *GetRetIDPtr() const noexcept {
     return retid_ptr_;
   }
+
+  void SetPriority(const int priority) noexcept { priority_ = priority; }
 
   void operator()(BaseTask *task) noexcept(false);
 
@@ -28,7 +30,7 @@ private:
   const int *retid_ptr_;
 
 protected:
-  const int order_;
+  int priority_;
 };
 } // namespace impl
 

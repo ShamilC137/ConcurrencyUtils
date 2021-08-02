@@ -6,6 +6,9 @@
 #include "../API/DataStructures/Multithreading/Atomics.hpp"
 #include "Utility.hpp"
 
+// Problems:
+// wait deadlock check
+
 namespace impl {
 class BaseTask {
   // ctor and dtor
@@ -82,7 +85,7 @@ public:
   // object. Decrements the counter of acceptors.
   void NotifyAboutComplete();
 
-  // nonmodifying members
+  // sync operations
 public:
   // Potentially blocks the calling thread until unblocked be a notifying
   // operation and load return value equal to expected.
@@ -90,7 +93,7 @@ public:
   // By default, assumed that task emitter will be wait for task completion.
   // If few slots are binded to the task and the order of execution is important
   // this function can be used as a synchronization.
-  void Wait(const unsigned char expected_value = 0) const noexcept(false);
+  void Wait(const unsigned char expected_value = 0) noexcept(false);
 
 private:
   api::String mid_;             // Module identefierm
