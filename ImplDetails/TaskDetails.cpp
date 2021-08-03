@@ -5,7 +5,10 @@ namespace impl {
 BaseTask::BaseTask(const api::String &module_id, const bool is_blocking_task,
                    const int *idseq, const int *retid) noexcept
     : mid_{module_id}, is_blocking_task_{is_blocking_task}, idseq_ptr_{idseq},
-      retid_ptr_{retid}, nreferences_{}, nacceptors_{} {}
+      retid_ptr_{retid}, nreferences_{},
+      nacceptors_(static_cast<unsigned char>(
+          is_blocking_task)), // task itseld can be treated as acceptor
+      waiters_semaphore_{} {}
 
 BaseTask::~BaseTask() noexcept(false) {
   if (nreferences_ != 0u) {
@@ -15,7 +18,7 @@ BaseTask::~BaseTask() noexcept(false) {
 
 // modifiers
 void BaseTask::NotifyAboutComplete() {
-  nacceptors_.sub(1, api::MemoryOrder::acq_rel);
+  waiters_semaphore_.store(nacceptors_.sub(1u, api::MemoryOrder::relaxed));
   assert(nacceptors_.load(api::MemoryOrder::relaxed) != 255);
   nacceptors_.notify_all();
 }
@@ -23,13 +26,19 @@ void BaseTask::NotifyAboutComplete() {
 // sync operations
 void BaseTask::Wait(const unsigned char expected_value) noexcept(false) {
   auto old{nacceptors_.load(api::MemoryOrder::acquire)};
-
-  if (expected_value > old) {
+  const auto correct_value{expected_value +
+                           static_cast<unsigned char>(is_blocking_task_)};
+  if (correct_value > old) {
     throw api::Deadlock("Unreachible expected value");
   }
 
-  for (; old != expected_value;
+  // Maximum number of waiters = nacceptors (excepcted_value values which may
+  // cause thread block: 0, 1..., nacceptors - 1)
+  for (; old != correct_value;
        old = nacceptors_.load(api::MemoryOrder::relaxed)) {
+    if (!waiters_semaphore_.sub(1, api::MemoryOrder::relaxed)) {
+      throw api::Deadlock("Threads will never be unblocked");
+    }
     nacceptors_.wait(old, api::MemoryOrder::relaxed);
   }
 }

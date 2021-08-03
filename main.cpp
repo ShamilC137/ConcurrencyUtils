@@ -4,7 +4,6 @@
 #include <iostream>
 #include <thread>
 
-
 int zoo(int a1) {
   std::cout << a1 << '\n';
   return a1;
@@ -17,7 +16,11 @@ void foo() {
   for (int index{}; index < 10; ++index) {
     impl::BaseSlot *slot(new api::Slot<int, int>(zoo));
     slot->SetPriority(1);
-    (*slot)(tasks[index]);
+    try {
+      (*slot)(tasks[index]);
+    } catch (std::exception &ex) {
+      std::cout << ex.what() << '\n';
+    }
   }
 }
 
@@ -26,13 +29,17 @@ void foo1() {
   for (int index{}; index < 10; ++index) {
     impl::BaseSlot *slot(new api::Slot<int, int>(zoo));
     slot->SetPriority(2);
-    (*slot)(tasks[index]);
+    try {
+      (*slot)(tasks[index]);
+    } catch (std::exception &ex) {
+      std::cout << ex.what() << '\n';
+    }
   }
 }
 
 void boo() {
   for (int index{}; index < 10; ++index) {
-    auto task = new api::Task<int>("mod", true, index); // BaseTask *
+    auto task = new api::Task<int>("mod", false, index); // BaseTask *
     task->SetNumOfAcceptors(2);
     tasks[index] = task;
   }
@@ -40,7 +47,11 @@ void boo() {
 
 void Delete() {
   for (int index{}; index < 10; ++index) {
-    delete tasks[index];
+    try {
+      delete tasks[index];
+    } catch (std::exception &ex) {
+      std::cout << ex.what() << '\n';
+    }
   }
 }
 

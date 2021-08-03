@@ -9,6 +9,8 @@
 #include <functional>
 
 namespace api {
+  // Slot is the class which allows to hide underlying function and call it 
+  // with given tasks.
 template <class ReturnType, class... Args> class Slot : public impl::BaseSlot {
 public:
   using Base = impl::BaseSlot;
@@ -35,6 +37,7 @@ private:
   }
 
 protected:
+  // Calls the underlying function with parameters from task. 
   virtual void RealCall(impl::BaseTask *task) noexcept(false) override {
     if (task->GetIDSequencePtr() != Base::GetIDSequencePtr()) {
       throw api::BadSlotCall("Task and slot parameters types are incompatible");
@@ -46,15 +49,15 @@ protected:
       } else {
         // since code above may throw exception this check appear in both
         // situations
-        if (priority_ != -1) {
-          task->Wait(priority_);
+        if (const auto priority{Base::GetPriority()}; priority != -1) {
+          task->Wait(priority);
         }
         ReturningCall(static_cast<ReturnTask<ReturnType, Args...> *>(task),
                       std::make_index_sequence<sizeof...(Args)>{});
       }
     } else {
-      if (priority_ != -1) {
-        task->Wait(priority_);
+      if (const auto priority{Base::GetPriority()}; priority != -1) {
+        task->Wait(priority);
       }
       NonReturningCall(static_cast<Task<Args...> *>(task),
                        std::make_index_sequence<sizeof...(Args)>{});

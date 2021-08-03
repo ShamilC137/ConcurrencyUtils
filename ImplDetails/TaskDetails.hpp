@@ -6,10 +6,9 @@
 #include "../API/DataStructures/Multithreading/Atomics.hpp"
 #include "Utility.hpp"
 
-// Problems:
-// wait deadlock check
-
 namespace impl {
+// Basic task which contains RTTI about derived classes and multithreading
+// synchronization functions.
 class BaseTask {
   // ctor and dtor
 public:
@@ -56,7 +55,10 @@ public:
 
   // Shows that target threads still working
   [[nodiscard]] inline bool IsWaitable() const noexcept {
-    return nacceptors_.load(api::MemoryOrder::relaxed) != 0u;
+    return nacceptors_.load(api::MemoryOrder::relaxed) >
+           static_cast<unsigned char>(
+               is_blocking_task_); // task itself is not considered as waitable
+                                   // routine
   }
 
   // modifiers
@@ -72,7 +74,9 @@ public:
   // it decrements number of acceptors.
   // Safe. Only kernel thread can set number of acceptors
   inline void SetNumOfAcceptors(const unsigned char nacceptors) noexcept {
-    nacceptors_.store(nacceptors, api::MemoryOrder::relaxed);
+    waiters_semaphore_.store(
+        nacceptors_.add(nacceptors, api::MemoryOrder::relaxed),
+        api::MemoryOrder::relaxed);
   }
 
   // Decrements number of references and returns new value.
@@ -105,6 +109,7 @@ private:
                                            // Settted by kernel.
   api::Atomic<unsigned char> nacceptors_;  // Number of this task acceptors.
                                            // Setted by kernel.
+  api::Atomic<unsigned char> waiters_semaphore_; // Number of current waiters.
 };
 } // namespace impl
 
