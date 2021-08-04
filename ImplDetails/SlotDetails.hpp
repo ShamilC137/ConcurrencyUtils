@@ -1,6 +1,5 @@
 #ifndef APPLICATION_IMPLDETAILS_SLOTDETAILS_HPP_
 #define APPLICATION_IMPLDETAILS_SLOTDETAILS_HPP_
-
 // current project
 #include "TaskDetails.hpp"
 #include "Utility.hpp"
@@ -16,6 +15,14 @@ public:
   // priority - slot priority;
   BaseSlot(const int *idseq, const int *retid,
            const int priority = -1) noexcept;
+
+  inline virtual ~BaseSlot() noexcept {}
+
+  // Return the size in bytes of this class; used to correct deallocate object
+  // of this class which captured with pointer to base.
+  [[nodiscard]] inline virtual std::size_t SizeInBytes() const noexcept {
+    return sizeof(BaseSlot);
+  }
 
   // Returns derived class types identifiers sequence
   [[nodiscard]] inline const int *GetIDSequencePtr() const noexcept {
@@ -34,10 +41,13 @@ public:
   [[nodiscard]] inline int GetPriority() const noexcept { return priority_; }
 
   // Calls underlying function
-  void operator()(BaseTask *task) noexcept(false);
+  // throws
+  void operator()(api::TaskWrapper &task) noexcept(false);
+  void operator()(api::TaskWrapper &&task) noexcept(false);
 
 protected:
-  virtual void RealCall(BaseTask *task) noexcept(false) = 0;
+  // potentially throws
+  virtual void RealCall(api::TaskWrapper &task) noexcept(false) = 0;
 
 private:
   const int *idseq_ptr_; // derived class types identifiers sequence
@@ -46,5 +56,26 @@ private:
                  //  called first; if no priority is set, -1 is used.
 };
 } // namespace impl
+
+namespace api {
+// Scoped slot wrapper (calls delete when out of scope)
+class SlotWrapper {
+public:
+#if STL_ALLOCATOR_USAGE
+  using PointerType = impl::BaseSlot *;
+  using Allocator = std::allocator<impl::BaseSlot>;
+#elif ALIGNED_ALLOCATOR_USAGE
+  using PointerType = impl::BaseSlot *;
+  using Allocator = api::AlignedAllocator<impl::BaseSlot>;
+#endif
+
+  SlotWrapper(const PointerType &slot,
+              const Allocator &alloc = Allocator{}) noexcept;
+  ~SlotWrapper() noexcept;
+
+  PointerType slot;
+  Allocator alloc;
+};
+} // namespace api
 
 #endif // !APPLICATION_IMPLDETAILS_SLOTDETAILS_HPP_

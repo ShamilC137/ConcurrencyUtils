@@ -26,12 +26,15 @@ public:
   // Returns the signatures of slots
   [[nodiscard]] api::Vector<api::String> GetSlotsSignatures() const;
 
+  // pure virtual functions
 public:
+
+
   // fields
 private:
   api::String id_; // module identifier; used to identify module; must be unique
   // contains slots signatures and binded handlers; signatures must be unique;
-  api::HashMap<api::String, impl::BaseSlot *> slots_;
+  api::HashMap<api::String, api::SlotWrapper> slots_;
 };
 } // namespace impl
 #endif // !APPLICATION_KERNEL_ABSTRACTMODULE_HPP_

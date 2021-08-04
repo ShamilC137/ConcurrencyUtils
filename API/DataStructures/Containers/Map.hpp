@@ -2,7 +2,7 @@
 #define APPLICATION_API_DATASTRUCTURES_CONTAINERS_MAP_HPP_
 // current project
 #include "../../../Config.hpp"
-#include "../../Memory/VAllocator.hpp"
+#include "../../Memory/AlignedAllocator.hpp"
 
 // STL
 #include <map>
@@ -12,9 +12,9 @@ namespace api {
 template <class Key, class Value, class Compare = std::less<Key>,
           class Allocator = std::allocator<std::pair<const Key, Value>>>
 using Map = std::map<Key, Value, Compare, Allocator>;
-#elif VALLOCATOR_USAGE
+#elif ALIGNED_ALLOCATOR_USAGE
 template <class Key, class Value, class Compare = std::less<Key>,
-          class Allocator = api::VAllocator<std::pair<const Key, Value>>>
+          class Allocator = AlignedAllocator<std::pair<const Key, Value>>>
 using Map = std::map<Key, Value, Compare, Allocator>;
 #else
 static_assert(false, "Ambigious allocator");

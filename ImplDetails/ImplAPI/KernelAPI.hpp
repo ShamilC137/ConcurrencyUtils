@@ -2,8 +2,6 @@
 #define APPLICATION_IMPLDETAILS_IMPLAPI_KERNELAPI_HPP_
 
 // current project
-#include "../../API/Memory/VPtr.hpp"
-
 #include "../../Config.hpp"
 
 // STL
@@ -11,6 +9,9 @@
 
 // OS dependent headers
 #if WINDOWS32 | WINDOWS64
+#define WIN32_LEAN_AND_MEAN // What is it:
+                            // https://devblogs.microsoft.com/oldnewthing/20091130-00/?p=15863
+                            // Must be used to avoid problem with socket_types.h
 #include <Windows.h>
 #else
 static_assert(false, "Unsupported OS");
@@ -28,23 +29,11 @@ namespace kernel_api {
 // allocates memory with the given alignment; takes nbytes to allocate
 // return virtual pointer to allocated memory
 // throws
-[[nodiscard]] api::VPtr<void>
-Allocate(const std::size_t align, const std::size_t nbytes) noexcept(false);
+[[nodiscard]] void *Allocate(const std::size_t align,
+                             const std::size_t nbytes) noexcept(false);
 
 // deallocates memory by the given pointer with the given size in bytes
-void Deallocate(api::VPtr<void> ptr, const std::size_t nbytes) noexcept;
-
-// OS dependent functions
-#if defined WINDOWS32 | defined WINDOWS64
-// Suspends executed thread; takes thread native handler;
-// return -1 if failed and non negative number otherwise
-::DWORD SuspendThread(::HANDLE thread_native_handler) noexcept;
-
-// Resumes thread execution; takes thread native handler;
-// return -1 if failed and non negative number otherwise
-::DWORD ResumeThread(::HANDLE thread_native_handler) noexcept;
-#endif // !defined WINDOWS32 | defined WINDOWS64
-
+void Deallocate(void *ptr, const std::size_t nbytes) noexcept;
 } // namespace kernel_api
 } // namespace api
 

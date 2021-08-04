@@ -1,9 +1,26 @@
 #include "Kernel.hpp"
 
 namespace kernel {
+// NOTE: function marked as multithreaded can be called from few threads
+// and must not block other such functions, so them have its own mutex objects
+
 // Ctors
-Kernel::Kernel() noexcept(false)
-    : mmu_(operator new(kMMUSize)) {} // throws
+Kernel::Kernel() noexcept(false) : mmu_(operator new(kMMUSize)) {} // throws
+
+// Multithreading
+[[nodiscard]] void *Kernel::Allocate(const std::size_t align,
+                                     const std::size_t nbytes) noexcept(false) {
+  static api::Mutex mt{};
+  api::ScopedLock<api::Mutex> lock(mt);
+  return mmu_.Allocate(align, nbytes); // throws
+}
+
+// Multithreading
+void Kernel::Deallocate(void *ptr, const size_t nbytes) noexcept {
+  static api::Mutex mt{};
+  api::ScopedLock<api::Mutex> lock(mt);
+  mmu_.Deallocate(ptr, nbytes);
+}
 } // namespace kernel
 
 namespace api {
@@ -14,21 +31,13 @@ kernel::Kernel &GetKernel() noexcept {
   return kernel;
 }
 
-[[nodiscard]] api::VPtr<void>
-Allocate(const std::size_t align, const std::size_t nbytes) noexcept(false) {
+[[nodiscard]] void *Allocate(const std::size_t align,
+                             const std::size_t nbytes) noexcept(false) {
   return GetKernel().Allocate(align, nbytes); // throws
 }
 
-void Deallocate(api::VPtr<void> ptr, const std::size_t nbytes) noexcept {
+void Deallocate(void *ptr, const std::size_t nbytes) noexcept {
   GetKernel().Deallocate(ptr, nbytes);
-}
-
-::DWORD SuspendThread(::HANDLE thread_native_handler) noexcept {
-  return ::SuspendThread(thread_native_handler);
-}
-
-::DWORD ResumeThread(::HANDLE thread_native_handler) noexcept {
-  return ::ResumeThread(thread_native_handler);
 }
 } // namespace kernel_api
 } // namespace api

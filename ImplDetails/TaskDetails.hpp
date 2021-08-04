@@ -2,9 +2,22 @@
 #define APPLICATION_IMPLDETAILS_TASKDETAILS_HPP_
 
 // current project
+#include "../../Config.hpp"
 #include "../API/DataStructures/Containers/String.hpp"
 #include "../API/DataStructures/Multithreading/Atomics.hpp"
 #include "Utility.hpp"
+
+// conditional headers
+#if ALIGNED_ALLOCATOR_USAGE
+#include "../API/Memory/AlignedAllocator.hpp"
+#endif
+
+// STL
+// Allocator construct and destroy are deprecated in C++17 so I we have to use
+// allocator_traits because there are some checks that disallow to compile
+// code with these members. Use of define will not fix problem because
+// other header also may use "memory" header.
+#include <memory> // for allocator_traits
 
 namespace impl {
 // Basic task which contains RTTI about derived classes and multithreading
@@ -27,6 +40,11 @@ public:
 
   // getters
 public:
+  // Return size in bytes of current type object; used to deallocate object
+  // captured with pointer to base class.
+  [[nodiscard]] inline virtual std::size_t SizeInBytes() const noexcept {
+    return sizeof(BaseTask);
+  }
   // Returns creator module identifier
   [[nodiscard]] inline const api::String &GetCreatorModuleID() const noexcept {
     return mid_;
@@ -87,7 +105,7 @@ public:
 
   // Unblock at least one thread blocked in a waiting operation on its atomic
   // object. Decrements the counter of acceptors.
-  void NotifyAboutComplete();
+  void NotifyAboutComplete() noexcept;
 
   // sync operations
 public:
@@ -97,6 +115,7 @@ public:
   // By default, assumed that task emitter will be wait for task completion.
   // If few slots are binded to the task and the order of execution is important
   // this function can be used as a synchronization.
+  // throws
   void Wait(const unsigned char expected_value = 0) noexcept(false);
 
 private:
@@ -112,5 +131,26 @@ private:
   api::Atomic<unsigned char> waiters_semaphore_; // Number of current waiters.
 };
 } // namespace impl
+
+namespace api {
+// Task wrapper that deletes task if number of references on this task becomes 0
+class TaskWrapper {
+public:
+  using PointerType = impl::BaseTask *;
+#if STL_ALLOCATOR_USAGE
+  using Allocator = std::allocator<impl::BaseTask>;
+#elif ALIGNED_ALLOCATOR_USAGE
+  using Allocator = api::AlignedAllocator<impl::BaseTask>;
+#endif
+
+  TaskWrapper(const PointerType &task,
+              const Allocator &alloc = Allocator{}) noexcept(false);
+
+  ~TaskWrapper() noexcept;
+
+  PointerType task;
+  Allocator alloc;
+};
+} // namespace api
 
 #endif // !APPLICATION_IMPLDETAILS_TASKDETAILS_HPP_

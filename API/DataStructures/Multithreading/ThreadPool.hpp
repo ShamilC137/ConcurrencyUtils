@@ -1,19 +1,17 @@
 #ifndef APPLICATION_API_DATASTRUCTURES_MULTITHREADING_THREADPOOL_HPP_
 #define APPLICATION_API_DATASTRUCTURES_MULTITHREADING_THREADPOOL_HPP_
 
-#define BOOST_THREAD_VERSION 5
-#define BOOST_THREAD_USES_LOG
-#define BOOST_THREAD_USES_LOG_THREAD_ID
-#define BOOST_THREAD_QUEUE_DEPRECATE_OLD
-#if !defined BOOST_NO_CXX11_DECLTYPE
-#define BOOST_RESULT_OF_USE_DECLTYPE
+// boost
+//#include <SDKDDKVer.h>
+#ifndef _WIN32_WINNT
+// Windows version
+#define _WIN32_WINNT 0x0601 // from header above; only this define is used
+                            // so I manually defined it
 #endif
 
-// booost
-#include "boost/thread/thread_pool.hpp"
-
+#include "boost/asio/thread_pool.hpp"
 namespace api {
-using ThreadPool = boost::basic_thread_pool;
+using ThreadPool = boost::asio::thread_pool;
 }
 
 #endif //! APPLICATION_API_DATASTRUCTURES_MULTITHREADING_THREADPOOL_HPP_

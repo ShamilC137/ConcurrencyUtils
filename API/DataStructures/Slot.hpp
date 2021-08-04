@@ -9,8 +9,8 @@
 #include <functional>
 
 namespace api {
-  // Slot is the class which allows to hide underlying function and call it 
-  // with given tasks.
+// Slot is the class which allows to hide underlying function and call it
+// with given tasks.
 template <class ReturnType, class... Args> class Slot : public impl::BaseSlot {
 public:
   using Base = impl::BaseSlot;
@@ -20,6 +20,16 @@ public:
       : Base(impl::IDSequence<Args...>::CreateIDSequence(),
              &impl::TypeID<ReturnType>::id),
         func_{function} {}
+
+  // Calls underlying function with given task.
+  // throws
+  using Base::operator();
+
+  // Return the size in bytes of this class; used to correct deallocate object
+  // of this class which captured with pointer to base.
+  [[nodiscard]] inline std::size_t SizeInBytes() const noexcept override {
+    return sizeof(Slot);
+  }
 
 private:
   template <std::size_t... Indexes>
@@ -37,8 +47,9 @@ private:
   }
 
 protected:
-  // Calls the underlying function with parameters from task. 
-  virtual void RealCall(impl::BaseTask *task) noexcept(false) override {
+  // Calls the underlying function with parameters from task.
+  virtual void RealCall(TaskWrapper &task_wrap) noexcept(false) override {
+    decltype(auto) task{task_wrap.task};
     if (task->GetIDSequencePtr() != Base::GetIDSequencePtr()) {
       throw api::BadSlotCall("Task and slot parameters types are incompatible");
     }
@@ -49,15 +60,18 @@ protected:
       } else {
         // since code above may throw exception this check appear in both
         // situations
-        if (const auto priority{Base::GetPriority()}; priority != -1) {
-          task->Wait(priority);
+        if (const auto priority{
+                static_cast<unsigned char>(Base::GetPriority())};
+            priority != -1) {
+          task->Wait(priority); // throws
         }
         ReturningCall(static_cast<ReturnTask<ReturnType, Args...> *>(task),
                       std::make_index_sequence<sizeof...(Args)>{});
       }
     } else {
-      if (const auto priority{Base::GetPriority()}; priority != -1) {
-        task->Wait(priority);
+      if (const auto priority{static_cast<unsigned char>(Base::GetPriority())};
+          priority != -1) {
+        task->Wait(priority); // throws
       }
       NonReturningCall(static_cast<Task<Args...> *>(task),
                        std::make_index_sequence<sizeof...(Args)>{});

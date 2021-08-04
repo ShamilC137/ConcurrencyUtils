@@ -134,12 +134,6 @@
     <ClInclude Include="API\DataStructures\Task.hpp">
       <Filter>Файлы заголовков\API\DataStructures</Filter>
     </ClInclude>
-    <ClInclude Include="API\Memory\VAllocator.hpp">
-      <Filter>Файлы заголовков\API\Memory</Filter>
-    </ClInclude>
-    <ClInclude Include="API\Memory\VPtr.hpp">
-      <Filter>Файлы заголовков\API\Memory</Filter>
-    </ClInclude>
     <ClInclude Include="ImplDetails\ImplAPI\KernelAPI.hpp">
       <Filter>Файлы заголовков\ImplDetails\ImplAPI</Filter>
     </ClInclude>
@@ -172,6 +166,9 @@
     </ClInclude>
     <ClInclude Include="Kernel\AbstractModule.hpp">
       <Filter>Файлы заголовков\Kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="API\Memory\AlignedAllocator.hpp">
+      <Filter>Файлы заголовков\API\Memory</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

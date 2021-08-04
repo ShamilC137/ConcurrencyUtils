@@ -3,7 +3,7 @@
 
 // current project
 #include "../../../Config.hpp"
-#include "../../Memory/VAllocator.hpp"
+#include "../../Memory/AlignedAllocator.hpp"
 
 // STL
 #include <set>
@@ -13,9 +13,9 @@ namespace api {
 template <class Key, class Compare = std::less<Key>,
           class Allocator = std::allocator<Key>>
 using Set = std::set<Key, Compare, Allocator>;
-#elif VALLOCATOR_USAGE
+#elif ALIGNED_ALLOCATOR_USAGE
 template <class Key, class Compare = std::less<Key>,
-          class Allocator = api::VAllocator<Key>>
+          class Allocator = AlignedAllocator<Key>>
 using Set = std::set<Key, Compare, Allocator>;
 #else
 static_assert(false, "Ambigious allocator");

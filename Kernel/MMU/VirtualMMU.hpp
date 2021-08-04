@@ -2,7 +2,6 @@
 #define APPLICATION_KERNEL_MMU_VIRTUALMMU_HPP_
 
 #include "AlignMMU.hpp"
-#include "../../API/Memory/VPtr.hpp"
 
 namespace mmu {
 
@@ -34,11 +33,11 @@ namespace mmu {
 //********************************************************************************************************************//
 template <SizeType kMemorySize> class VirtualMMU {
 public:
-  VirtualMMU(void *ptr) {}
- SizeType Allocate(SizeType /*align*/, SizeType /*count_in_bytes */) {
-   return {};
- }
- void Deallocate(SizeType /*ptr*/, SizeType /*count_in_bytes*/) {}
+  VirtualMMU(void * /* ptr*/) {}
+  void *Allocate(SizeType /*align*/, SizeType /*count_in_bytes */) {
+    return {};
+  }
+  void Deallocate(void * /*ptr*/, SizeType /*count_in_bytes*/) {}
 };
 
 } // namespace mmu

@@ -50,8 +50,10 @@ static_assert(false, "Panic: unsupported OS");
 // taken as active
 // if 1 all aliased containers must use standard allocator;
 #define STL_ALLOCATOR_USAGE 1
-// if 1 all aliased containers must use standard allocator
+// if 1 all aliased containers must use virtual allocator
 #define VALLOCATOR_USAGE 0
+// if 1 all aliased containers must use aligned allocator
+#define ALIGNED_ALLOCATOR_USAGE 0
 // allocator resolution flags ^^^
 // this project specific macro ^^^
 

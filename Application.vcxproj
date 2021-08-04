@@ -180,8 +180,7 @@
     <ClInclude Include="API\DataStructures\Multithreading\UniqueLock.hpp" />
     <ClInclude Include="API\DataStructures\Slot.hpp" />
     <ClInclude Include="API\DataStructures\Task.hpp" />
-    <ClInclude Include="API\Memory\VAllocator.hpp" />
-    <ClInclude Include="API\Memory\VPtr.hpp" />
+    <ClInclude Include="API\Memory\AlignedAllocator.hpp" />
     <ClInclude Include="API\PublicAPI.hpp" />
     <ClInclude Include="Config.hpp" />
     <ClInclude Include="ImplDetails\ImplAPI\KernelAPI.hpp" />
