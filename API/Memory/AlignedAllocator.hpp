@@ -2,7 +2,7 @@
 #define APPLICATION_API_MEMORY_ALIGNEDALLOCATOR_HPP_
 
 // current project
-#include "../PublicAPI.hpp"
+#include "../MemoryManagementUtilities.hpp"
 
 // STL
 #include <type_traits>

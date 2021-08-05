@@ -188,5 +188,8 @@
     <ClInclude Include="API\DataStructures\ScopedSlotWrapper.hpp">
       <Filter>Файлы заголовков\API\DataStructures</Filter>
     </ClInclude>
+    <ClInclude Include="API\MemoryManagementUtilities.hpp">
+      <Filter>Файлы заголовков\API</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

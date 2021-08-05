@@ -184,6 +184,7 @@
     <ClInclude Include="API\DataStructures\Slot.hpp" />
     <ClInclude Include="API\DataStructures\Task.hpp" />
     <ClInclude Include="API\DataStructures\TaskWrapper.hpp" />
+    <ClInclude Include="API\MemoryManagementUtilities.hpp" />
     <ClInclude Include="API\Memory\AlignedAllocator.hpp" />
     <ClInclude Include="API\PublicAPI.hpp" />
     <ClInclude Include="Config.hpp" />

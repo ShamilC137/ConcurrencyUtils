@@ -57,4 +57,12 @@ static_assert(false, "Panic: unsupported OS");
 // allocator resolution flags ^^^
 // this project specific macro ^^^
 
+// OS dependent macro
+#if WINDOWS32 | WINDOWS64
+#define WIN32_LEAN_AND_MEAN  // What is it:
+                             // https://devblogs.microsoft.com/oldnewthing/20091130-00/?p=15863
+                             // Must be used to avoid problem with
+                             // socket_types.h
+#endif
+
 #endif // !APPLICATION_CONFIG_HPP_

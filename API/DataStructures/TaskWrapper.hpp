@@ -2,8 +2,8 @@
 #define APPLICATION_API_DATASTRUCTURES_TASKWRAPPER_HPP_
 
 // current project
-#include "Task.hpp"
 #include "../../Config.hpp"
+#include "Task.hpp"
 
 namespace api {
 // Task wrapper that deletes task if number of references on this task becomes 0
