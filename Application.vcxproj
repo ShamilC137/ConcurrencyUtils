@@ -154,6 +154,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="API\DataStructures\ScopedSlotWrapper.cpp" />
+    <ClCompile Include="API\DataStructures\TaskWrapper.cpp" />
     <ClCompile Include="ImplDetails\SlotDetails.cpp" />
     <ClCompile Include="ImplDetails\TaskDetails.cpp" />
     <ClCompile Include="Kernel\AbstractModule.cpp" />
@@ -178,8 +180,10 @@
     <ClInclude Include="API\DataStructures\Multithreading\ThreadPool.hpp" />
     <ClInclude Include="API\DataStructures\Multithreading\UnboundedPriorityBlockingQueue.hpp" />
     <ClInclude Include="API\DataStructures\Multithreading\UniqueLock.hpp" />
+    <ClInclude Include="API\DataStructures\ScopedSlotWrapper.hpp" />
     <ClInclude Include="API\DataStructures\Slot.hpp" />
     <ClInclude Include="API\DataStructures\Task.hpp" />
+    <ClInclude Include="API\DataStructures\TaskWrapper.hpp" />
     <ClInclude Include="API\Memory\AlignedAllocator.hpp" />
     <ClInclude Include="API\PublicAPI.hpp" />
     <ClInclude Include="Config.hpp" />

@@ -2,7 +2,10 @@
 #define APPLICATION_API_DATASTRUCTURES_CONTAINERS_STRING_HPP_
 // current project
 #include "../../../Config.hpp"
+
+#if ALIGNED_ALLOCATOR_USAGE
 #include "../../Memory/AlignedAllocator.hpp"
+#endif // !ALIGNED_ALLOCATOR_USAGE
 
 // STL
 #include <string>

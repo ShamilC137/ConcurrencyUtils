@@ -11,11 +11,15 @@
 #include "../../API/DataStructures/Multithreading/ThreadPool.hpp"
 #include "../../API/DataStructures/Multithreading/Thread.hpp"
 #include "../../API/DataStructures/Multithreading/UnboundedPriorityBlockingQueue.hpp"
+
+#include "../../API/DataStructures/TaskWrapper.hpp"
+
 #include "../../ImplDetails/ImplAPI/KernelAPI.hpp"
 
 #include "../MMU/VirtualMMU.hpp"
 
 #include "../AbstractModule.hpp"
+
 
 // STL
 #include <cstddef>

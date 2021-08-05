@@ -5,7 +5,7 @@
 #include <thread>
 
 int zoo(int a1) {
-  std::cout << a1 << '\n';
+  // std::cout << a1 << '\n';
   return a1;
 };
 
@@ -18,6 +18,9 @@ void foo() {
     slot->SetPriority(1);
     try {
       (*slot)(tasks[index]);
+      std::cout
+          << static_cast<api::ReturnTask<int, int> *>(tasks[index])->GetResult()
+          << '\n';
     } catch (std::exception &ex) {
       std::cout << ex.what() << '\n';
     }
@@ -25,22 +28,27 @@ void foo() {
 }
 
 void foo1() {
-  std::this_thread::sleep_for(std::chrono::seconds(1));
+//  std::this_thread::sleep_for(std::chrono::seconds(1));
   for (int index{}; index < 10; ++index) {
     impl::BaseSlot *slot(new api::Slot<int, int>(zoo));
-    slot->SetPriority(2);
+    //slot->SetPriority(1);
     try {
-      (*slot)(tasks[index]);
+      api::TaskWrapper task(tasks[index]);
+      (*slot)(task);
+      std::cout
+          << static_cast<api::ReturnTask<int, int> *>(tasks[index])->GetResult()
+          << '\n';
     } catch (std::exception &ex) {
       std::cout << ex.what() << '\n';
     }
+    delete slot;
   }
 }
 
 void boo() {
   for (int index{}; index < 10; ++index) {
-    auto task = new api::Task<int>("mod", false, index); // BaseTask *
-    task->SetNumOfAcceptors(2);
+    auto task = new api::ReturnTask<int, int>("mod", index); // BaseTask *
+    task->SetNumOfAcceptors(1);
     tasks[index] = task;
   }
 }
@@ -55,14 +63,18 @@ void Delete() {
   }
 }
 
+#include "API/PublicAPI.hpp"
 int main() {
-  boo();
-  std::thread thread2(Delete);
-  std::thread thread1(foo);
-  std::thread thread3(foo1);
-  thread2.join();
-  thread3.join();
-  thread1.join();
+  //boo();
+  //std::thread thread1(Delete);
+ // std::this_thread::sleep_for(std::chrono::seconds(1));
+  //std::thread thread2(foo);
+  //std::thread thread3(foo1);
 
+  //thread1.join();
+  //thread2.join();
+  //thread3.join();
+
+  api::Emit<int, int>("mid", false, 1);
   return 0;
 }

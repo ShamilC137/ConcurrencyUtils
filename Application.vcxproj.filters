@@ -52,6 +52,12 @@
     <Filter Include="Файлы заголовков\ImplDetails\ImplAPI">
       <UniqueIdentifier>{4fc1eced-eaf1-461f-9207-89fd783465ca}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Исходные файлы\API">
+      <UniqueIdentifier>{11268b3f-ba87-4148-8b3e-d89541a3a403}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\API\DataStructures">
+      <UniqueIdentifier>{70477b48-251a-4fa4-b0e3-85f41dd5be24}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -68,6 +74,12 @@
     </ClCompile>
     <ClCompile Include="ImplDetails\TaskDetails.cpp">
       <Filter>Исходные файлы\ImplDetails</Filter>
+    </ClCompile>
+    <ClCompile Include="API\DataStructures\TaskWrapper.cpp">
+      <Filter>Исходные файлы\API\DataStructures</Filter>
+    </ClCompile>
+    <ClCompile Include="API\DataStructures\ScopedSlotWrapper.cpp">
+      <Filter>Исходные файлы\API\DataStructures</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -169,6 +181,12 @@
     </ClInclude>
     <ClInclude Include="API\Memory\AlignedAllocator.hpp">
       <Filter>Файлы заголовков\API\Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="API\DataStructures\TaskWrapper.hpp">
+      <Filter>Файлы заголовков\API\DataStructures</Filter>
+    </ClInclude>
+    <ClInclude Include="API\DataStructures\ScopedSlotWrapper.hpp">
+      <Filter>Файлы заголовков\API\DataStructures</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

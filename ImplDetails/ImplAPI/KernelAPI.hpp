@@ -1,8 +1,17 @@
+// As this header is one of the basic ones, with the help of which other headers
+// are written, it additionally protected from recursive inclusion.
+#if defined APPLICATION_IMPLDETAILS_IMPLAPI_KERNELAPI_HPP_  & !defined MUTE_KERNELAPI_ERROR_
+#error "KernelAPI was already defined, i.e. recursive include directive \
+detected. If you really understand what you doing, define \
+MUTE_KERNELAPI_ERROR_."
+#endif
+
 #ifndef APPLICATION_IMPLDETAILS_IMPLAPI_KERNELAPI_HPP_
 #define APPLICATION_IMPLDETAILS_IMPLAPI_KERNELAPI_HPP_
 
 // current project
 #include "../../Config.hpp"
+#include "../../API/DataStructures/TaskWrapper.hpp"
 
 // STL
 #include <cstddef>
@@ -34,6 +43,12 @@ namespace kernel_api {
 
 // deallocates memory by the given pointer with the given size in bytes
 void Deallocate(void *ptr, const std::size_t nbytes) noexcept;
+
+// Adds new task to associated with emitted signal module queue. Takes
+// task (as wrapped one).
+// Warning: if wrapper object on callee thread will be a temporary object,
+// it will be deleted after all slots routine complete!
+void PushToQueue(const api::TaskWrapper &task);
 } // namespace kernel_api
 } // namespace api
 

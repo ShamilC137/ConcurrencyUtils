@@ -13,14 +13,4 @@ void BaseSlot::operator()(api::TaskWrapper &&task) noexcept(false) {
 }
 } // namespace impl
 
-namespace api {
-SlotWrapper::SlotWrapper(const PointerType &slot,
-                         const Allocator &alloc) noexcept
-    : slot{slot}, alloc{alloc} {}
 
-SlotWrapper::~SlotWrapper() noexcept {
-  const auto mysize{slot->SizeInBytes()};
-  std::allocator_traits<Allocator>::destroy(alloc, slot);
-  std::allocator_traits<Allocator>::deallocate(alloc, slot, mysize);
-}
-} // namespace api

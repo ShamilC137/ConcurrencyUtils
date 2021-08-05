@@ -2,9 +2,9 @@
 
 namespace impl {
 // ctor and dtor
-BaseTask::BaseTask(const api::String &module_id, const bool is_blocking_task,
+BaseTask::BaseTask(const api::String &signal_sig, const bool is_blocking_task,
                    const int *idseq, const int *retid) noexcept
-    : mid_{module_id}, is_blocking_task_{is_blocking_task}, idseq_ptr_{idseq},
+    : signal_sig_{signal_sig}, is_blocking_task_{is_blocking_task}, idseq_ptr_{idseq},
       retid_ptr_{retid}, nreferences_{},
       nacceptors_(static_cast<unsigned char>(
           is_blocking_task)), // task itseld can be treated as acceptor
@@ -46,17 +46,3 @@ void BaseTask::Wait(const unsigned char expected_value) noexcept(false) {
   }
 }
 } // namespace impl
-
-namespace api {
-TaskWrapper::TaskWrapper(const PointerType &task,
-                         const Allocator &alloc) noexcept(false)
-    : task{task}, alloc{alloc} {}
-
-TaskWrapper::~TaskWrapper() noexcept {
-  if (task->DecrementNumOfRefs() == 0u) {
-    const auto mysize{task->SizeInBytes()};
-    std::allocator_traits<Allocator>::destroy(alloc, task);
-    std::allocator_traits<Allocator>::deallocate(alloc, task, mysize);
-  }
-}
-} // namespace api

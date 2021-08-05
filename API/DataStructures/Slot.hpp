@@ -49,7 +49,7 @@ private:
 protected:
   // Calls the underlying function with parameters from task.
   virtual void RealCall(TaskWrapper &task_wrap) noexcept(false) override {
-    decltype(auto) task{task_wrap.task};
+    decltype(auto) task{task_wrap.GetTask()};
     if (task->GetIDSequencePtr() != Base::GetIDSequencePtr()) {
       throw api::BadSlotCall("Task and slot parameters types are incompatible");
     }
@@ -60,18 +60,17 @@ protected:
       } else {
         // since code above may throw exception this check appear in both
         // situations
-        if (const auto priority{
-                static_cast<unsigned char>(Base::GetPriority())};
+        if (const auto priority{Base::GetPriority()};
             priority != -1) {
-          task->Wait(priority); // throws
+          task->Wait(static_cast<unsigned char>(priority)); // throws
         }
         ReturningCall(static_cast<ReturnTask<ReturnType, Args...> *>(task),
                       std::make_index_sequence<sizeof...(Args)>{});
       }
     } else {
-      if (const auto priority{static_cast<unsigned char>(Base::GetPriority())};
+      if (const auto priority{Base::GetPriority()};
           priority != -1) {
-        task->Wait(priority); // throws
+        task->Wait(static_cast<unsigned char>(priority)); // throws
       }
       NonReturningCall(static_cast<Task<Args...> *>(task),
                        std::make_index_sequence<sizeof...(Args)>{});

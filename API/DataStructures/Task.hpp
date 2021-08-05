@@ -147,12 +147,12 @@ public:
   using Tuple = std::tuple<Args...>;
 
 public:
-  // module_id - caller module id
+  // signal_sig - signal signature
   // is_blocking_task - if true task must wait for its slot complete call
   // args - target slot arguments
-  Task(api::String module_id, bool is_blocking_task,
+  Task(api::String signal_sig, bool is_blocking_task,
        impl::ForceExplicitTypeT<Args>... args)
-      : Task(module_id, is_blocking_task, nullptr,
+      : Task(signal_sig, is_blocking_task, nullptr,
              std::forward<Args>(args)...) {}
 
   ~Task() noexcept(false) override {
@@ -249,15 +249,16 @@ private:
 // If ReturnTask is connected with few slots - UB, debug mode will throw
 // exception, release mode will write message about error in error log.
 template <class ReturnType, class... Args>
-class ReturnTask : public Task<Args...>, public impl::RetTypeResolution<ReturnType> {
+class ReturnTask : public Task<Args...>,
+                   public impl::RetTypeResolution<ReturnType> {
   using Base = Task<Args...>;
   using RetBase = impl::RetTypeResolution<ReturnType>;
 
 public:
-  // module_id - caller module id
+  // signal_sig - signal signature
   // args - target slot arguments
-  ReturnTask(String module_id, impl::ForceExplicitTypeT<Args>... args)
-      : Base(module_id, true, &impl::TypeID<ReturnType>::id,
+  ReturnTask(String signal_sig, impl::ForceExplicitTypeT<Args>... args)
+      : Base(signal_sig, true, &impl::TypeID<ReturnType>::id,
              std::forward<Args>(args)...),
         RetBase(this) {}
 
@@ -272,6 +273,15 @@ public:
   // of this class which captured with pointer to base.
   [[nodiscard]] inline std::size_t SizeInBytes() const noexcept override {
     return sizeof(ReturnTask);
+  }
+
+  virtual inline void
+  SetNumOfAcceptors(const unsigned char nacceptors) noexcept(false) override {
+    if (nacceptors > 1) {
+      throw BrokenReturnTask("Return task cannot have more than one acceptor.");
+    } else {
+      Base::SetNumOfAcceptors(nacceptors);
+    }
   }
 };
 

@@ -25,18 +25,20 @@ namespace impl {
 class BaseTask {
   // ctor and dtor
 public:
-  // module_id - identifier of creator module
+  // signal_sig - identifier emitter
   // is_blocking_task - if true, task will be blocked in emitter until
   // all target threads complete their routines. Applyed for derived classes,
   // i.e. Task.
   // idseq - types identificators sequence which describes derived classes
   // retid - nullptr if task will have no return value and contain type
   // identifier of return type otherwise.
-  BaseTask(const api::String &module_id, const bool is_blocking_task,
+  BaseTask(const api::String &signal_sig, const bool is_blocking_task,
            const int *idseq, const int *retid) noexcept;
 
   // throws
   virtual ~BaseTask() noexcept(false);
+  BaseTask &operator=(const BaseTask &rhs) = delete;
+  BaseTask &operator=(BaseTask &&rhs) = delete;
 
   // getters
 public:
@@ -47,7 +49,7 @@ public:
   }
   // Returns creator module identifier
   [[nodiscard]] inline const api::String &GetCreatorModuleID() const noexcept {
-    return mid_;
+    return signal_sig_;
   }
 
   // Returns sequence of derived task types identifiers.
@@ -58,6 +60,11 @@ public:
   // Returns the task return type identifier
   [[nodiscard]] inline const int *GetRetIDPtr() const noexcept {
     return retid_ptr_;
+  }
+
+  // Return current number of references.
+  [[nodiscard]] inline unsigned char GetNumOfRefs() const noexcept {
+    return nreferences_.load(api::MemoryOrder::relaxed);
   }
 
   // Shows that task must return value (i.e. have type ReturnTask)
@@ -82,25 +89,29 @@ public:
   // modifiers
 public:
   // Sets the basic number of references to task (i.e. number of this task
-  // instances). Used to automatic deletion in TaskWrapper.
-  // Safe. Only kernel thread can set number of references
+  // instances). Used to automatic deletion in TaskWrapper
   inline void SetNumOfRefs(const unsigned char nreferences) noexcept {
     nreferences_.store(nreferences, api::MemoryOrder::relaxed);
   }
 
   // Set the number of task acceptors (i.e. slots). When slot complete its work,
   // it decrements number of acceptors.
-  // Safe. Only kernel thread can set number of acceptors
-  inline void SetNumOfAcceptors(const unsigned char nacceptors) noexcept {
+  // may throw in derived class
+  virtual inline void
+  SetNumOfAcceptors(const unsigned char nacceptors) noexcept(false) {
     waiters_semaphore_.store(
         nacceptors_.add(nacceptors, api::MemoryOrder::relaxed),
         api::MemoryOrder::relaxed);
   }
 
   // Decrements number of references and returns new value.
-  // Safe. Atomic counter
   unsigned char DecrementNumOfRefs() noexcept {
-    return nreferences_.sub(1, api::MemoryOrder::relaxed);
+    return nreferences_.sub(1u, api::MemoryOrder::relaxed);
+  }
+
+  // Increments number of references and returns new value.
+  unsigned char IncremenetNumOfRefs() noexcept {
+    return nreferences_.add(1u, api::MemoryOrder::relaxed);
   }
 
   // Unblock at least one thread blocked in a waiting operation on its atomic
@@ -119,7 +130,7 @@ public:
   void Wait(const unsigned char expected_value = 0) noexcept(false);
 
 private:
-  api::String mid_;             // Module identefierm
+  api::String signal_sig_;             // Module identefier
   const bool is_blocking_task_; // If true, derived task will be blocked until
                                 // target threads routine completion.
   const int *idseq_ptr_;        // Derived classes types identifiers sequence.
@@ -131,26 +142,4 @@ private:
   api::Atomic<unsigned char> waiters_semaphore_; // Number of current waiters.
 };
 } // namespace impl
-
-namespace api {
-// Task wrapper that deletes task if number of references on this task becomes 0
-class TaskWrapper {
-public:
-  using PointerType = impl::BaseTask *;
-#if STL_ALLOCATOR_USAGE
-  using Allocator = std::allocator<impl::BaseTask>;
-#elif ALIGNED_ALLOCATOR_USAGE
-  using Allocator = api::AlignedAllocator<impl::BaseTask>;
-#endif
-
-  TaskWrapper(const PointerType &task,
-              const Allocator &alloc = Allocator{}) noexcept(false);
-
-  ~TaskWrapper() noexcept;
-
-  PointerType task;
-  Allocator alloc;
-};
-} // namespace api
-
 #endif // !APPLICATION_IMPLDETAILS_TASKDETAILS_HPP_

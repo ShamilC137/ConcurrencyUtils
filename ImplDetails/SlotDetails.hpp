@@ -2,6 +2,7 @@
 #define APPLICATION_IMPLDETAILS_SLOTDETAILS_HPP_
 // current project
 #include "TaskDetails.hpp"
+#include "../API/DataStructures/TaskWrapper.hpp"
 #include "Utility.hpp"
 
 namespace impl {
@@ -17,6 +18,9 @@ public:
            const int priority = -1) noexcept;
 
   inline virtual ~BaseSlot() noexcept {}
+
+  BaseSlot &operator=(const BaseSlot &rhs) = delete;
+  BaseSlot &operator=(BaseSlot &&rhs) = delete;
 
   // Return the size in bytes of this class; used to correct deallocate object
   // of this class which captured with pointer to base.
@@ -56,26 +60,5 @@ private:
                  //  called first; if no priority is set, -1 is used.
 };
 } // namespace impl
-
-namespace api {
-// Scoped slot wrapper (calls delete when out of scope)
-class SlotWrapper {
-public:
-#if STL_ALLOCATOR_USAGE
-  using PointerType = impl::BaseSlot *;
-  using Allocator = std::allocator<impl::BaseSlot>;
-#elif ALIGNED_ALLOCATOR_USAGE
-  using PointerType = impl::BaseSlot *;
-  using Allocator = api::AlignedAllocator<impl::BaseSlot>;
-#endif
-
-  SlotWrapper(const PointerType &slot,
-              const Allocator &alloc = Allocator{}) noexcept;
-  ~SlotWrapper() noexcept;
-
-  PointerType slot;
-  Allocator alloc;
-};
-} // namespace api
 
 #endif // !APPLICATION_IMPLDETAILS_SLOTDETAILS_HPP_

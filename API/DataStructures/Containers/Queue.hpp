@@ -1,7 +1,9 @@
 #ifndef APPLICATION_API_DATASTRUCTURES_CONTAINERS_QUEUE_HPP_
 #define APPLICATION_API_DATASTRUCTURES_CONTAINERS_QUEUE_HPP_
 // current project
+#if ALIGNED_ALLOCATOR_USAGE
 #include "../../Memory/AlignedAllocator.hpp"
+#endif // !ALIGNED_ALLOCATOR_USAGE
 #include "Deque.hpp"
 
 // STL
