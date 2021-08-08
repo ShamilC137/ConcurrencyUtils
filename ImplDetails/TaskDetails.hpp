@@ -19,6 +19,11 @@
 // other header also may use "memory" header.
 #include <memory> // for allocator_traits
 
+namespace api {
+// Used to compare to task. 
+enum class TaskPriority : unsigned char { kLowPriority, KHighPriotity };
+} // namespace api
+
 namespace impl {
 // Basic task which contains RTTI about derived classes and multithreading
 // synchronization functions.
@@ -33,7 +38,8 @@ public:
   // retid - nullptr if task will have no return value and contain type
   // identifier of return type otherwise.
   BaseTask(const api::String &signal_sig, const bool is_blocking_task,
-           const int *idseq, const int *retid) noexcept;
+           api::TaskPriority priority, const int *idseq,
+           const int *retid) noexcept;
 
   // throws
   virtual ~BaseTask() noexcept(false);
@@ -76,6 +82,11 @@ public:
   // Safe. Read only.
   [[nodiscard]] inline bool IsBlockingTask() const noexcept {
     return is_blocking_task_;
+  }
+
+  // Return task's priority
+  [[nodiscard]] inline api::TaskPriority GetPriority() const noexcept {
+    return priority_;
   }
 
   // Shows that target threads still working
@@ -130,16 +141,41 @@ public:
   void Wait(const unsigned char expected_value = 0) noexcept(false);
 
 private:
-  api::String signal_sig_;             // Module identefier
+  api::String signal_sig_;      // Module identefier
   const bool is_blocking_task_; // If true, derived task will be blocked until
                                 // target threads routine completion.
-  const int *idseq_ptr_;        // Derived classes types identifiers sequence.
-  const int *retid_ptr_;        // Derived classes return type identifier.
+  const api::TaskPriority priority_; // Task priority is used to compare tasks.
+  const int *idseq_ptr_; // Derived classes types identifiers sequence.
+  const int *retid_ptr_; // Derived classes return type identifier.
   api::Atomic<unsigned char> nreferences_; // Number of references to this task.
                                            // Settted by kernel.
   api::Atomic<unsigned char> nacceptors_;  // Number of this task acceptors.
                                            // Setted by kernel.
   api::Atomic<unsigned char> waiters_semaphore_; // Number of current waiters.
 };
+
+[[nodiscard]] inline bool operator==(const BaseTask &lhs, const BaseTask &rhs) {
+  return lhs.GetPriority() == rhs.GetPriority();
+}
+
+[[nodiscard]] inline bool operator!=(const BaseTask &lhs, const BaseTask &rhs) {
+  return !(lhs == rhs);
+}
+
+[[nodiscard]] inline bool operator<(const BaseTask &lhs, const BaseTask &rhs) {
+  return lhs.GetPriority() < rhs.GetPriority();
+}
+
+[[nodiscard]] inline bool operator>(const BaseTask &lhs, const BaseTask &rhs) {
+  return rhs < lhs;
+}
+
+[[nodiscard]] inline bool operator<=(const BaseTask &lhs, const BaseTask &rhs) {
+  return !(lhs > rhs);
+}
+
+[[nodiscard]] inline bool operator>=(const BaseTask &lhs, const BaseTask &rhs) {
+  return !(lhs < rhs);
+}
 } // namespace impl
 #endif // !APPLICATION_IMPLDETAILS_TASKDETAILS_HPP_

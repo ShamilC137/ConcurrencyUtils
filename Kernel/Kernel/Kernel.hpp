@@ -18,24 +18,18 @@
 
 #include "../MMU/VirtualMMU.hpp"
 
-#include "../AbstractModule.hpp"
+#include "../../ImplDetails/AbstractModule.hpp"
 
 
-// STL
+// STD
 #include <cstddef>
 
 namespace impl {
 // The struct contains all necessary to kernel information about associated
-// kernel.
+// module.
 struct ModuleDescriptor {
-  // Associated module identifier.
-  api::String mdl_id;
-  // Associated with this module queue of tasks. Module will take task from this
-  // queue. Kernel will push tasks to this queue.
-  api::UnboundedPriorityBlockingQueue<api::TaskWrapper> mtasks_queue;
-  // Associated with this module tasks queue. Kernel will take tasks from this
-  // queue. Module will push tasks to this queue.
-  api::UnboundedPriorityBlockingQueue<api::TaskWrapper> kntasks_queue;
+  // Pointer to associated module.
+  impl::AbstractModule *module;
   // All module must have main threads that will handle problems with other
   // threads (uncatched exception, for example). Such situations will may send
   // signals to main thread or to kernel (which will resend it to main thread).
@@ -66,7 +60,7 @@ private:
   // throws
   Kernel() noexcept(false);
 
-  // memory manage functions
+  // memory management functions
 public:
   // allocates memory with the given alignment; takes nbytes to allocate
   // returns pointer to allocated memory
@@ -91,12 +85,16 @@ private:
   // Containter of connection; connection model:
   // signal -> container of slots (contains pair: slot signature and associated
   // module).
+  // Signals signatures are extracted from project configuration file.
   // Cannot work with objects for now.
   api::HashMap<api::String, api::Vector<impl::SlotSigPair>>
       connections_signatures_;
   // Container of modules.
   // Key: module id, value: associated module descriptor.
   api::HashMap<api::String, impl::ModuleDescriptor> modules_;
+  // The kernel will take tasks from this queue. Modules will push tasks to the
+  // queue with "Emit" function.
+  api::UnboundedPriorityBlockingQueue<api::TaskWrapper> tasks_queue;
 };
 } // namespace kernel
 

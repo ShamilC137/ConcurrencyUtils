@@ -16,46 +16,55 @@ namespace api {
 // signal_sig - target signal signature
 // is_blocking_call - if true, blocks caller until the task is completed.
 // args - target function arguments.
-// Return value: TaskWrapper if return type is void, otherwise ReturnTaskWrapper
+// Return value: ReturnTaskWrapper
+// All template parameters must be explicitly specified.
 // Nonvoid return type specialization. Value can be obtained with GetResult().
 // throws
 template <class ReturnType, class... Args>
-[[nodiscard]] std::enable_if_t<!std::is_same_v<ReturnType, void>,
-                               ReturnTaskWrapper<ReturnType, Args...>>
+[[nodiscard]] std::enable_if_t<
+    !std::is_same_v<ReturnType, void>,
+    ReturnTaskWrapper<ReturnType, Args...>>
 Emit(const api::String &signal_sig, bool is_blocking_call,
-     Args... args) noexcept(false) {
+     TaskPriority priority,
+     impl::ForceExplicitTypeT<Args>... args) noexcept(false) {
 #if ALIGNED_ALLOCATOR_USAGE
   ReturnTaskWrapper<ReturnType, Args...> mytask(
       Allocate<ReturnTask<ReturnType, Args...>>(1));
-  new (mytask.GetTask())
-      ReturnTask<ReturnType, Args...>(signal_sig, std::forward<Args>(args)...);
+  new (mytask.GetTask()) ReturnTask<ReturnType, Args...>(
+      signal_sig, priority, std::forward<Args>(args)...);
 #elif STL_ALLOCATOR_USAGE
   ReturnTaskWrapper<ReturnType, Args...> mytask(
-      new ReturnTask<ReturnType, Args...>(signal_sig,
+      new ReturnTask<ReturnType, Args...>(signal_sig, priority,
                                           std::forward<Args>(args)...));
 #endif
-  kernel_api::PushToQueue(mytask);
+  kernel_api::PushToKernelQueue(mytask);
   if (is_blocking_call) {
     mytask.GetTask()->Wait(); // throws
   }
   return mytask;
 }
 
+// signal_sig - target signal signature
+// is_blocking_call - if true, blocks caller until the task is completed.
+// args - target function arguments.
+// Return value: TaskWrapper
+// All template parameters must be explicitly specified.
 // Void return type specialization
 // throws
 template <class ReturnType, class... Args>
 std::enable_if_t<std::is_same_v<void, ReturnType>, TaskWrapper>
 Emit(const api::String &signal_sig, bool is_blocking_call,
-     Args... args) noexcept(false) {
+     TaskPriority priority,
+     impl::ForceExplicitTypeT<Args>... args) noexcept(false) {
 #if STL_ALLOCATOR_USAGE
-  TaskWrapper mytask(new Task<Args...>(signal_sig, is_blocking_call,
+  TaskWrapper mytask(new Task<Args...>(signal_sig, is_blocking_call, priority,
                                        std::forward<Args>(args)...));
 #elif ALIGNED_ALLOCATOR_USAGE
   TaskWrapper mytask(Allocate<Task<Args...>>(1));
-  new (mytask.GetTask()) 
-    Task<Args...>(signal_sig, is_blocking_call, std::forward<Args>(args)...));
+  new (mytask.GetTask()) Task<Args...>(signal_sig, is_blocking_call, priority,
+                                       std::forward<Args>(args)...);
 #endif
-  kernel_api::PushToQueue(mytask);
+  kernel_api::PushToKernelQueue(mytask);
   if (is_blocking_call) {
     mytask.GetTask()->Wait(); // throws
   }

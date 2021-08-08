@@ -66,9 +66,6 @@
     <ClCompile Include="Kernel\Kernel\Kernel.cpp">
       <Filter>Исходные файлы\Kernel\Kernel</Filter>
     </ClCompile>
-    <ClCompile Include="Kernel\AbstractModule.cpp">
-      <Filter>Исходные файлы\Kernel</Filter>
-    </ClCompile>
     <ClCompile Include="ImplDetails\SlotDetails.cpp">
       <Filter>Исходные файлы\ImplDetails</Filter>
     </ClCompile>
@@ -80,6 +77,9 @@
     </ClCompile>
     <ClCompile Include="API\DataStructures\ScopedSlotWrapper.cpp">
       <Filter>Исходные файлы\API\DataStructures</Filter>
+    </ClCompile>
+    <ClCompile Include="ImplDetails\AbstractModule.cpp">
+      <Filter>Исходные файлы\ImplDetails</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -176,9 +176,6 @@
     <ClInclude Include="Kernel\MMU\VirtualMMU.hpp">
       <Filter>Файлы заголовков\Kernel\MMU</Filter>
     </ClInclude>
-    <ClInclude Include="Kernel\AbstractModule.hpp">
-      <Filter>Файлы заголовков\Kernel</Filter>
-    </ClInclude>
     <ClInclude Include="API\Memory\AlignedAllocator.hpp">
       <Filter>Файлы заголовков\API\Memory</Filter>
     </ClInclude>
@@ -190,6 +187,12 @@
     </ClInclude>
     <ClInclude Include="API\MemoryManagementUtilities.hpp">
       <Filter>Файлы заголовков\API</Filter>
+    </ClInclude>
+    <ClInclude Include="ImplDetails\AbstractModule.hpp">
+      <Filter>Файлы заголовков\ImplDetails</Filter>
+    </ClInclude>
+    <ClInclude Include="ImplDetails\ImplAPI\Errors.hpp">
+      <Filter>Файлы заголовков\ImplDetails\ImplAPI</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

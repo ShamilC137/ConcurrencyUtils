@@ -1,80 +1,50 @@
-#include "API/DataStructures/Slot.hpp"
-#include <chrono>
-#include <functional>
+#include "API/DataStructures/Multithreading/UnboundedPriorityBlockingQueue.hpp"
 #include <iostream>
 #include <thread>
+api::UnboundedPriorityBlockingQueue<int> queue;
 
-int zoo(int a1) {
-  // std::cout << a1 << '\n';
-  return a1;
-};
+void Init() {
+  for (int index{100}; index >= 0; --index) {
+    queue.Push(index);
+    std::cout << "size: " << queue.Size() << '\n'; 
+  }
+  std::cout << "Done pushing\n";
+}
 
-impl::BaseTask *tasks[10];
+void TryInit() {
+  for (int index{50}; index > 0; --index) {
+    std::cout << std::boolalpha << queue.TryEmplace(index) << '\n';
+  }
+}
 
-void foo() {
-  std::this_thread::sleep_for(std::chrono::seconds(1));
-  for (int index{}; index < 10; ++index) {
-    impl::BaseSlot *slot(new api::Slot<int, int>(zoo));
-    slot->SetPriority(1);
+void Pop() {
+  for (int index{}; index <= 15; ++index) {
+    std::cout << queue.Pop() << '\n';
+  }
+  std::cout << "Done poping\n";
+}
+
+void TryPop() {
+  for (int index{}; index <= 15; ++index) {
     try {
-      (*slot)(tasks[index]);
-      std::cout
-          << static_cast<api::ReturnTask<int, int> *>(tasks[index])->GetResult()
-          << '\n';
-    } catch (std::exception &ex) {
-      std::cout << ex.what() << '\n';
+      std::cout << queue.TryPop() << '\n';
+    } catch (...) {
+      std::cout << "Failed\n";
     }
   }
+  std::cout << "Done poping\n";
 }
 
-void foo1() {
-//  std::this_thread::sleep_for(std::chrono::seconds(1));
-  for (int index{}; index < 10; ++index) {
-    impl::BaseSlot *slot(new api::Slot<int, int>(zoo));
-    //slot->SetPriority(1);
-    try {
-      api::TaskWrapper task(tasks[index]);
-      (*slot)(task);
-      std::cout
-          << static_cast<api::ReturnTask<int, int> *>(tasks[index])->GetResult()
-          << '\n';
-    } catch (std::exception &ex) {
-      std::cout << ex.what() << '\n';
-    }
-    delete slot;
-  }
-}
-
-void boo() {
-  for (int index{}; index < 10; ++index) {
-    auto task = new api::ReturnTask<int, int>("mod", index); // BaseTask *
-    task->SetNumOfAcceptors(1);
-    tasks[index] = task;
-  }
-}
-
-void Delete() {
-  for (int index{}; index < 10; ++index) {
-    try {
-      delete tasks[index];
-    } catch (std::exception &ex) {
-      std::cout << ex.what() << '\n';
-    }
-  }
-}
-
-#include "API/PublicAPI.hpp"
 int main() {
-  //boo();
-  //std::thread thread1(Delete);
+  std::thread thr4(TryInit);
+  std::thread thr1(Init);
  // std::this_thread::sleep_for(std::chrono::seconds(1));
-  //std::thread thread2(foo);
-  //std::thread thread3(foo1);
+  std::thread thr2(TryPop);
+  std::thread thr3(Pop);
 
-  //thread1.join();
-  //thread2.join();
-  //thread3.join();
-
-  api::Emit<int, int>("mid", false, 1);
+  thr1.join();
+  thr2.join();
+  thr3.join();
+  thr4.join();
   return 0;
 }

@@ -2,7 +2,7 @@
 
 namespace kernel {
 // NOTE: function marked as "Parallel" can be called from few threads
-// and must not block other such functions, so them have its own mutex objects
+// and must not block other such functions, but block other call of themselfs
 
 // Ctors
 Kernel::Kernel() noexcept(false) : mmu_(operator new(kMMUSize)) {} // throws
@@ -10,15 +10,11 @@ Kernel::Kernel() noexcept(false) : mmu_(operator new(kMMUSize)) {} // throws
 // FIXME: Multithreading
 [[nodiscard]] void *Kernel::Allocate(const std::size_t align,
                                      const std::size_t nbytes) noexcept(false) {
-  static api::Mutex mt{};
-  api::ScopedLock<api::Mutex> lock(mt);
   return mmu_.Allocate(align, nbytes); // throws
 }
 
 // FIXME: Multithreading
 void Kernel::Deallocate(void *ptr, const size_t nbytes) noexcept {
-  static api::Mutex mt{};
-  api::ScopedLock<api::Mutex> lock(mt);
   mmu_.Deallocate(ptr, nbytes);
 }
 } // namespace kernel
@@ -40,6 +36,8 @@ void Deallocate(void *ptr, const std::size_t nbytes) noexcept {
   GetKernel().Deallocate(ptr, nbytes);
 }
 
-void PushToQueue(const api::TaskWrapper &task) {}
+impl::KernelQueueError PushToKernelQueue(const api::TaskWrapper &task) {
+  return {};
+}
 } // namespace kernel_api
 } // namespace api

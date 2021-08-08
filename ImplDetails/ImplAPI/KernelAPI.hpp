@@ -5,6 +5,8 @@
 #include "../../Config.hpp"
 #include "../../API/DataStructures/TaskWrapper.hpp"
 
+#include "Errors.hpp"
+
 // STL
 #include <cstddef>
 
@@ -33,11 +35,11 @@ namespace kernel_api {
 // deallocates memory by the given pointer with the given size in bytes
 void Deallocate(void *ptr, const std::size_t nbytes) noexcept;
 
-// Adds new task to associated with emitted signal module queue. Takes
-// task (as wrapped one).
+// Adds new task to kernel queue. Takes task (as wrapped one). Potentially
+// blocks caller thread if queue is busy.
 // Warning: if wrapper object on callee thread will be a temporary object,
 // it will be deleted after all slots routine complete!
-void PushToQueue(const api::TaskWrapper &task);
+impl::KernelQueueError PushToKernelQueue(const api::TaskWrapper &task);
 } // namespace kernel_api
 } // namespace api
 

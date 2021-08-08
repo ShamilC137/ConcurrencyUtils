@@ -10,7 +10,15 @@
 
 #include "../Containers/Deque.hpp"
 
+// STL
+#include <exception>
+
 namespace api {
+struct PopFailed : std::exception {
+  using Base = std::exception;
+  using Base::Base;
+  using Base::what;
+};
 // This container represents unbounded priority queue allowing one writter and
 // multiple readers. "Push" and "Emplace" operations just adding a new element
 // to the container, insert position is dependent from priority. By default, new
@@ -49,14 +57,16 @@ public:
   operator=(const UnboundedPriorityBlockingQueue &) = delete;
 
 private:
-  // Waiting for the completion of desired modify operation. Potentially 
+  // Waiting for the completion of desired modify operation. Potentially
   // block caller thread.
   void WaitForModifyOperation() const {
-    want_to_modify_flag_.wait(true, MemoryOrder::relaxed);
+    while (want_to_modify_flag_.wait(true, MemoryOrder::relaxed))
+      ;
   }
 
   // access operations
 public:
+  // Returns first element in queue. Potentially block if container is modified.
   [[nodiscard]] reference Front() noexcept(noexcept(container_.front())) {
     WaitForModifyOperation();
     read_semaphore_.fetch_add(1u, MemoryOrder::acquire);
@@ -66,6 +76,7 @@ public:
     return result;
   }
 
+  // Returns first element in queue. Potentially block if container is modified.
   [[nodiscard]] const_reference Front() const
       noexcept(noexcept(container_.front())) {
     WaitForModifyOperation();
@@ -76,6 +87,7 @@ public:
     return result;
   }
 
+  // Returns last element in queue. Potentially block if container is modified.
   [[nodiscard]] reference Back() noexcept(noexcept(container_.back())) {
     WaitForModifyOperation();
     read_semaphore_.fetch_add(1u, MemoryOrder::acquire);
@@ -85,6 +97,7 @@ public:
     return result;
   }
 
+  // Returns last element in queue. Potentially block if container is modified.
   [[nodiscard]] const_reference Back() const
       noexcept(noexcept(container_.back())) {
     WaitForModifyOperation();
@@ -95,6 +108,7 @@ public:
     return result;
   }
 
+  // Returns container state. Potentially blocks if container is modified.
   [[nodiscard]] bool Empty() const noexcept(noexcept(container_.empty())) {
     WaitForModifyOperation();
     read_semaphore_.fetch_add(1u, MemoryOrder::acquire);
@@ -104,6 +118,7 @@ public:
     return result;
   }
 
+  // Returns container state. Potentially blocks if container is modified.
   [[nodiscard]] size_type Size() const noexcept(noexcept(container_.size())) {
     WaitForModifyOperation();
     read_semaphore_.fetch_add(1, MemoryOrder::acquire);
@@ -124,7 +139,7 @@ private:
     }
   }
 
-  // waiting for the completion of all exectuted read operation. Potentially 
+  // waiting for the completion of all exectuted read operation. Potentially
   // block caller thread.
   void WaitForReadOperations() const {
     // waiting until read_semaphore value will be 0
@@ -136,46 +151,48 @@ private:
 
   // modify operations
 public:
-  void Push(const_reference value) {
-    ScopedLock<api::Mutex> lock(mutex_); // disable other modifications
-    // disable new read operations
-    want_to_modify_flag_.test_and_set(MemoryOrder::acquire);
-    WaitForReadOperations();
-    container_.push_back(value);
-    CorrectInsertion(); // correct insert position with priority
-    // enable new read operations
-    want_to_modify_flag_.clear(MemoryOrder::release);
-    want_to_modify_flag_.notify_all(); // notify read ops
-    rw_sync_cvar_.notify_one();
-  }
+  // Adds new element to container. Potentially block if container already
+  // modified.
+  void Push(const_reference value) { Emplace(value); }
 
-  void Push(value_type &&value) {
-    ScopedLock<api::Mutex> lock(mutex_); // disable other modifications
-    // disable new read operations
-    want_to_modify_flag_.test_and_set(MemoryOrder::acquire);
-    WaitForReadOperations();
-    container_.push_back(std::move(value));
-    CorrectInsertion(); // correct insert position with priority
-    want_to_modify_flag_.clear(MemoryOrder::release); // enable read ops
+  // Adds new element to container. Potentially block if container already
+  // modified.
+  void Push(value_type &&value) { Emplace(std::move(value)); }
+
+private:
+  template <class... Args> void UnblockingEmplace(Args &&...args) {
+    container_.emplace_back(std::forward<Args>(args)...);
+    CorrectInsertion();
+    want_to_modify_flag_.clear(api::MemoryOrder::release);
     want_to_modify_flag_.notify_all();
     rw_sync_cvar_.notify_all();
   }
 
+public:
+  // Adds new element to container. Potentially block if container already
+  // modified.
   template <class... Args> void Emplace(Args &&...args) {
     ScopedLock<api::Mutex> lock(mutex_); // disable other modifications
     // there is no opportunity to return correct result of insert operations
     // because of elements reordering
-
     // disable new read operations
-    want_to_modify_flag_.test_and_set(MemoryOrder::acquire);
+    want_to_modify_flag_.test_and_set(api::MemoryOrder::acquire);
     WaitForReadOperations();
-    container_.emplace_back(std::forward<Args>(args)...);
-    CorrectInsertion();
-    want_to_modify_flag_.clear(MemoryOrder::release); // enable read ops
-    want_to_modify_flag_.notify_all();
-    rw_sync_cvar_.notify_all();
+    UnblockingEmplace(std::forward<Args>(args)...);
   }
 
+private:
+  value_type UnblockingPop() {
+    auto last{std::move(container_.front())};
+    container_.pop_front();
+    want_to_modify_flag_.clear(MemoryOrder::release); // enable read ops
+    want_to_modify_flag_.notify_all();
+    return last;
+  }
+
+public:
+  // Extract element from container and return this element. Potentially blocks
+  // if container already modified or queue is empty.
   value_type Pop() {
     UniqueLock<Mutex> lock(mutex_); // disable other modifications
     while (container_.empty()) {
@@ -184,11 +201,50 @@ public:
     // disable new read operations
     want_to_modify_flag_.test_and_set(MemoryOrder::acquire);
     WaitForReadOperations();
-    auto last{std::move(container_.front())};
-    container_.pop_front();
-    want_to_modify_flag_.clear(MemoryOrder::release); // enable read ops
-    want_to_modify_flag_.notify_all();
-    return last;
+    return UnblockingPop();
+  }
+
+  // Add new element to container. If add operation cannot be performed,
+  // returns false.
+  // Not blocks caller thread.
+  bool TryPush(const_reference value) { return TryEmplace(value); }
+
+  // Add new element to container. If add operation cannot be performed,
+  // returns false.
+  // Not blocks caller thread.
+  bool TryPush(value_type &&value) { return TryEmplace(std::move(value)); }
+
+  // Add new element to container. If add operation cannot be performed, 
+  // returns false.
+  // Not blocks caller thread.
+  template <class... Args> bool TryEmplace(Args &&...args) {
+    api::UniqueLock<api::Mutex> lock(mutex_, boost::try_to_lock_t{});
+    // prevent new read operations
+    want_to_modify_flag_.test_and_set(api::MemoryOrder::acquire);
+    if (!lock.owns_lock() ||
+        read_semaphore_.load(api::MemoryOrder::relaxed) != 0u) {
+      want_to_modify_flag_.clear(api::MemoryOrder::release);
+      want_to_modify_flag_.notify_all();
+      return false;
+    }
+    UnblockingEmplace(std::forward<Args>(args)...);
+    return true;
+  }
+
+  // Extract last element of queue. If pop operation cannot be performed, throws 
+  // exception PopFailed. Not blocks caller thread.
+  value_type TryPop() noexcept(false) {
+    api::UniqueLock<api::Mutex> lock(mutex_, boost::try_to_lock_t{});
+    // prevent new read operations
+    want_to_modify_flag_.test_and_set(api::MemoryOrder::acquire);
+    if (!lock.owns_lock() ||
+        read_semaphore_.load(api::MemoryOrder::relaxed) != 0u ||
+        container_.empty()) {
+      want_to_modify_flag_.clear(api::MemoryOrder::release);
+      want_to_modify_flag_.notify_all();
+      throw PopFailed("Failed to extract element");
+    }
+    return UnblockingPop();
   }
 
   // fields

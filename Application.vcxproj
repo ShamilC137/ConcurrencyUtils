@@ -156,9 +156,9 @@
   <ItemGroup>
     <ClCompile Include="API\DataStructures\ScopedSlotWrapper.cpp" />
     <ClCompile Include="API\DataStructures\TaskWrapper.cpp" />
+    <ClCompile Include="ImplDetails\AbstractModule.cpp" />
     <ClCompile Include="ImplDetails\SlotDetails.cpp" />
     <ClCompile Include="ImplDetails\TaskDetails.cpp" />
-    <ClCompile Include="Kernel\AbstractModule.cpp" />
     <ClCompile Include="Kernel\Kernel\Kernel.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
@@ -188,11 +188,12 @@
     <ClInclude Include="API\Memory\AlignedAllocator.hpp" />
     <ClInclude Include="API\PublicAPI.hpp" />
     <ClInclude Include="Config.hpp" />
+    <ClInclude Include="ImplDetails\AbstractModule.hpp" />
+    <ClInclude Include="ImplDetails\ImplAPI\Errors.hpp" />
     <ClInclude Include="ImplDetails\ImplAPI\KernelAPI.hpp" />
     <ClInclude Include="ImplDetails\SlotDetails.hpp" />
     <ClInclude Include="ImplDetails\TaskDetails.hpp" />
     <ClInclude Include="ImplDetails\Utility.hpp" />
-    <ClInclude Include="Kernel\AbstractModule.hpp" />
     <ClInclude Include="Kernel\Kernel\Kernel.hpp" />
     <ClInclude Include="Kernel\MMU\AlignMMU.hpp" />
     <ClInclude Include="Kernel\MMU\AllocatorBlockMMU.hpp" />

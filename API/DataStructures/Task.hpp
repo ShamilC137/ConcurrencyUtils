@@ -150,9 +150,9 @@ public:
   // signal_sig - signal signature
   // is_blocking_task - if true task must wait for its slot complete call
   // args - target slot arguments
-  Task(api::String signal_sig, bool is_blocking_task,
+  Task(api::String signal_sig, bool is_blocking_task, TaskPriority priority,
        impl::ForceExplicitTypeT<Args>... args)
-      : Task(signal_sig, is_blocking_task, nullptr,
+      : Task(signal_sig, is_blocking_task, priority, nullptr,
              std::forward<Args>(args)...) {}
 
   ~Task() noexcept(false) override {
@@ -168,9 +168,9 @@ public:
   }
 
 protected:
-  Task(api::String module_id, bool is_blocking_task, const int *retid,
-       impl::ForceExplicitTypeT<Args>... args)
-      : Base(module_id, is_blocking_task,
+  Task(api::String module_id, bool is_blocking_task, TaskPriority priority,
+       const int *retid, impl::ForceExplicitTypeT<Args>... args)
+      : Base(module_id, is_blocking_task, priority,
              impl::IDSequence<Args...>::CreateIDSequence(), retid),
         data_{std::forward<Args>(args)...} {}
 
@@ -257,8 +257,9 @@ class ReturnTask : public Task<Args...>,
 public:
   // signal_sig - signal signature
   // args - target slot arguments
-  ReturnTask(String signal_sig, impl::ForceExplicitTypeT<Args>... args)
-      : Base(signal_sig, true, &impl::TypeID<ReturnType>::id,
+  ReturnTask(String signal_sig, TaskPriority priority,
+             impl::ForceExplicitTypeT<Args>... args)
+      : Base(signal_sig, true, priority, &impl::TypeID<ReturnType>::id,
              std::forward<Args>(args)...),
         RetBase(this) {}
 

@@ -3,9 +3,10 @@
 namespace impl {
 // ctor and dtor
 BaseTask::BaseTask(const api::String &signal_sig, const bool is_blocking_task,
-                   const int *idseq, const int *retid) noexcept
-    : signal_sig_{signal_sig}, is_blocking_task_{is_blocking_task}, idseq_ptr_{idseq},
-      retid_ptr_{retid}, nreferences_{},
+                   api::TaskPriority priority, const int *idseq,
+                   const int *retid) noexcept
+    : signal_sig_{signal_sig}, is_blocking_task_{is_blocking_task},
+      priority_{priority}, idseq_ptr_{idseq}, retid_ptr_{retid}, nreferences_{},
       nacceptors_(static_cast<unsigned char>(
           is_blocking_task)), // task itseld can be treated as acceptor
       waiters_semaphore_{} {}

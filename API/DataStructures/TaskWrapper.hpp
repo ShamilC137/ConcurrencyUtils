@@ -7,6 +7,8 @@
 
 namespace api {
 // Task wrapper that deletes task if number of references on this task becomes 0
+// Note: if task type must supply == and < operators. Other operators will be
+// implemented by wrapper.
 class TaskWrapper {
 public:
   using PointerType = impl::BaseTask *;
@@ -43,5 +45,35 @@ struct ReturnTaskWrapper : TaskWrapper {
     return static_cast<const PointerType>(task_);
   }
 };
+
+[[nodiscard]] inline bool operator==(const TaskWrapper& lhs,
+                                     const TaskWrapper& rhs) {
+  return (*lhs.GetTask()) == (*rhs.GetTask());
+}
+
+[[nodiscard]] inline bool operator!=(const TaskWrapper &lhs,
+                                     const TaskWrapper &rhs) {
+  return !(lhs == rhs);
+}
+
+[[nodiscard]] inline bool operator<(const TaskWrapper &lhs,
+                                     const TaskWrapper &rhs) {
+  return (*lhs.GetTask()) < (*rhs.GetTask());
+}
+
+[[nodiscard]] inline bool operator>(const TaskWrapper &lhs,
+                                     const TaskWrapper &rhs) {
+  return rhs < lhs;
+}
+
+[[nodiscard]] inline bool operator>=(const TaskWrapper &lhs,
+                                     const TaskWrapper &rhs) {
+  return !(lhs < rhs);
+}
+
+[[nodiscard]] inline bool operator<=(const TaskWrapper &lhs,
+                                     const TaskWrapper &rhs) {
+  return !(lhs > rhs);
+}
 } // namespace api
 #endif // !APPLICATION_API_DATASTRUCTURES_TASKWRAPPER_HPP_
