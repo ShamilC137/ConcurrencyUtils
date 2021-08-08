@@ -39,7 +39,7 @@ void Deallocate(void *ptr, const std::size_t nbytes) noexcept;
 // blocks caller thread if queue is busy.
 // Warning: if wrapper object on callee thread will be a temporary object,
 // it will be deleted after all slots routine complete!
-impl::KernelQueueError PushToKernelQueue(const api::TaskWrapper &task);
+impl::KernelQueueErrorStatus PushToKernelQueue(const api::TaskWrapper &task);
 } // namespace kernel_api
 } // namespace api
 

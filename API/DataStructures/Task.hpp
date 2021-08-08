@@ -155,9 +155,13 @@ public:
       : Task(signal_sig, is_blocking_task, priority, nullptr,
              std::forward<Args>(args)...) {}
 
-  ~Task() noexcept(false) override {
+  ~Task() noexcept override {
     if (Base::IsBlockingTask()) {
-      Base::Wait(); // throws
+      try {
+        Base::Wait();  // throws
+      } catch (...) {
+        assert(false && "Deadlock during task destruction");
+      }
     }
   }
 
@@ -262,12 +266,12 @@ public:
       : Base(signal_sig, true, priority, &impl::TypeID<ReturnType>::id,
              std::forward<Args>(args)...),
         RetBase(this) {}
-
-  ~ReturnTask() noexcept(false) override {
-    if (Base::IsWaitable()) { // if true, it means that GetResult was not
-                              // called. Such condition treated as unacceptable.
-      throw BrokenReturnTask("Callee thread still working");
-    }
+  
+  ~ReturnTask() noexcept override {
+    assert(!Base::IsWaitable() &&
+           "Callee thread still working"); // if true, it means that GetResult
+                                           // was not called. Such condition
+                                           // treated as unacceptable.
   }
 
   // Return the size in bytes of this class; used to correct deallocate object

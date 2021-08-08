@@ -11,10 +11,9 @@ BaseTask::BaseTask(const api::String &signal_sig, const bool is_blocking_task,
           is_blocking_task)), // task itseld can be treated as acceptor
       waiters_semaphore_{} {}
 
-BaseTask::~BaseTask() noexcept(false) {
-  if (nreferences_ != 0u) {
-    throw api::AliveTaskDeletion("Deleting task with references");
-  }
+BaseTask::~BaseTask() noexcept {
+  assert(nreferences_.load(api::MemoryOrder::relaxed) != 0u &&
+         "Deleting alive task");
 }
 
 // modifiers

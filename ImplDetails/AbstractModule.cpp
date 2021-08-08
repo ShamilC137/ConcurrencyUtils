@@ -29,4 +29,12 @@ AbstractModule::TryExtractTask() noexcept(false) {
     throw;
   }
 }
+
+void AbstractModule::ExecuteTask() noexcept(false) {
+  auto task{tasks_queue_.Pop()};
+  // throws: std::out_of_range
+  auto slot_ptr{slots_.at(task.GetTarget()).GetSlot()}; 
+  // throws: api::BadSlotCall
+  (*slot_ptr)(task);                                    
+}
 } // namespace impl

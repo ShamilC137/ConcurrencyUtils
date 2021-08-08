@@ -17,10 +17,11 @@
 // allocator_traits because there are some checks that disallow to compile
 // code with these members. Use of define will not fix problem because
 // other header also may use "memory" header.
+#include <cassert>
 #include <memory> // for allocator_traits
 
 namespace api {
-// Used to compare to task. 
+// Used to compare to task.
 enum class TaskPriority : unsigned char { kLowPriority, KHighPriotity };
 } // namespace api
 
@@ -41,8 +42,7 @@ public:
            api::TaskPriority priority, const int *idseq,
            const int *retid) noexcept;
 
-  // throws
-  virtual ~BaseTask() noexcept(false);
+  virtual ~BaseTask() noexcept;
   BaseTask &operator=(const BaseTask &rhs) = delete;
   BaseTask &operator=(BaseTask &&rhs) = delete;
 
@@ -121,7 +121,7 @@ public:
   }
 
   // Increments number of references and returns new value.
-  unsigned char IncremenetNumOfRefs() noexcept {
+  unsigned char IncrementNumOfRefs() noexcept {
     return nreferences_.add(1u, api::MemoryOrder::relaxed);
   }
 
@@ -141,7 +141,7 @@ public:
   void Wait(const unsigned char expected_value = 0) noexcept(false);
 
 private:
-  api::String signal_sig_;      // Module identefier
+  api::String signal_sig_; // Module identefier
   const bool is_blocking_task_; // If true, derived task will be blocked until
                                 // target threads routine completion.
   const api::TaskPriority priority_; // Task priority is used to compare tasks.

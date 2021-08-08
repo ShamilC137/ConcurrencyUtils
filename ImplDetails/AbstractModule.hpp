@@ -19,11 +19,16 @@
 
 #include "../Config.hpp"
 
+#include "ImplAPI/Errors.hpp"
+
 // STD
 #include <cassert>
 #include <memory> // allocator traits
 
 namespace impl {
+// AbstractModule is the basic module for other program modules. Program
+// module is used to extend application functionality. AbstactModule contains
+// all features that all modules must contain.
 class AbstractModule {
   // aliases
 public:
@@ -80,6 +85,11 @@ public:
     return tasks_queue_.TryPush(task);
   }
 
+  // Extract task from tasks queue and execute it. Potentially block caller
+  // thread if queue is modified or empty or slot have priority.
+  // Throws: std::out_of_range, api::BadSlotCall
+  void ExecuteTask() noexcept(false);
+
   // pure virtual functions
 public:
   // Module initialization consists of few steps:
@@ -87,8 +97,9 @@ public:
   // 2) Main thread creation
   // 3) Probably additional threads creation
   // 4) Fills slots table (i.e. slots signatures -> slot)
-  // Returns true if module was initialized successfully, false otherwise.
-  virtual bool Init() = 0;
+  // Returns error status.
+  // Do not throw exceptions, returns code error instead.
+  virtual ModuleInitErrorStatus Init() noexcept = 0;
 
   // fields
 private:

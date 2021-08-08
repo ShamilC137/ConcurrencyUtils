@@ -53,12 +53,6 @@ struct BrokenReturnTask : std::exception {
   using Base::what;
 };
 
-struct AliveTaskDeletion : std::exception {
-  using Base = std::exception;
-  using Base::Base;
-  using Base::what;
-};
-
 struct Deadlock : std::exception {
   using Base = std::exception;
   using Base::Base;
