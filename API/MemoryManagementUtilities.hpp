@@ -13,7 +13,7 @@ void Deallocate(void *ptr, const std::size_t nbytes) noexcept;
 } // namespace kernel_api
 
 // Allocates continious memory block for the given number of objects of T type
-// throws
+// throws: std::bad_alloc
 template <class T>
 [[nodiscard]] T *Allocate(std::size_t count) noexcept(false) {
   return static_cast<T *>(

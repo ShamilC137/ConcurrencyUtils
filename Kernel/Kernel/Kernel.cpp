@@ -10,7 +10,7 @@ Kernel::Kernel() noexcept(false) : mmu_(operator new(kMMUSize)) {} // throws
 // FIXME: Multithreading
 [[nodiscard]] void *Kernel::Allocate(const std::size_t align,
                                      const std::size_t nbytes) noexcept(false) {
-  return mmu_.Allocate(align, nbytes); // throws
+  return mmu_.Allocate(align, nbytes); // throws: std::bad_alloc
 }
 
 // FIXME: Multithreading
@@ -29,7 +29,7 @@ kernel::Kernel &GetKernel() noexcept {
 
 [[nodiscard]] void *Allocate(const std::size_t align,
                              const std::size_t nbytes) noexcept(false) {
-  return GetKernel().Allocate(align, nbytes); // throws
+  return GetKernel().Allocate(align, nbytes); // throws: std::bad_alloc
 }
 
 void Deallocate(void *ptr, const std::size_t nbytes) noexcept {

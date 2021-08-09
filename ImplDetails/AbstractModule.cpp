@@ -30,11 +30,34 @@ AbstractModule::TryExtractTask() noexcept(false) {
   }
 }
 
-void AbstractModule::ExecuteTask() noexcept(false) {
-  auto task{tasks_queue_.Pop()};
+ThreadResourceErrorStatus AbstractModule::ExecuteTask() noexcept(false) {
+  auto task{tasks_queue_.Pop()}; // throws: api::PopFailed
+  return ExecuteTask(std::move(task));
+}
+
+void AbstractModule::ExecuteTask(api::ForceSlotCall) noexcept(false) {
+  auto task{tasks_queue_.Pop()}; // throws: api::PopFailed
+  ExecuteTask(std::move(task), {});
+}
+
+void AbstractModule::ExecuteTask(api::TaskWrapper task,
+                                 api::ForceSlotCall) noexcept(false) {
   // throws: std::out_of_range
-  auto slot_ptr{slots_.at(task.GetTarget()).GetSlot()}; 
+  auto slot_ptr{slots_.at(task.GetTarget()).GetSlot()};
+  (*slot_ptr)(task); // throws: api::BadSlotCall
+}
+
+ThreadResourceErrorStatus
+AbstractModule::ExecuteTask(api::TaskWrapper task) noexcept(false) {
+  // throws: std::out_of_range
+  auto slot_ptr{slots_.at(task.GetTarget()).GetSlot()};
+  if (slot_ptr->IncrementNumOfExecutors() > 1u) {
+    slot_ptr->DecrementNumOfExecutors(api::MemoryOrder::relaxed);
+    return ThreadResourceErrorStatus::kBusy;
+  }
   // throws: api::BadSlotCall
-  (*slot_ptr)(task);                                    
+  (*slot_ptr)(task);
+  slot_ptr->DecrementNumOfExecutors();
+  return ThreadResourceErrorStatus::kOk;
 }
 } // namespace impl

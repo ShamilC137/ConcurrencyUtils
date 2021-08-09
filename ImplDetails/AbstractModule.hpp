@@ -6,6 +6,7 @@
 #include "../API/DataStructures/Containers/String.hpp"
 #include "../API/DataStructures/Containers/Vector.hpp"
 
+#include "../API/DataStructures/Multithreading/Atomics.hpp"
 #include "../API/DataStructures/Multithreading/UnboundedPriorityBlockingQueue.hpp"
 
 #include "../API/DataStructures/ScopedSlotWrapper.hpp"
@@ -25,10 +26,16 @@
 #include <cassert>
 #include <memory> // allocator traits
 
+namespace api {
+// indicates that slot call must be done whether it already called or not
+struct ForceSlotCall {};
+} // namespace api
+
 namespace impl {
 // AbstractModule is the basic module for other program modules. Program
 // module is used to extend application functionality. AbstactModule contains
-// all features that all modules must contain.
+// all features that all modules must contain. AbstactModule provide functions
+// for working with tasks queue and slots
 class AbstractModule {
   // aliases
 public:
@@ -63,7 +70,7 @@ public:
 
   // Extracts a new task from the tasks queue. Potentially block until
   // a new task appears or queue is modified.
-  [[nodiscard]] inline api::TaskWrapper ExtractTask() {
+  [[nodiscard]] inline api::TaskWrapper ExtractTask() noexcept(false) {
     return tasks_queue_.Pop();
   }
 
@@ -72,7 +79,7 @@ public:
   // failed then status flag becomes false and TaskWrapper contains nullptr.
   // Otherwise, status flag becomes true and TaskWrapper contains correct task.
   // Do not block caller thread if queue is empty or if queue busy.
-  // Throws if extraction is failed.
+  // Throws if extraction is failed: api::PopFailed.
   [[nodiscard]] api::TaskWrapper TryExtractTask() noexcept(false);
 
   // Pushes a new task to the tasks queue. Potentially blocks if queue is
@@ -85,10 +92,32 @@ public:
     return tasks_queue_.TryPush(task);
   }
 
-  // Extract task from tasks queue and execute it. Potentially block caller
-  // thread if queue is modified or empty or slot have priority.
+  // Extract task from tasks queue and execute it. Potentially blocks caller
+  // thread if queue is modified or empty or slot have priority. Only one
+  // call to underlying slot is allowed.
+  // Throws: std::out_of_range, api::BadSlotCall, api::PopFailed
+  // Return value: Returns kOk if called was completed successfully and kBusy
+  // if slot already called.
+  ThreadResourceErrorStatus ExecuteTask() noexcept(false);
+
+  // Extract task from tasks queue and execute it. Potentially blocks caller
+  // thread if queue is modified or empty or slot have priority. Makes call
+  // whether slot busy or not.
+  // Throws: std::out_of_range, api::BadSlotCall, api::PopFailed
+  void ExecuteTask(api::ForceSlotCall) noexcept(false);
+
+  // Takes task and execute it. Potentially blocks caller thread if slot have
+  // priority.
   // Throws: std::out_of_range, api::BadSlotCall
-  void ExecuteTask() noexcept(false);
+  // Return value: Returns kOk if called was completed successfully and kBusy
+  // if slot already called.
+  ThreadResourceErrorStatus ExecuteTask(api::TaskWrapper task) noexcept(false);
+
+  // Extract task from tasks queue and execute it. Potentially blocks caller
+  // thread if queue is modified or empty or slot have priority. Makes call
+  // whether slot busy or not.
+  // Throws: std::out_of_range, api::BadSlotCall
+  void ExecuteTask(api::TaskWrapper task, api::ForceSlotCall) noexcept(false);
 
   // pure virtual functions
 public:

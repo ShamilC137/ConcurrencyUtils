@@ -17,13 +17,17 @@ class TaskWrapper {
 public:
   using PointerType = impl::BaseTask *;
 
+  // Takes pointer to task and probably target slot signature.
   TaskWrapper(const PointerType &task, const api::String &target = {}) noexcept;
 
   TaskWrapper(const TaskWrapper &rhs) noexcept;
 
-  TaskWrapper(TaskWrapper &&rhs);
+  TaskWrapper(TaskWrapper &&rhs) noexcept;
 
-  TaskWrapper &operator=(const TaskWrapper &task) = delete;
+  virtual ~TaskWrapper() noexcept;
+
+  TaskWrapper &operator=(const TaskWrapper &task);
+
   TaskWrapper &operator=(TaskWrapper &&task) noexcept;
 
   [[nodiscard]] inline PointerType GetTask() noexcept { return task_; }
@@ -36,7 +40,7 @@ public:
 
   [[nodiscard]] inline api::String GetTarget() const { return target_; }
 
-  virtual ~TaskWrapper() noexcept;
+  
 
 protected:
   PointerType task_;

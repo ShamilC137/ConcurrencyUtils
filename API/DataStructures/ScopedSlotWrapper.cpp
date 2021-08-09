@@ -8,7 +8,22 @@ void Deallocate(void *ptr, const std::size_t nbytes) noexcept;
 ScopedSlotWrapper::ScopedSlotWrapper(const PointerType &slot) noexcept
     : slot_{slot} {}
 
+ScopedSlotWrapper::ScopedSlotWrapper(ScopedSlotWrapper &&rhs) noexcept
+    : slot_{rhs.slot_} {
+  rhs.slot_ = nullptr;
+}
+
+ScopedSlotWrapper &ScopedSlotWrapper::operator=(
+    ScopedSlotWrapper &&rhs) noexcept {
+  this->~ScopedSlotWrapper(); // clear current context
+  new (this) ScopedSlotWrapper(std::move(rhs));
+  return *this;
+}
+
 ScopedSlotWrapper::~ScopedSlotWrapper() noexcept {
+  if (!slot_) {
+    return;
+  }
   const auto mysize{slot_->SizeInBytes()};
   slot_->~BaseSlot();
 #if ALIGNED_ALLOCATOR_USAGE

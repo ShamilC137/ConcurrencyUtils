@@ -13,7 +13,9 @@ public:
 
   ScopedSlotWrapper(const PointerType &slot) noexcept;
   
-  ScopedSlotWrapper(const ScopedSlotWrapper &) = delete;
+  ScopedSlotWrapper(ScopedSlotWrapper &&rhs) noexcept;
+
+  ScopedSlotWrapper &operator=(ScopedSlotWrapper &&rhs) noexcept;
 
   [[nodiscard]] inline PointerType GetSlot() noexcept { return slot_; }
   

@@ -19,7 +19,7 @@ namespace api {
 // Return value: ReturnTaskWrapper
 // All template parameters must be explicitly specified.
 // Nonvoid return type specialization. Value can be obtained with GetResult().
-// throws
+// throws: api::Deadlock
 template <class ReturnType, class... Args>
 [[nodiscard]] std::enable_if_t<
     !std::is_same_v<ReturnType, void>,
@@ -50,7 +50,7 @@ Emit(const api::String &signal_sig, bool is_blocking_call,
 // Return value: TaskWrapper
 // All template parameters must be explicitly specified.
 // Void return type specialization
-// throws
+// throws: api::Deadlock
 template <class ReturnType, class... Args>
 std::enable_if_t<std::is_same_v<void, ReturnType>, TaskWrapper>
 Emit(const api::String &signal_sig, bool is_blocking_call,

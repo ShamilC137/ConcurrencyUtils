@@ -35,7 +35,7 @@ public:
   inline RetTypeResolution(const BasePointer &base_task) noexcept
       : safety_object_{base_task} {}
 
-  // Throws
+  // Throws: api::Deadlock
   // Set the result value with given. Allocates memory for result value.
   void SetResult(RetType &&value) noexcept(false) {
     Alloc allocator{};
@@ -49,6 +49,7 @@ public:
   }
 
   // Return result value (moving it)
+  // Throws: api::Deadlock
   RetType GetResult() noexcept(false) {
     if (safety_object_->IsWaitable()) {
       safety_object_->Wait(); // throws
@@ -88,6 +89,7 @@ public:
   inline void SetResult(RetType &val) noexcept { value_ = std::addressof(val); }
 
   // Return reference to value. If value is expired - UB.
+  // Throws: api::Deadlock
   RetType &GetResult() const noexcept(false) {
     if (safety_object_->IsWaitable()) {
       safety_object_->Wait(); // throws
@@ -115,6 +117,7 @@ public:
   inline void SetResult(RetType *val) noexcept { value_ = val; }
 
   // Return reference to value. If value is expired - UB.
+  // Throws: api::Deadlock
   RetType *GetResult() noexcept(false) {
     if (safety_object_->IsWaitable()) {
       safety_object_->Wait(); // throws
@@ -158,7 +161,7 @@ public:
   ~Task() noexcept override {
     if (Base::IsBlockingTask()) {
       try {
-        Base::Wait();  // throws
+        Base::Wait(); // throws
       } catch (...) {
         assert(false && "Deadlock during task destruction");
       }
@@ -266,7 +269,7 @@ public:
       : Base(signal_sig, true, priority, &impl::TypeID<ReturnType>::id,
              std::forward<Args>(args)...),
         RetBase(this) {}
-  
+
   ~ReturnTask() noexcept override {
     assert(!Base::IsWaitable() &&
            "Callee thread still working"); // if true, it means that GetResult
@@ -281,11 +284,13 @@ public:
   }
 
   virtual inline void
-  SetNumOfAcceptors(const unsigned char nacceptors) noexcept(false) override {
+  SetNumOfAcceptors(const unsigned char nacceptors,
+                    api::MemoryOrder order =
+                        api::MemoryOrder::relaxed) noexcept(false) override {
     if (nacceptors > 1) {
       throw BrokenReturnTask("Return task cannot have more than one acceptor.");
     } else {
-      Base::SetNumOfAcceptors(nacceptors);
+      Base::SetNumOfAcceptors(nacceptors, order);
     }
   }
 };

@@ -231,7 +231,8 @@ public:
     return true;
   }
 
-  // Extract last element of queue. If pop operation cannot be performed, throws 
+  // Extract last element of queue. If pop operation cannot be performed, 
+  //  
   // exception PopFailed. Not blocks caller thread.
   value_type TryPop() noexcept(false) {
     api::UniqueLock<api::Mutex> lock(mutex_, boost::try_to_lock_t{});

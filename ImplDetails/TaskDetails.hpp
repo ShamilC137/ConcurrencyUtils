@@ -68,9 +68,10 @@ public:
     return retid_ptr_;
   }
 
-  // Return current number of references.
-  [[nodiscard]] inline unsigned char GetNumOfRefs() const noexcept {
-    return nreferences_.load(api::MemoryOrder::relaxed);
+  // Return current number of references with load().
+  [[nodiscard]] inline unsigned char GetNumOfRefs(
+      api::MemoryOrder order = api::MemoryOrder::relaxed) const noexcept {
+    return nreferences_.load(order);
   }
 
   // Shows that task must return value (i.e. have type ReturnTask)
@@ -89,9 +90,10 @@ public:
     return priority_;
   }
 
-  // Shows that target threads still working
-  [[nodiscard]] inline bool IsWaitable() const noexcept {
-    return nacceptors_.load(api::MemoryOrder::relaxed) >
+  // Shows that target threads still working (with load())
+  [[nodiscard]] inline bool IsWaitable(
+      api::MemoryOrder order = api::MemoryOrder::relaxed) const noexcept {
+    return nacceptors_.load(order) >
            static_cast<unsigned char>(
                is_blocking_task_); // task itself is not considered as waitable
                                    // routine
@@ -100,29 +102,33 @@ public:
   // modifiers
 public:
   // Sets the basic number of references to task (i.e. number of this task
-  // instances). Used to automatic deletion in TaskWrapper
-  inline void SetNumOfRefs(const unsigned char nreferences) noexcept {
-    nreferences_.store(nreferences, api::MemoryOrder::relaxed);
+  // instances, with store()). Used to automatic deletion in TaskWrapper.
+  inline void
+  SetNumOfRefs(const unsigned char nreferences,
+               api::MemoryOrder order = api::MemoryOrder::relaxed) noexcept {
+    nreferences_.store(nreferences, order);
   }
 
-  // Set the number of task acceptors (i.e. slots). When slot complete its work,
-  // it decrements number of acceptors.
-  // may throw in derived class
-  virtual inline void
-  SetNumOfAcceptors(const unsigned char nacceptors) noexcept(false) {
+  // Set the number of task acceptors (i.e. slots, with store()). When slot
+  // complete its work, it implicitely decrements number of acceptors. 
+  // May throw in derived class
+  virtual inline void SetNumOfAcceptors(
+      const unsigned char nacceptors,
+      api::MemoryOrder order = api::MemoryOrder::relaxed) noexcept(false) {
     waiters_semaphore_.store(
-        nacceptors_.add(nacceptors, api::MemoryOrder::relaxed),
-        api::MemoryOrder::relaxed);
+        nacceptors_.add(nacceptors, api::MemoryOrder::relaxed), order);
   }
 
   // Decrements number of references and returns new value.
-  unsigned char DecrementNumOfRefs() noexcept {
-    return nreferences_.sub(1u, api::MemoryOrder::relaxed);
+  unsigned char DecrementNumOfRefs(
+      api::MemoryOrder order = api::MemoryOrder::release) noexcept {
+    return nreferences_.sub(1u, order);
   }
 
   // Increments number of references and returns new value.
-  unsigned char IncrementNumOfRefs() noexcept {
-    return nreferences_.add(1u, api::MemoryOrder::relaxed);
+  unsigned char IncrementNumOfRefs(
+      api::MemoryOrder order = api::MemoryOrder::acquire) noexcept {
+    return nreferences_.add(1u, order);
   }
 
   // Unblock at least one thread blocked in a waiting operation on its atomic
@@ -133,15 +139,18 @@ public:
 public:
   // Potentially blocks the calling thread until unblocked be a notifying
   // operation and load return value equal to expected.
-  // Waiting until number of acceptors and expected value become equal.
+  // Waiting until number of acceptors (i.e. uncompleted slots)
+  // and expected value become equal.
   // By default, assumed that task emitter will be wait for task completion.
   // If few slots are binded to the task and the order of execution is important
   // this function can be used as a synchronization.
-  // throws
+  // Task itself always have expected_value = 0.
+  // throws: api::Deadlock
+  // FIXME: Deadlock checking fails if is_blocking_task = false.
   void Wait(const unsigned char expected_value = 0) noexcept(false);
 
 private:
-  api::String signal_sig_; // Module identefier
+  api::String signal_sig_;      // Module identefier
   const bool is_blocking_task_; // If true, derived task will be blocked until
                                 // target threads routine completion.
   const api::TaskPriority priority_; // Task priority is used to compare tasks.

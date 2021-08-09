@@ -28,7 +28,7 @@ namespace kernel_api {
 
 // allocates memory with the given alignment; takes nbytes to allocate
 // return virtual pointer to allocated memory
-// throws
+// throws: std::bad_alloc
 [[nodiscard]] void *Allocate(const std::size_t align,
                              const std::size_t nbytes) noexcept(false);
 

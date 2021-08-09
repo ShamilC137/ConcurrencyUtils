@@ -22,7 +22,7 @@ public:
         func_{function} {}
 
   // Calls underlying function with given task.
-  // throws
+  // throws: api::BadSlotCall
   using Base::operator();
 
   // Return the size in bytes of this class; used to correct deallocate object
@@ -48,6 +48,7 @@ private:
 
 protected:
   // Calls the underlying function with parameters from task.
+  // Throws: api::Deadlock, api::BadSlotCall
   virtual void RealCall(TaskWrapper &task_wrap) noexcept(false) override {
     decltype(auto) task{task_wrap.GetTask()};
     if (task->GetIDSequencePtr() != Base::GetIDSequencePtr()) {
@@ -62,7 +63,8 @@ protected:
         // situations
         if (const auto priority{Base::GetPriority()};
             priority != -1) {
-          task->Wait(static_cast<unsigned char>(priority)); // throws
+          // throws: api::Deadlock
+          task->Wait(static_cast<unsigned char>(priority)); 
         }
         ReturningCall(static_cast<ReturnTask<ReturnType, Args...> *>(task),
                       std::make_index_sequence<sizeof...(Args)>{});
@@ -70,7 +72,8 @@ protected:
     } else {
       if (const auto priority{Base::GetPriority()};
           priority != -1) {
-        task->Wait(static_cast<unsigned char>(priority)); // throws
+        // throws: api::Deadlock
+        task->Wait(static_cast<unsigned char>(priority));
       }
       NonReturningCall(static_cast<Task<Args...> *>(task),
                        std::make_index_sequence<sizeof...(Args)>{});
