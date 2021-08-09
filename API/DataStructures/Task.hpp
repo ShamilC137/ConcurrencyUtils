@@ -129,7 +129,6 @@ private:
   PointerType value_{};
   BasePointer safety_object_; // ensure multithreading safety
 };
-
 } // namespace impl
 
 namespace api {
@@ -152,11 +151,12 @@ public:
 public:
   // signal_sig - signal signature
   // is_blocking_task - if true task must wait for its slot complete call
+  // task_priority - used for task compare
   // args - target slot arguments
   Task(api::String signal_sig, bool is_blocking_task, TaskPriority priority,
        impl::ForceExplicitTypeT<Args>... args)
-      : Task(signal_sig, is_blocking_task, priority, nullptr,
-             std::forward<Args>(args)...) {}
+      : Task(signal_sig, is_blocking_task, priority,
+             nullptr, std::forward<Args>(args)...) {}
 
   ~Task() noexcept override {
     if (Base::IsBlockingTask()) {
@@ -263,6 +263,7 @@ class ReturnTask : public Task<Args...>,
 
 public:
   // signal_sig - signal signature
+  // task_priority - used for task compare
   // args - target slot arguments
   ReturnTask(String signal_sig, TaskPriority priority,
              impl::ForceExplicitTypeT<Args>... args)

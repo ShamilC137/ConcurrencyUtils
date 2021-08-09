@@ -18,6 +18,7 @@ public:
   using PointerType = impl::BaseTask *;
 
   // Takes pointer to task and probably target slot signature.
+  TaskWrapper();
   TaskWrapper(const PointerType &task, const api::String &target = {}) noexcept;
 
   TaskWrapper(const TaskWrapper &rhs) noexcept;

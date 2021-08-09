@@ -22,7 +22,7 @@
 
 namespace api {
 // Used to compare to task.
-enum class TaskPriority : unsigned char { kLowPriority, KHighPriotity };
+enum class TaskPriority : unsigned char { kLowPriority, kHighPriotity };
 } // namespace api
 
 namespace impl {
@@ -146,7 +146,6 @@ public:
   // this function can be used as a synchronization.
   // Task itself always have expected_value = 0.
   // throws: api::Deadlock
-  // FIXME: Deadlock checking fails if is_blocking_task = false.
   void Wait(const unsigned char expected_value = 0) noexcept(false);
 
 private:

@@ -4,8 +4,8 @@ namespace api {
 namespace kernel_api {
 void Deallocate(void *ptr, const std::size_t nbytes) noexcept;
 }
-
-TaskWrapper::TaskWrapper(const PointerType &task,
+TaskWrapper::TaskWrapper() : task_{}, target_{} {}
+  TaskWrapper::TaskWrapper(const PointerType &task,
                          const api::String &target) noexcept
     : task_{task}, target_{target} {
   if (task_) {
