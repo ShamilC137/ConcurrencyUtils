@@ -66,8 +66,12 @@ protected:
           // throws: api::Deadlock
           task->Wait(static_cast<unsigned char>(priority));
         }
-        ReturningCall(static_cast<ReturnTask<ReturnType, Args...> *>(task),
-                      std::make_index_sequence<sizeof...(Args)>{});
+        if constexpr (std::is_same_v<ReturnType, void>) {
+          throw BadSlotCall("Bad call with void return type");
+        } else {
+          ReturningCall(static_cast<ReturnTask<ReturnType, Args...> *>(task),
+                        std::make_index_sequence<sizeof...(Args)>{});
+        }
       }
     } else {
       if (const auto priority{Base::GetPriority()}; priority != -1) {

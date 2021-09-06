@@ -18,8 +18,11 @@ BaseTask::~BaseTask() noexcept {
 
 // modifiers
 void BaseTask::NotifyAboutComplete() noexcept {
-  waiters_semaphore_.store(nacceptors_.sub(1u, api::MemoryOrder::relaxed));
+  waiters_semaphore_.store(nacceptors_.sub(1u, api::MemoryOrder::release), api::MemoryOrder::release);
   assert(nacceptors_.load(api::MemoryOrder::relaxed) != 255);
+  if (!IsWaitable()) {
+    ClearArguments();
+  }
   nacceptors_.notify_all();
 }
 
@@ -39,8 +42,8 @@ void BaseTask::Wait(const unsigned char expected_value) noexcept(false) {
   // 1, 2, ..., nacceptors is is_blocking_task = true) so if is_blocking_task =
   // false waiter_semaphore value must be corrected 
   for (; old != correct_value;
-       old = nacceptors_.load(api::MemoryOrder::relaxed)) {
-    if ((waiters_semaphore_.sub(1, api::MemoryOrder::relaxed) +
+       old = nacceptors_.load(api::MemoryOrder::acquire)) {
+    if ((waiters_semaphore_.sub(1, api::MemoryOrder::release) +
          static_cast<unsigned char>(!is_blocking_task_)) == 0u) {
       throw api::Deadlock("Threads will never be unblocked");
     }

@@ -21,9 +21,8 @@ namespace api {
 // Nonvoid return type specialization. Value can be obtained with GetResult().
 // throws: api::Deadlock
 template <class ReturnType, class... Args>
-[[nodiscard]] std::enable_if_t<
-    !std::is_same_v<ReturnType, void>,
-    ReturnTaskWrapper<ReturnType, Args...>>
+[[nodiscard]] std::enable_if_t<!std::is_same_v<ReturnType, void>,
+                               ReturnTaskWrapper<ReturnType, Args...>>
 Emit(const api::String &signal_sig, bool is_blocking_call,
      TaskPriority priority,
      impl::ForceExplicitTypeT<Args>... args) noexcept(false) {

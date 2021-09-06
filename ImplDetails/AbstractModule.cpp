@@ -52,7 +52,7 @@ AbstractModule::ExecuteTask(api::TaskWrapper task) noexcept(false) {
   // throws: std::out_of_range
   auto slot_ptr{slots_.at(task.GetTarget()).GetSlot()};
   if (slot_ptr->IncrementNumOfExecutors() > 1u) {
-    slot_ptr->DecrementNumOfExecutors(api::MemoryOrder::relaxed);
+    slot_ptr->DecrementNumOfExecutors();
     return ThreadResourceErrorStatus::kBusy;
   }
   // throws: api::BadSlotCall

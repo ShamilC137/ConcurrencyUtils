@@ -119,6 +119,12 @@ public:
   // Throws: std::out_of_range, api::BadSlotCall
   void ExecuteTask(api::TaskWrapper task, api::ForceSlotCall) noexcept(false);
 
+  static inline void Routine(AbstractModule *module) { 
+    while (true) {
+      module->ExecuteTask();
+    }
+  }
+
   // pure virtual functions
 public:
   // Module initialization consists of few steps:
@@ -130,7 +136,7 @@ public:
   // Do not throw exceptions, returns code error instead.
   virtual ModuleInitErrorStatus Init() noexcept = 0;
 
-  // fields
+  // fields 
 private:
   api::String id_; // module identifier; used to identify module; must be unique
   // contains slots signatures and binded handlers; signatures must be unique;

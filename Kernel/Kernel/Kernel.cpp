@@ -36,8 +36,8 @@ void Deallocate(void *ptr, const std::size_t nbytes) noexcept {
   GetKernel().Deallocate(ptr, nbytes);
 }
 
-impl::KernelQueueErrorStatus PushToKernelQueue(const api::TaskWrapper &task) {
-  return {};
+void PushToKernelQueue(const api::TaskWrapper &task) {
+  GetKernel().PushToQueue(task);
 }
 } // namespace kernel_api
 } // namespace api

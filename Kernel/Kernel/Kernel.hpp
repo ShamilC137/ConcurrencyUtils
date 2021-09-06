@@ -8,8 +8,8 @@
 
 #include "../../API/DataStructures/Multithreading/Mutex.hpp"
 #include "../../API/DataStructures/Multithreading/ScopedLock.hpp"
-#include "../../API/DataStructures/Multithreading/ThreadPool.hpp"
 #include "../../API/DataStructures/Multithreading/Thread.hpp"
+#include "../../API/DataStructures/Multithreading/ThreadPool.hpp"
 #include "../../API/DataStructures/Multithreading/UnboundedPriorityBlockingQueue.hpp"
 
 #include "../../API/DataStructures/TaskWrapper.hpp"
@@ -19,7 +19,6 @@
 #include "../MMU/VirtualMMU.hpp"
 
 #include "../../ImplDetails/AbstractModule.hpp"
-
 
 // STD
 #include <cstddef>
@@ -36,7 +35,7 @@ struct ModuleDescriptor {
   // Main thread can relaunch additional thread, kill it, etc. If thread will be
   // canceled without notifying kernel - UB; all additional threads will be
   // canceled otherwise.
-  api::Thread mainthr;
+  api::Thread *mainthr;
   // Shows whether the main thread is suspended or not.
   bool is_mt_suspended;
   // Additional threads. Created in the main thread and control by it. Mb empty
@@ -73,6 +72,16 @@ public:
 
   // internal logic functions
 public:
+  // Adds task to task queue. Potentially blocks caller thread if queue is busy.
+  inline void PushToQueue(const api::TaskWrapper &task) {
+    tasks_queue_.Push(task);
+  }
+
+  // Extracts task from task queue. Potentially block caller thread
+  // if queue is busy.
+  [[nodiscard]] inline api::TaskWrapper ExtactTask() noexcept(false) {
+    return tasks_queue_.Pop();
+  }
   // friends
 private:
   // creates kernel if it does not exist; returns reference to the kernel;
@@ -94,7 +103,7 @@ private:
   api::HashMap<api::String, impl::ModuleDescriptor> modules_;
   // The kernel will take tasks from this queue. Modules will push tasks to the
   // queue with "Emit" function.
-  api::UnboundedPriorityBlockingQueue<api::TaskWrapper> tasks_queue;
+  api::UnboundedPriorityBlockingQueue<api::TaskWrapper> tasks_queue_;
 };
 } // namespace kernel
 

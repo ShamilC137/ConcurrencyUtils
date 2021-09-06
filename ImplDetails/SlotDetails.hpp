@@ -18,6 +18,7 @@ public:
            const int priority = -1) noexcept;
 
   inline virtual ~BaseSlot() noexcept {
+    // relaxed ?
     assert(nexecuters_.load(api::MemoryOrder::relaxed) == 0u &&
            "Slot currently executed");
   }

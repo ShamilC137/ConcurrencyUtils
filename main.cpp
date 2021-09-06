@@ -22,13 +22,13 @@ void Waiter() {
  }
 }
 
-int foo(int a1) {
+void foo(int a1) {
   std::cout << a1 << '\n';
-  return {};
+  return;
 }
 
 void Caller() {
-  api::ScopedSlotWrapper slot_wrap(new api::Slot<int, int>(foo));
+  api::ScopedSlotWrapper slot_wrap(new api::Slot<void, int>(foo));
   for (int index{}; index < 5; ++index) {
     (*slot_wrap.GetSlot())(tasks[index]);
     std::cout << "Slot work done\n";

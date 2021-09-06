@@ -2,13 +2,91 @@
 #define APPLICATION_API_DATASTRUCTURES_TASK_HPP_
 
 // current project
+#include "../../Config.hpp"
 #include "../../ImplDetails/TaskDetails.hpp"
 #include "Containers/String.hpp"
+
+#if ALIGNED_ALLOCATOR_USAGE
+#include "../Memory/AlignedAllocator.hpp"
+#endif
 
 // STL
 #include <tuple>
 
 namespace impl {
+
+template <class... Args> class Arguments {
+public:
+  using Tuple = std::tuple<Args...>;
+
+  Arguments(Args &&...args) : data_{std::forward<Args>(args)...} {}
+
+private:
+  template <class T, std::size_t... Seq>
+  void UnpackHelper(T &where, std::index_sequence<Seq...>) {
+    (where.push_back(std::forward<Args>(std::get<Seq>(data_))), ...);
+  }
+
+  template <class T, std::size_t... Seq>
+  void UnpackHelper(T &where, std::index_sequence<Seq...>) const {
+    (where.push_back(
+         std::forward<std::add_const_t<Args>>(std::get<Seq>(data_))),
+     ...);
+  }
+
+public:
+  // Extracts the arguments of its tuple to container. Container must have
+  // "push_back" method
+  template <class Container> void Unpack(Container &where) {
+    constexpr auto size{std::tuple_size_v<Tuple>};
+    UnpackHelper(where, std::make_index_sequence<size>{});
+  }
+
+  // Same as previous one but add const qualifier to tuple tupes
+  template <class T> void Unpack(T &where) const {
+    constexpr auto size{std::tuple_size_v<Tuple>};
+    UnpackHelper(where, std::make_index_sequence<size>{});
+  }
+
+private:
+  template <class Container, class Inserter, std::size_t... Indexes>
+  void UnpackHelper(Container &where, Inserter inserter,
+                    std::index_sequence<Indexes...>) {
+    ((inserter(where, std::forward<Args>(std::get<Indexes>(data_)))), ...);
+  }
+
+  template <class Container, class Inserter, std::size_t... Indexes>
+  void UnpackHelper(Container &where, Inserter inserter,
+                    std::index_sequence<Indexes...>) const {
+    ((inserter(where,
+               std::forward<std::add_const_t<Args>>(std::get<Indexes>(data_)))),
+     ...);
+  }
+
+public:
+  // Extracts tuple parameters and adds them to container using the inserter
+  template <class Container, class Inserter>
+  void Unpack(Container &where, Inserter inserter) {
+    constexpr auto size{sizeof...(Args)};
+    UnpackHelper(where, inserter, std::make_index_sequence<size>{});
+  }
+
+  // Same as previous one but adds the const qualifier to tuple parameters
+  template <class Container, class Inserter>
+  void Unpack(Container &where, Inserter inserter) const {
+    constexpr auto size{sizeof...(Args)};
+    UnpackHelper(where, inserter, std::make_index_sequence<size>{});
+  }
+
+  [[nodiscard]] inline Tuple &GetTuple() noexcept { return data_; }
+
+  // Return data tuple
+  [[nodiscard]] inline const Tuple &GetTuple() const noexcept { return data_; }
+
+private:
+  Tuple data_;
+};
+
 // RetTypeResolution is the helper type for ReturnTask. Task return value is
 // stored here. It introduce "SetResult" and "GetResult" function which adopted
 // for its underlying types. If target thread still not provide result of its
@@ -146,7 +224,8 @@ namespace api {
 template <class... Args> class Task : public impl::BaseTask {
 public:
   using Base = impl::BaseTask;
-  using Tuple = std::tuple<Args...>;
+  using Tuple = typename impl::Arguments<Args...>::Tuple;
+  using Arguments = impl::Arguments<Args...>;
 
 public:
   // signal_sig - signal signature
@@ -155,8 +234,8 @@ public:
   // args - target slot arguments
   Task(api::String signal_sig, bool is_blocking_task, TaskPriority priority,
        impl::ForceExplicitTypeT<Args>... args)
-      : Task(signal_sig, is_blocking_task, priority,
-             nullptr, std::forward<Args>(args)...) {}
+      : Task(signal_sig, is_blocking_task, priority, nullptr,
+             std::forward<Args>(args)...) {}
 
   ~Task() noexcept override {
     if (Base::IsBlockingTask()) {
@@ -179,74 +258,54 @@ protected:
        const int *retid, impl::ForceExplicitTypeT<Args>... args)
       : Base(module_id, is_blocking_task, priority,
              impl::IDSequence<Args...>::CreateIDSequence(), retid),
-        data_{std::forward<Args>(args)...} {}
-
-private:
-  template <class T, std::size_t... Seq>
-  void UnpackHelper(T &where, std::index_sequence<Seq...>) {
-    (where.push_back(std::forward<Args>(std::get<Seq>(data_))), ...);
-  }
-
-  template <class T, std::size_t... Seq>
-  void UnpackHelper(T &where, std::index_sequence<Seq...>) const {
-    (where.push_back(
-         std::forward<std::add_const_t<Args>>(std::get<Seq>(data_))),
-     ...);
+        args_{} {
+#if STL_ALLOCATOR_USAGE
+    args_ = new Arguments{std::forward<Args>(args)...};
+#elif ALIGNED_ALLOCATOR_USAGE
+    args_ = Allocate<Arguments>(1);
+    new (args_) Arguments(std::forward<Args>(args)...);
+#endif
   }
 
 public:
-  // Extracts the arguments of its tuple to container. Container must have
-  // "push_back" method
   template <class Container> void Unpack(Container &where) {
-    constexpr auto size{std::tuple_size_v<Tuple>};
-    UnpackHelper(where, std::make_index_sequence<size>{});
+    args_->Unpack(where);
   }
 
-  // Same as previous one but add const qualifier to tuple tupes
-  template <class T> void Unpack(T &where) const {
-    constexpr auto size{std::tuple_size_v<Tuple>};
-    UnpackHelper(where, std::make_index_sequence<size>{});
+  template <class Container> void Unpack(Container &where) const {
+    args_->Unpack(where);
   }
 
-private:
-  template <class Container, class Inserter, std::size_t... Indexes>
-  void UnpackHelper(Container &where, Inserter inserter,
-                    std::index_sequence<Indexes...>) {
-    ((inserter(where, std::forward<Args>(std::get<Indexes>(data_)))), ...);
-  }
-
-  template <class Container, class Inserter, std::size_t... Indexes>
-  void UnpackHelper(Container &where, Inserter inserter,
-                    std::index_sequence<Indexes...>) const {
-    ((inserter(where,
-               std::forward<std::add_const_t<Args>>(std::get<Indexes>(data_)))),
-     ...);
-  }
-
-public:
-  // Extracts tuple parameters and adds them to container using the inserter
   template <class Container, class Inserter>
   void Unpack(Container &where, Inserter inserter) {
-    constexpr auto size{sizeof...(Args)};
-    UnpackHelper(where, inserter, std::make_index_sequence<size>{});
+    args_->Unpack(where, inserter);
   }
 
-  // Same as previous one but adds the const qualifier to tuple parameters
   template <class Container, class Inserter>
   void Unpack(Container &where, Inserter inserter) const {
-    constexpr auto size{sizeof...(Args)};
-    UnpackHelper(where, inserter, std::make_index_sequence<size>{});
+    args_->Unpack(where, inserter);
   }
 
   // Return data tuple
-  [[nodiscard]] inline Tuple &GetTuple() noexcept { return data_; }
+  [[nodiscard]] inline Tuple &GetTuple() noexcept { return args_->GetTuple(); }
 
   // Return data tuple
-  [[nodiscard]] inline const Tuple &GetTuple() const noexcept { return data_; }
+  [[nodiscard]] inline const Tuple &GetTuple() const noexcept {
+    return args_->GetTuple();
+  }
+
+  void ClearArguments() override {
+#if STL_ALLOCATOR_USAGE
+    delete args_;
+#elif ALIGNED_ALLOCATOR_USAGE
+    args_->Arguments();
+    Deallocate<Arguments>(args_, 1);
+#endif
+  }
 
   // fields
 private:
-  Tuple data_;
+  Arguments *args_;
 };
 
 // Task that allows to return value from target function. Assumed that result
@@ -287,7 +346,7 @@ public:
   virtual inline void
   SetNumOfAcceptors(const unsigned char nacceptors,
                     api::MemoryOrder order =
-                        api::MemoryOrder::relaxed) noexcept(false) override {
+                        api::MemoryOrder::release) noexcept(false) override {
     if (nacceptors > 1) {
       throw BrokenReturnTask("Return task cannot have more than one acceptor.");
     } else {

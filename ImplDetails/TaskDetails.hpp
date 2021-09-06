@@ -53,6 +53,7 @@ public:
   [[nodiscard]] inline virtual std::size_t SizeInBytes() const noexcept {
     return sizeof(BaseTask);
   }
+  
   // Returns creator module identifier
   [[nodiscard]] inline const api::String &GetCreatorModuleID() const noexcept {
     return signal_sig_;
@@ -132,8 +133,12 @@ public:
   }
 
   // Unblock at least one thread blocked in a waiting operation on its atomic
-  // object. Decrements the counter of acceptors.
+  // object. Decrements the counter of acceptors. Automaticly deletes arguments
+  // if task is not waitable anymore
   void NotifyAboutComplete() noexcept;
+
+  // Deletes task arguments
+  virtual void ClearArguments() = 0;
 
   // sync operations
 public:
