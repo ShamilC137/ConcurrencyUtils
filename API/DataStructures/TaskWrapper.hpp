@@ -19,7 +19,8 @@ public:
 
   // Takes pointer to task and probably target slot signature.
   TaskWrapper();
-  TaskWrapper(const PointerType &task, const api::String &target = {}) noexcept;
+  TaskWrapper(const PointerType &task, const api::String &target = {},
+              const api::String &signal = {}) noexcept;
 
   TaskWrapper(const TaskWrapper &rhs) noexcept;
 
@@ -37,17 +38,24 @@ public:
     return task_;
   }
 
+  // Kernel 
   inline void SetTarget(const api::String &target) { target_ = target; }
 
-  [[nodiscard]] inline api::String GetTarget() const { return target_; }
+  [[nodiscard]] inline const api::String &GetTarget() const { return target_; }
 
-  
+  // Kernel
+  inline void SetCausedSignal(const api::String &signal) { signal_ = signal; }
+
+  [[nodiscard]] inline const api::String &GetCausedSignal() const noexcept {
+    return signal_;
+  }
 
 protected:
   PointerType task_;
 
 private:
   api::String target_; // Associated with this task slot
+  api::String signal_; // Associated with this task signal
 };
 
 template <class ReturnType, class... Args>

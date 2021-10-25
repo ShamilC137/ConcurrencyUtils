@@ -10,6 +10,7 @@
 #include "DataStructures/TaskWrapper.hpp"
 #include "MemoryManagementUtilities.hpp"
 
+#include "../ImplDetails/AbstractModule.hpp"
 #include "../ImplDetails/ImplAPI/KernelAPI.hpp"
 
 namespace api {
@@ -69,6 +70,12 @@ Emit(const api::String &signal_sig, bool is_blocking_call,
   }
   return mytask;
 }
+
+// Adds new module to kernel. Do not transfers ownership
+void AddModule(impl::AbstractModule *module);
+
+// Runs the program
+[[nodiscard]] int Run();
 } // namespace api
 
 #endif // !APPLICATION_API_PUBLICAPI_HPP_

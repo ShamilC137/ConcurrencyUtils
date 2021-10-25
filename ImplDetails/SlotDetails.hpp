@@ -1,6 +1,7 @@
 #ifndef APPLICATION_IMPLDETAILS_SLOTDETAILS_HPP_
 #define APPLICATION_IMPLDETAILS_SLOTDETAILS_HPP_
 // current project
+#include "../API/DataStructures/Containers/HashMap.hpp"
 #include "../API/DataStructures/TaskWrapper.hpp"
 #include "TaskDetails.hpp"
 #include "Utility.hpp"
@@ -14,12 +15,10 @@ public:
   // idseq - derived class types identifiers sequence;
   // retid - derived class return type identifier;
   // priority - slot priority;
-  BaseSlot(const int *idseq, const int *retid,
-           const int priority = -1) noexcept;
+  BaseSlot(const int *idseq, const int *retid) noexcept;
 
   inline virtual ~BaseSlot() noexcept {
-    // relaxed ?
-    assert(nexecuters_.load(api::MemoryOrder::relaxed) == 0u &&
+    assert(nexecuters_.load(api::MemoryOrder::acquire) == 0u &&
            "Slot currently executed");
   }
 
@@ -43,22 +42,30 @@ public:
   }
 
   // Increments number of executors of the slot and returns new value
-  inline unsigned char
-  IncrementNumOfExecutors(api::MemoryOrder order = api::MemoryOrder::acquire) {
+  inline unsigned char IncrementNumOfExecutors(
+      api::MemoryOrder order = api::MemoryOrder::acquire) noexcept {
     return nexecuters_.add(1u, order);
   }
 
   // Decrements number of executors of the slot and returns new value
-  inline unsigned char
-  DecrementNumOfExecutors(api::MemoryOrder order = api::MemoryOrder::release) {
+  inline unsigned char DecrementNumOfExecutors(
+      api::MemoryOrder order = api::MemoryOrder::release) noexcept {
     return nexecuters_.sub(1u, order);
   }
 
   // Sets the slot priority
-  inline void SetPriority(const int priority) noexcept { priority_ = priority; }
+  void SetPriority(const api::String &signal,
+                   const int priority) noexcept {
+    assert(priority != 0);
+    priorities_[signal] = priority;
+  }
 
   // Return current priority
-  [[nodiscard]] inline int GetPriority() const noexcept { return priority_; }
+  // throws std::out_of_range if priority with given signal does not exist
+  [[nodiscard]] inline int GetPriority(const api::String &signal) const
+      noexcept(false) {
+    return priorities_.at(signal);
+  }
 
   // Calls underlying function
   // throws: api::BadSlotCall, api::Deadlock
@@ -72,12 +79,13 @@ protected:
 private:
   const int *idseq_ptr_; // derived class types identifiers sequence
   const int *retid_ptr_; // derived class return type identifier
-  // slot priority; slot with the highest prioprity
-  // called first; if no priority is set, -1 is used.
-  int priority_;
   // Number of current exectures of this slot. All users of slots must change
   // number of executers themselves.
   api::Atomic<unsigned char> nexecuters_;
+  // slot priority; slot with the highest prioprity
+  // called first; if no priority is set, -1 is used.
+  // Its priotiry depends from signal. Kernel sets the priorities
+  api::HashMap<api::String, int> priorities_;
 };
 } // namespace impl
 

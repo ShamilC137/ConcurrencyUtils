@@ -6,11 +6,13 @@
 #include "../../API/DataStructures/Containers/String.hpp"
 #include "../../API/DataStructures/Containers/Vector.hpp"
 
+#include "../../API/DataStructures//Multithreading//DeferThread.hpp"
 #include "../../API/DataStructures/Multithreading/Mutex.hpp"
 #include "../../API/DataStructures/Multithreading/ScopedLock.hpp"
 #include "../../API/DataStructures/Multithreading/Thread.hpp"
 #include "../../API/DataStructures/Multithreading/ThreadPool.hpp"
 #include "../../API/DataStructures/Multithreading/UnboundedPriorityBlockingQueue.hpp"
+#include "../../API/DataStructures/Multithreading/Atomics.hpp"
 
 #include "../../API/DataStructures/TaskWrapper.hpp"
 
@@ -22,6 +24,10 @@
 
 // STD
 #include <cstddef>
+
+namespace api {
+template <class T, class U> class Pair {};
+} // namespace api
 
 namespace impl {
 // The struct contains all necessary to kernel information about associated
@@ -35,11 +41,11 @@ struct ModuleDescriptor {
   // Main thread can relaunch additional thread, kill it, etc. If thread will be
   // canceled without notifying kernel - UB; all additional threads will be
   // canceled otherwise.
-  api::Thread *mainthr;
+  api::DeferThread *mainthr;
   // Shows whether the main thread is suspended or not.
   bool is_mt_suspended;
   // Additional threads. Created in the main thread and control by it. Mb empty
-  api::Vector<api::Thread> addl_thrs;
+  api::Vector<api::DeferThread> addl_thrs;
   api::Vector<api::ThreadPool> addl_tpools;
 };
 
@@ -47,6 +53,12 @@ struct SlotSigPair {
   api::String slot_sig; // slot signature
   ModuleDescriptor *md; // associated with this slot module descriptor
 };
+
+// stub. Returns next signal + container of connected slots with its priorities
+api::Pair<api::String, api::Vector<api::Pair<api::String, int>>>
+GetNextEntry() {
+  return {};
+}
 } // namespace impl
 
 namespace kernel {
@@ -55,8 +67,13 @@ static constexpr mmu::SizeType kMMUSize{16 * 1024 * 1024};
 //
 class Kernel {
   // Ctors
+public:
+  Kernel(const Kernel &) = delete;
+
+  Kernel &operator=(const Kernel &) = delete;
+
 private:
-  // throws
+  // throws: std::bad_alloc
   Kernel() noexcept(false);
 
   // memory management functions
@@ -70,6 +87,8 @@ public:
   // deallocates memory by the given pointer with the given size in bytes
   void Deallocate(void *ptr, const size_t nbytes) noexcept;
 
+  // Thread manipulation functions
+
   // internal logic functions
 public:
   // Adds task to task queue. Potentially blocks caller thread if queue is busy.
@@ -77,11 +96,14 @@ public:
     tasks_queue_.Push(task);
   }
 
-  // Extracts task from task queue. Potentially block caller thread
-  // if queue is busy.
-  [[nodiscard]] inline api::TaskWrapper ExtactTask() noexcept(false) {
-    return tasks_queue_.Pop();
-  }
+  // Adds new module to kernel
+  void AddModule(impl::AbstractModule *module);
+
+  // Start point for program
+  [[nodiscard]] int Run();
+
+  
+
   // friends
 private:
   // creates kernel if it does not exist; returns reference to the kernel;
@@ -104,6 +126,8 @@ private:
   // The kernel will take tasks from this queue. Modules will push tasks to the
   // queue with "Emit" function.
   api::UnboundedPriorityBlockingQueue<api::TaskWrapper> tasks_queue_;
+  api::AtomicFlag exit_flag_; // shows that program must be closed, i.e. breaks
+                              // run loop
 };
 } // namespace kernel
 

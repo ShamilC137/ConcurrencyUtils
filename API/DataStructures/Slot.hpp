@@ -62,7 +62,8 @@ protected:
       } else {
         // since code above may throw exception this check appear in both
         // situations
-        if (const auto priority{Base::GetPriority()}; priority != -1) {
+        if (const auto priority{Base::GetPriority(task_wrap.GetCausedSignal())};
+            priority != -1) {
           // throws: api::Deadlock
           task->Wait(static_cast<unsigned char>(priority));
         }
@@ -74,12 +75,13 @@ protected:
         }
       }
     } else {
-      if (const auto priority{Base::GetPriority()}; priority != -1) {
+      if (const auto priority{Base::GetPriority(task_wrap.GetCausedSignal())};
+          priority != -1) {
         // throws: api::Deadlock
         task->Wait(static_cast<unsigned char>(priority));
       }
-        NonReturningCall(static_cast<Task<Args...> *>(task),
-                         std::make_index_sequence<sizeof...(Args)>{});
+      NonReturningCall(static_cast<Task<Args...> *>(task),
+                       std::make_index_sequence<sizeof...(Args)>{});
     }
 
     task->NotifyAboutComplete();

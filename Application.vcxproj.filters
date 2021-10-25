@@ -58,6 +58,9 @@
     <Filter Include="Исходные файлы\API\DataStructures">
       <UniqueIdentifier>{70477b48-251a-4fa4-b0e3-85f41dd5be24}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Исходные файлы\API\DataStructures\Multithreading">
+      <UniqueIdentifier>{d24d1162-605f-4f81-a42b-af271b6f678f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -80,6 +83,12 @@
     </ClCompile>
     <ClCompile Include="ImplDetails\AbstractModule.cpp">
       <Filter>Исходные файлы\ImplDetails</Filter>
+    </ClCompile>
+    <ClCompile Include="API\PublicAPI.cpp">
+      <Filter>Исходные файлы\API</Filter>
+    </ClCompile>
+    <ClCompile Include="API\DataStructures\Multithreading\DeferThreadWrapper.cpp">
+      <Filter>Исходные файлы\API\DataStructures\Multithreading</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -193,6 +202,12 @@
     </ClInclude>
     <ClInclude Include="ImplDetails\ImplAPI\Errors.hpp">
       <Filter>Файлы заголовков\ImplDetails\ImplAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="API\DataStructures\Multithreading\DeferThread.hpp">
+      <Filter>Файлы заголовков\API\DataStructures\Multithreading</Filter>
+    </ClInclude>
+    <ClInclude Include="API\DataStructures\Multithreading\DeferThreadWrapper.hpp">
+      <Filter>Файлы заголовков\API\DataStructures\Multithreading</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

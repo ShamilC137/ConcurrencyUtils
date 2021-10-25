@@ -53,7 +53,7 @@ public:
   [[nodiscard]] inline virtual std::size_t SizeInBytes() const noexcept {
     return sizeof(BaseTask);
   }
-  
+
   // Returns creator module identifier
   [[nodiscard]] inline const api::String &GetCreatorModuleID() const noexcept {
     return signal_sig_;
@@ -93,11 +93,9 @@ public:
 
   // Shows that target threads still working (with load())
   [[nodiscard]] inline bool IsWaitable(
-      api::MemoryOrder order = api::MemoryOrder::relaxed) const noexcept {
-    return nacceptors_.load(order) >
-           static_cast<unsigned char>(
-               is_blocking_task_); // task itself is not considered as waitable
-                                   // routine
+      api::MemoryOrder order = api::MemoryOrder::acquire) const noexcept {
+    return nacceptors_.load(order) > 0; // task itself is not considered as
+                                        // waitable routine
   }
 
   // modifiers
@@ -106,18 +104,17 @@ public:
   // instances, with store()). Used to automatic deletion in TaskWrapper.
   inline void
   SetNumOfRefs(const unsigned char nreferences,
-               api::MemoryOrder order = api::MemoryOrder::relaxed) noexcept {
+               api::MemoryOrder order = api::MemoryOrder::release) noexcept {
     nreferences_.store(nreferences, order);
   }
 
   // Set the number of task acceptors (i.e. slots, with store()). When slot
-  // complete its work, it implicitely decrements number of acceptors. 
+  // complete its work, it implicitely decrements number of acceptors.
   // May throw in derived class
   virtual inline void SetNumOfAcceptors(
       const unsigned char nacceptors,
-      api::MemoryOrder order = api::MemoryOrder::relaxed) noexcept(false) {
-    waiters_semaphore_.store(
-        nacceptors_.add(nacceptors, api::MemoryOrder::relaxed), order);
+      api::MemoryOrder order = api::MemoryOrder::release) noexcept {
+    nacceptors_.store(nacceptors, order);
   }
 
   // Decrements number of references and returns new value.
@@ -128,7 +125,7 @@ public:
 
   // Increments number of references and returns new value.
   unsigned char IncrementNumOfRefs(
-      api::MemoryOrder order = api::MemoryOrder::acquire) noexcept {
+      api::MemoryOrder order = api::MemoryOrder::release) noexcept {
     return nreferences_.add(1u, order);
   }
 
@@ -161,10 +158,12 @@ private:
   const int *idseq_ptr_; // Derived classes types identifiers sequence.
   const int *retid_ptr_; // Derived classes return type identifier.
   api::Atomic<unsigned char> nreferences_; // Number of references to this task.
-                                           // Settted by kernel.
-  api::Atomic<unsigned char> nacceptors_;  // Number of this task acceptors.
-                                           // Setted by kernel.
-  api::Atomic<unsigned char> waiters_semaphore_; // Number of current waiters.
+  api::Atomic<unsigned char>
+      nacceptors_; // Number of this task acceptors.
+                   // Setted by kernel. Reflects number of slots which will be
+                   // execute this task
+
+  api::AtomicFlag expired_waiting_; // shows that task must be
 };
 
 [[nodiscard]] inline bool operator==(const BaseTask &lhs, const BaseTask &rhs) {

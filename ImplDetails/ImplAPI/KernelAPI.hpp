@@ -4,6 +4,7 @@
 // current project
 #include "../../Config.hpp"
 #include "../../API/DataStructures/TaskWrapper.hpp"
+#include "../AbstractModule.hpp"
 
 #include "Errors.hpp"
 
@@ -40,6 +41,12 @@ void Deallocate(void *ptr, const std::size_t nbytes) noexcept;
 // Warning: if wrapper object on caller thread is a temporary object,
 // it will be deleted after all slots routine complete!
 void PushToKernelQueue(const api::TaskWrapper &task);
+
+// Adds new module to kernel. Do not transfers ownership
+void AddModule(impl::AbstractModule *module);
+
+// Runs the program
+[[nodiscard]] int Run();
 } // namespace kernel_api
 } // namespace api
 
