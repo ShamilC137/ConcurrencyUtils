@@ -61,6 +61,9 @@
     <Filter Include="Исходные файлы\API\DataStructures\Multithreading">
       <UniqueIdentifier>{d24d1162-605f-4f81-a42b-af271b6f678f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Файлы заголовков\ImplDetails\MP">
+      <UniqueIdentifier>{4ab78b19-03b0-4bef-8176-fa29c99837d4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -208,6 +211,12 @@
     </ClInclude>
     <ClInclude Include="API\DataStructures\Multithreading\DeferThreadWrapper.hpp">
       <Filter>Файлы заголовков\API\DataStructures\Multithreading</Filter>
+    </ClInclude>
+    <ClInclude Include="ImplDetails\MP\MPVector.hpp">
+      <Filter>Файлы заголовков\ImplDetails\MP</Filter>
+    </ClInclude>
+    <ClInclude Include="ImplDetails\MP\Function_types.hpp">
+      <Filter>Файлы заголовков\ImplDetails\MP</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

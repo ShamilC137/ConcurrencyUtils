@@ -17,12 +17,14 @@ DeferThreadWrapper::DeferThreadWrapper(DeferThreadWrapper &&rhs) noexcept
 DeferThreadWrapper &
 DeferThreadWrapper::operator=(const DeferThreadWrapper &rhs) noexcept {
   thread_ = rhs.thread_;
+  return *this;
 }
 
 DeferThreadWrapper &
 DeferThreadWrapper::operator=(DeferThreadWrapper &&rhs) noexcept {
   thread_ = rhs.thread_;
   rhs.thread_ = nullptr;
+  return *this;
 }
 
 void DeferThreadWrapper::Detach() { thread_->Detach(); }

@@ -1,13 +1,9 @@
 #ifndef APPLICATION_API_DATASTRUCTURES_MULTITHREADING_DEFERTHREAD_HPP_
 #define APPLICATION_API_DATASTRUCTURES_MULTITHREADING_DEFERTHREAD_HPP_
 // current project
+#include "../../../ImplDetails/MP/Function_types.hpp"
 #include "Atomics.hpp"
 #include "Thread.hpp"
-
-// boost
-#include "boost/function_types/parameter_types.hpp"
-#include "boost/mpl/at.hpp"
-#include "boost/mpl/size.hpp"
 
 // std
 #include <exception>
@@ -71,9 +67,7 @@ public:
     return thread_.hardware_concurrency();
   }
 
-  [[nodiscard]] inline auto GetId() const noexcept {
-    return thread_.get_id();
-  }
+  [[nodiscard]] inline auto GetId() const noexcept { return thread_.get_id(); }
 
 private:
   api::AtomicFlag is_active_;
@@ -84,17 +78,15 @@ template <class ExceptionHandler, class ThreadRoutine, class... RoutineArgs>
 void ThreadLaunchRoutine(ExceptionHandler &&handler, DeferThread *wrapper,
                          ThreadRoutine &&routine, RoutineArgs &&...args) {
   wrapper->GetIsActiveFlag().wait(false, api::MemoryOrder::acquire);
-  using handler_arguments =
-      typename boost::function_types::parameter_types<ExceptionHandler>::type;
-  static_assert(boost::mpl::size<handler_arguments>::value < 2u,
-                "Too many handler arguments");
+  using HandlerArguments =
+      typename Components<std::decay_t<ExceptionHandler>>::ParametersTypes;
+  static_assert(HandlerArguments::size < 2u, "Too many handler arguments");
+
   try {
     routine(std::forward<RoutineArgs>(args)...);
   } catch (std::exception &ex) {
-    if constexpr (boost::mpl::size<handler_arguments>::value == 1u) {
-      handler(
-          static_cast<typename boost::mpl::at_c<handler_arguments, 0l>::type>(
-              ex));
+    if constexpr (HandlerArguments::size == 1u) {
+      handler(static_cast<TypeExtractor<0u, HandlerArguments>>(ex));
     } else {
       handler();
     }

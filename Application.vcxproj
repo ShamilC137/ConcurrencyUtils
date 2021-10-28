@@ -195,6 +195,8 @@
     <ClInclude Include="ImplDetails\AbstractModule.hpp" />
     <ClInclude Include="ImplDetails\ImplAPI\Errors.hpp" />
     <ClInclude Include="ImplDetails\ImplAPI\KernelAPI.hpp" />
+    <ClInclude Include="ImplDetails\MP\Function_types.hpp" />
+    <ClInclude Include="ImplDetails\MP\MPVector.hpp" />
     <ClInclude Include="ImplDetails\SlotDetails.hpp" />
     <ClInclude Include="ImplDetails\TaskDetails.hpp" />
     <ClInclude Include="ImplDetails\Utility.hpp" />
