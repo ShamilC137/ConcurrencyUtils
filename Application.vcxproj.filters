@@ -93,6 +93,9 @@
     <ClCompile Include="API\DataStructures\Multithreading\DeferThreadWrapper.cpp">
       <Filter>Исходные файлы\API\DataStructures\Multithreading</Filter>
     </ClCompile>
+    <ClCompile Include="API\DataStructures\Multithreading\ThreadSignals.cpp">
+      <Filter>Исходные файлы\API\DataStructures\Multithreading</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Config.hpp">
@@ -176,9 +179,6 @@
     <ClInclude Include="Kernel\MMU\AlignMMU.hpp">
       <Filter>Файлы заголовков\Kernel\MMU</Filter>
     </ClInclude>
-    <ClInclude Include="Kernel\MMU\AllocatorBlockMMU.hpp">
-      <Filter>Файлы заголовков\Kernel\MMU</Filter>
-    </ClInclude>
     <ClInclude Include="Kernel\MMU\BlockMMU.hpp">
       <Filter>Файлы заголовков\Kernel\MMU</Filter>
     </ClInclude>
@@ -187,9 +187,6 @@
     </ClInclude>
     <ClInclude Include="Kernel\MMU\VirtualMMU.hpp">
       <Filter>Файлы заголовков\Kernel\MMU</Filter>
-    </ClInclude>
-    <ClInclude Include="API\Memory\AlignedAllocator.hpp">
-      <Filter>Файлы заголовков\API\Memory</Filter>
     </ClInclude>
     <ClInclude Include="API\DataStructures\TaskWrapper.hpp">
       <Filter>Файлы заголовков\API\DataStructures</Filter>
@@ -217,6 +214,12 @@
     </ClInclude>
     <ClInclude Include="ImplDetails\MP\Function_types.hpp">
       <Filter>Файлы заголовков\ImplDetails\MP</Filter>
+    </ClInclude>
+    <ClInclude Include="API\DataStructures\Multithreading\ThreadSignals.hpp">
+      <Filter>Файлы заголовков\API\DataStructures\Multithreading</Filter>
+    </ClInclude>
+    <ClInclude Include="Kernel\MMU\AllocatorBlockMMU.hpp">
+      <Filter>Файлы заголовков\Kernel\MMU</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

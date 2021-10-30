@@ -6,10 +6,6 @@
 #include "../../ImplDetails/TaskDetails.hpp"
 #include "Containers/String.hpp"
 
-#if ALIGNED_ALLOCATOR_USAGE
-#include "../Memory/AlignedAllocator.hpp"
-#endif
-
 // STL
 #include <tuple>
 
@@ -103,11 +99,7 @@ public:
   using ValueType = std::decay_t<RetType>;
   using BasePointer = BaseTask *;
   using PointerType = ValueType *;
-#if STL_ALLOCATOR_USAGE
   using Alloc = std::allocator<ValueType>;
-#elif ALIGNED_ALLOCATOR_USAGE
-  using Alloc = api::AlignedAllocator<ValueType>;
-#endif
 
 public:
   inline RetTypeResolution(const BasePointer &base_task) noexcept
@@ -259,12 +251,7 @@ protected:
       : Base(module_id, is_blocking_task, priority,
              impl::IDSequence<Args...>::CreateIDSequence(), retid),
         args_{} {
-#if STL_ALLOCATOR_USAGE
     args_ = new Arguments{std::forward<Args>(args)...};
-#elif ALIGNED_ALLOCATOR_USAGE
-    args_ = Allocate<Arguments>(1);
-    new (args_) Arguments(std::forward<Args>(args)...);
-#endif
   }
 
 public:
@@ -295,12 +282,7 @@ public:
   }
 
   void ClearArguments() override {
-#if STL_ALLOCATOR_USAGE
     delete args_;
-#elif ALIGNED_ALLOCATOR_USAGE
-    args_->Arguments();
-    Deallocate<Arguments>(args_, 1);
-#endif
   }
 
   // fields

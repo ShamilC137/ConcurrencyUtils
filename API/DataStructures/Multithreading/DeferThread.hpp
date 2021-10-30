@@ -1,28 +1,59 @@
 #ifndef APPLICATION_API_DATASTRUCTURES_MULTITHREADING_DEFERTHREAD_HPP_
 #define APPLICATION_API_DATASTRUCTURES_MULTITHREADING_DEFERTHREAD_HPP_
 // current project
+#include "../../../ImplDetails/ImplAPI/KernelAPI.hpp"
 #include "../../../ImplDetails/MP/Function_types.hpp"
 #include "Atomics.hpp"
 #include "Thread.hpp"
+#include "ThreadSignals.hpp"
 
 // std
 #include <exception>
 
 namespace api {
 class DeferThread;
-template <class ExceptionHandler, class ThreadRoutine, class... RoutineArgs>
-void ThreadLaunchRoutine(ExceptionHandler &&handler, DeferThread *wrapper,
-                         ThreadRoutine &&routine, RoutineArgs &&...args);
 
+template <class ThreadRoutine, class... RoutineArgs>
+void RoutineLoop(ThreadSignals signals_mask,
+                 ThreadRoutine (*routine)(RoutineArgs...),
+                 RoutineArgs &&...args) {
+  if (signals_mask.Test(ThreadSignal::kExitAfterCall)) {
+    routine(std::forward<RoutineArgs>(args)...);
+  } else {
+    // current_signal have one value (i.e. ThreadSignal)
+    const auto volatile &current_signal{
+        kernel_api::GetThreadSignalsReference(GetId())};
+    while (true) {
+      switch (current_signal & signals_mask) {
+      case ThreadSignal::kExit:
+        return;
+      case ThreadSignal::kSuspend:
+        // FIXME: suspending thread
+        break;
+      default:
+        routine(std::forward<RoutineArgs>(args)...);
+      }
+    }
+  }
+}
+} // namespace api
+namespace impl {
+template <class ExceptionHandler, class ThreadRoutine, class... RoutineArgs>
+void ThreadLaunchRoutine(api::ThreadSignals sigs, ExceptionHandler &&handler,
+                         api::DeferThread *wrapper, ThreadRoutine &&routine,
+                         RoutineArgs &&...args);
+} // namespace impl
+
+namespace api {
 class DeferThread {
 public:
   template <class ExceptionHandler, class ThreadRoutine, class... RoutineArgs>
-  DeferThread(ExceptionHandler &&handler, ThreadRoutine &&routine,
-              RoutineArgs &&...args)
+  DeferThread(ThreadSignals sigs, ExceptionHandler &&handler,
+              ThreadRoutine &&routine, RoutineArgs &&...args)
       : is_active_{},
-        thread_(ThreadLaunchRoutine<ExceptionHandler, ThreadRoutine,
-                                    RoutineArgs...>,
-                std::forward<ExceptionHandler>(handler), this,
+        thread_(impl::ThreadLaunchRoutine<ExceptionHandler, ThreadRoutine,
+                                          RoutineArgs...>,
+                sigs, std::forward<ExceptionHandler>(handler), this,
                 std::forward<ThreadRoutine>(routine),
                 std::forward<RoutineArgs>(args)...) {}
 
@@ -73,20 +104,23 @@ private:
   api::AtomicFlag is_active_;
   api::Thread thread_;
 };
+} // namespace api
 
+namespace impl {
 template <class ExceptionHandler, class ThreadRoutine, class... RoutineArgs>
-void ThreadLaunchRoutine(ExceptionHandler &&handler, DeferThread *wrapper,
-                         ThreadRoutine &&routine, RoutineArgs &&...args) {
+void ThreadLaunchRoutine(api::ThreadSignals sigs, ExceptionHandler &&handler,
+                         api::DeferThread *wrapper, ThreadRoutine &&routine,
+                         RoutineArgs &&...args) {
   wrapper->GetIsActiveFlag().wait(false, api::MemoryOrder::acquire);
   using HandlerArguments =
-      typename Components<std::decay_t<ExceptionHandler>>::ParametersTypes;
+      typename api::Components<std::decay_t<ExceptionHandler>>::ParametersTypes;
   static_assert(HandlerArguments::size < 2u, "Too many handler arguments");
 
   try {
-    routine(std::forward<RoutineArgs>(args)...);
+    api::RoutineLoop(sigs, routine, std::forward<RoutineArgs>(args)...);
   } catch (std::exception &ex) {
     if constexpr (HandlerArguments::size == 1u) {
-      handler(static_cast<TypeExtractor<0u, HandlerArguments>>(ex));
+      handler(static_cast<api::TypeExtractor<0u, HandlerArguments>>(ex));
     } else {
       handler();
     }
@@ -94,5 +128,5 @@ void ThreadLaunchRoutine(ExceptionHandler &&handler, DeferThread *wrapper,
     // Unhandled exception error
   }
 }
-} // namespace api
+} // namespace impl
 #endif // APPLICATION_API_DATASTRUCTURES_MULTITHREADING_DEFERTHREAD_HPP_

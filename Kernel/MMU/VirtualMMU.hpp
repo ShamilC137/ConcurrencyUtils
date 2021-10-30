@@ -34,7 +34,7 @@ namespace mmu {
 template <SizeType kMemorySize> class VirtualMMU {
 public:
   VirtualMMU(SizeType /* size*/) {}
-  void *Allocate(SizeType /*align*/, SizeType /*count_in_bytes */) {
+  void *Allocate(SizeType /*count_in_bytes */) {
     return {};
   }
   void Deallocate(void * /*ptr*/, SizeType /*count_in_bytes*/) {}

@@ -14,10 +14,6 @@
 #include "../API/DataStructures/Task.hpp"
 #include "../API/DataStructures/TaskWrapper.hpp"
 
-#if ALIGNED_ALLOCATOR_USAGE
-#include "../API/Memory/AlignedAllocator.hpp"
-#endif // !ALIGNED_ALLOCATOR_USAGE
-
 #include "../Config.hpp"
 
 #include "ImplAPI/Errors.hpp"
@@ -39,11 +35,7 @@ namespace impl {
 class AbstractModule {
   // aliases
 public:
-#if STL_ALLOCATOR_USAGE
   template <class T> using Allocator = std::allocator<T>;
-#elif ALIGNED_ALLOCATOR_USAGE
-  template <class T> using Allocator = api::AlignedAllocator<T>;
-#endif
 
   // Ctors
 public:

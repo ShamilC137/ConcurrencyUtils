@@ -27,16 +27,9 @@ template <class ReturnType, class... Args>
 Emit(const api::String &signal_sig, bool is_blocking_call,
      TaskPriority priority,
      impl::ForceExplicitTypeT<Args>... args) noexcept(false) {
-#if ALIGNED_ALLOCATOR_USAGE
-  ReturnTaskWrapper<ReturnType, Args...> mytask(
-      Allocate<ReturnTask<ReturnType, Args...>>(1));
-  new (mytask.GetTask()) ReturnTask<ReturnType, Args...>(
-      signal_sig, priority, std::forward<Args>(args)...);
-#elif STL_ALLOCATOR_USAGE
   ReturnTaskWrapper<ReturnType, Args...> mytask(
       new ReturnTask<ReturnType, Args...>(signal_sig, priority,
                                           std::forward<Args>(args)...));
-#endif
   kernel_api::PushToKernelQueue(mytask);
   if (is_blocking_call) {
     mytask.GetTask()->Wait(); // throws
@@ -56,14 +49,8 @@ std::enable_if_t<std::is_same_v<void, ReturnType>, TaskWrapper>
 Emit(const api::String &signal_sig, bool is_blocking_call,
      TaskPriority priority,
      impl::ForceExplicitTypeT<Args>... args) noexcept(false) {
-#if STL_ALLOCATOR_USAGE
   TaskWrapper mytask(new Task<Args...>(signal_sig, is_blocking_call, priority,
                                        std::forward<Args>(args)...));
-#elif ALIGNED_ALLOCATOR_USAGE
-  TaskWrapper mytask(Allocate<Task<Args...>>(1));
-  new (mytask.GetTask()) Task<Args...>(signal_sig, is_blocking_call, priority,
-                                       std::forward<Args>(args)...);
-#endif
   kernel_api::PushToKernelQueue(mytask);
   if (is_blocking_call) {
     mytask.GetTask()->Wait(); // throws

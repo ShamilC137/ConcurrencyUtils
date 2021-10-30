@@ -1,16 +1,19 @@
 #include "API/DataStructures/Multithreading/DeferThreadWrapper.hpp"
 #include <iostream>
-void Func() { throw std::exception{}; }
-struct ex : std::exception {
 
-};
+/* void Func() { std::cout << "I was called\n"; }
+struct ex : std::exception {};
+
+
 
 int main() {
-  api::DeferThread t([](ex&) { std::cout << "Handle\n"; }, &Func);
+  auto val{api::ThreadSignal::kExitAfterCall};
+  api::DeferThread t(
+      val, [](ex &) { std::cout << "Handle\n"; }, &Func);
   t.ActivateThread();
   t.Join();
-}
-/*#include "API/DataStructures/ScopedSlotWrapper.hpp"
+}*/
+#include "API/DataStructures/ScopedSlotWrapper.hpp"
 #include "API/DataStructures/Slot.hpp"
 #include "API/DataStructures/TaskWrapper.hpp"
 #include "API/PublicAPI.hpp"
@@ -37,12 +40,12 @@ void Init() {
 void Waiter() {
   for (int index{}; index < 10; ++index) {
     tasks[index].GetTask()->Wait();
-    std::cout << "Done waiting\n";
+    //std::cout << "Done waiting\n";
   }
 }
 
 void foo(int a1) {
-  std::cout << a1 << '\n';
+  //std::cout << a1 << '\n';
   return;
 }
 
@@ -58,7 +61,7 @@ void Caller1() {
       std::terminate();
     }
   }
-  std::cout << "Slot done\n";
+  //std::cout << "Slot done\n";
 }
 
 void Caller2() {
@@ -73,7 +76,7 @@ void Caller2() {
       std::terminate();
     }
   }
-  std::cout << "Slot1 done\n";
+  //std::cout << "Slot1 done\n";
 }
 
 // sig_name is_blocking priority : slot_name slot_name1 slot_name2
@@ -91,4 +94,4 @@ int main() {
   thr2.join();
   thr1.join();
   return 0;
-}*/
+}

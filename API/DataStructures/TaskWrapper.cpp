@@ -1,9 +1,6 @@
 #include "TaskWrapper.hpp"
 
 namespace api {
-namespace kernel_api {
-void Deallocate(void *ptr, const std::size_t nbytes) noexcept;
-}
 TaskWrapper::TaskWrapper() : task_{}, target_{} {}
 TaskWrapper::TaskWrapper(const PointerType &task, const api::String &target,
                          const api::String &signal) noexcept
@@ -37,11 +34,7 @@ TaskWrapper::~TaskWrapper() noexcept {
   if (task_ && task_->DecrementNumOfRefs(api::MemoryOrder::release) == 0u) {
     const auto mysize{task_->SizeInBytes()};
     task_->~BaseTask();
-#if ALIGNED_ALLOCATOR_USAGE
-    kernel_api::Deallocate(task_, mysize);
-#elif STL_ALLOCATOR_USAGE
     ::operator delete(task_, mysize);
-#endif
   }
 }
 } // namespace api

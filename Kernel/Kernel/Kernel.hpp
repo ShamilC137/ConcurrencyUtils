@@ -81,8 +81,7 @@ public:
   // allocates memory with the given alignment; takes nbytes to allocate
   // returns pointer to allocated memory
   // throws: std::bad_alloc
-  [[nodiscard]] void *Allocate(const std::size_t align,
-                               const std::size_t nbytes) noexcept(false);
+  [[nodiscard]] void *Allocate(const std::size_t nbytes) noexcept(false);
 
   // deallocates memory by the given pointer with the given size in bytes
   void Deallocate(void *ptr, const size_t nbytes) noexcept;

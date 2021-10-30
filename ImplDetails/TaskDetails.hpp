@@ -7,11 +7,6 @@
 #include "../API/DataStructures/Multithreading/Atomics.hpp"
 #include "Utility.hpp"
 
-// conditional headers
-#if ALIGNED_ALLOCATOR_USAGE
-#include "../API/Memory/AlignedAllocator.hpp"
-#endif
-
 // STL
 // Allocator construct and destroy are deprecated in C++17 so I we have to use
 // allocator_traits because there are some checks that disallow to compile
