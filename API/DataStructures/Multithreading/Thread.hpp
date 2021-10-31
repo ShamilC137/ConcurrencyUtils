@@ -7,9 +7,10 @@
 namespace api {
 using Thread = std::thread;
 
+// Returns hashed given id
+[[nodiscard]] std::size_t GetHashedId(const Thread::id &id) noexcept;
+
 // Returns hashed caller thread id
-[[nodiscard]] inline std::size_t GetId() noexcept {
-  return std::hash<Thread::id>{}.operator()(std::this_thread::get_id());
-}
+[[nodiscard]] std::size_t GetHashedId() noexcept;
 } // namespace api
 #endif

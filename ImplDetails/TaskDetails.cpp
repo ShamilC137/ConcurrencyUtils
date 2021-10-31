@@ -5,10 +5,9 @@ namespace impl {
 BaseTask::BaseTask(const api::String &signal_sig, const bool is_blocking_task,
                    api::TaskPriority priority, const int *idseq,
                    const int *retid) noexcept
-    : signal_sig_{signal_sig}, is_blocking_task_{is_blocking_task},
-      priority_{priority}, idseq_ptr_{idseq}, retid_ptr_{retid}, nreferences_{},
-      nacceptors_{}
-{}
+    : signal_sig_{signal_sig},
+      is_blocking_task_{is_blocking_task}, priority_{priority},
+      idseq_ptr_{idseq}, retid_ptr_{retid}, nreferences_{}, nacceptors_{} {}
 
 BaseTask::~BaseTask() noexcept {
   assert(nreferences_.load(api::MemoryOrder::acquire) == 0u &&
@@ -33,7 +32,7 @@ void BaseTask::Wait(const unsigned char expected_value) noexcept(false) {
 
   for (; old != expected_value;
        old = nacceptors_.load(api::MemoryOrder::acquire)) {
-    nacceptors_.wait(old, api::MemoryOrder::relaxed);
+    nacceptors_.wait(old, api::MemoryOrder::acquire);
   }
 }
 } // namespace impl

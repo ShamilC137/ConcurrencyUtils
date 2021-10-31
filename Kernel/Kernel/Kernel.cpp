@@ -1,5 +1,4 @@
 #include "Kernel.hpp"
-
 namespace kernel {
 // NOTE: function marked as "Parallel" can be called from few threads
 // and must not block other such functions, but block other call of themselfs
@@ -49,10 +48,34 @@ void AddModule(impl::AbstractModule *module) { GetKernel().AddModule(module); }
 
 // FIXME: stub
 [[nodiscard]] const volatile api::ThreadSignals &
-GetThreadSignalsReference(const std::size_t hashed_id) {
-  volatile const api::ThreadSignals sig{};
-  return sig;
+GetThreadSignalsReference(const std::size_t hashed_id) noexcept {
+  const volatile api::ThreadSignals sigs{};
+  return sigs;
 }
+
+// FIXME: stub
+bool SendKillThreadSignal(const std::size_t hashed_id) noexcept {
+  return false;
+}
+
+// FIXME: stub
+bool SendSuspendThreadSignal(const std::size_t hashed_id) noexcept {
+  return false;
+}
+
+// FIXME: stub
+bool ResumeThread(const std::size_t hashed_id) noexcept { return false; }
+
+// FIXME: stub
+void UnsetSignal(const std::size_t hashed_id, api::ThreadSignal sig) noexcept {
+  
+}
+
+// FIXME: stub
+void DeleteThread(const std::size_t hashed_id) {
+
+}
+
 } // namespace kernel_api
 } // namespace api
 
@@ -62,11 +85,7 @@ GetThreadSignalsReference(const std::size_t hashed_id) {
 
 [[nodiscard]] void *operator new(std::size_t count) noexcept(false) {
 #if ALIGNED_ALLOCATOR_USAGE
-  if (count != 0) {
-    return api::kernel_api::Allocate(count);
-  } else {
-    return nullptr;
-  }
+  return api::kernel_api::Allocate(count);
 #elif STL_ALLOCATOR_USAGE
   // since we overload operator new, we throw exception by outselves
   auto ptr{operator new (count, std::nothrow_t{})};

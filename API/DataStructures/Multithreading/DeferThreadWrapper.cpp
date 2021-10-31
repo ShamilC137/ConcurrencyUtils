@@ -1,47 +1,142 @@
 #include "DeferThreadWrapper.hpp"
 
 namespace api {
-DeferThreadWrapper::DeferThreadWrapper() noexcept : thread_{} {}
+DeferThreadWrapper::DeferThreadWrapper() noexcept : desc_{} {}
 
-DeferThreadWrapper::DeferThreadWrapper(DeferThread *thread) noexcept
-    : thread_{thread} {}
+DeferThreadWrapper::~DeferThreadWrapper() noexcept {
+  if (desc_) {
+    desc_->DecrementNumberOfReferences();
+  }
+}
+
+DeferThreadWrapper::DeferThreadWrapper(impl::ThreadDescriptor *desc) noexcept
+    : desc_{desc} {
+  if (desc_ && !desc_->IncrementNumberOfReferences()) {
+    desc_ = nullptr;
+  }
+}
 
 DeferThreadWrapper::DeferThreadWrapper(const DeferThreadWrapper &rhs) noexcept
-    : thread_{rhs.thread_} {}
+    : desc_{rhs.desc_} {
+  if (desc_) {
+    if (!desc_->IncrementNumberOfReferences()) {
+      desc_ = nullptr;
+    }
+  }
+}
 
 DeferThreadWrapper::DeferThreadWrapper(DeferThreadWrapper &&rhs) noexcept
-    : thread_{rhs.thread_} {
-  rhs.thread_ = nullptr;
+    : desc_{rhs.desc_} {
+  rhs.desc_ = nullptr;
 }
 
 DeferThreadWrapper &
 DeferThreadWrapper::operator=(const DeferThreadWrapper &rhs) noexcept {
-  thread_ = rhs.thread_;
+  desc_ = rhs.desc_;
+  if (desc_) {
+    if (!desc_->IncrementNumberOfReferences()) {
+      desc_ = nullptr;
+    }
+  }
   return *this;
 }
 
 DeferThreadWrapper &
 DeferThreadWrapper::operator=(DeferThreadWrapper &&rhs) noexcept {
-  thread_ = rhs.thread_;
-  rhs.thread_ = nullptr;
+  desc_ = rhs.desc_;
+  rhs.desc_ = nullptr;
   return *this;
 }
 
-void DeferThreadWrapper::Detach() { thread_->Detach(); }
-
-void DeferThreadWrapper::Join() { thread_->Join(); }
-
-auto DeferThreadWrapper::NativeHandle() { return thread_->GetNativeHandle(); }
-
-[[nodiscard]] bool DeferThreadWrapper::Joinable() const noexcept {
-  return thread_->Joinable();
+void DeferThreadWrapper::Detach() {
+  if (desc_) {
+    if (desc_->ShallBeDeleted()) {
+      desc_->DecrementNumberOfReferences();
+      desc_ = nullptr;
+    } else {
+      desc_->GetThread()->Detach();
+    }
+  }
 }
 
-[[nodiscard]] unsigned int DeferThreadWrapper::HardwareConcurrency() noexcept {
-  return thread_->HardwareConcurrency();
+void DeferThreadWrapper::Join() {
+  if (desc_) {
+    if (desc_->ShallBeDeleted()) {
+      desc_->DecrementNumberOfReferences();
+      desc_ = nullptr;
+    } else {
+      desc_->GetThread()->Join();
+    }
+  }
 }
 
-[[nodiscard]] auto DeferThreadWrapper::GetId() const noexcept {
-  return thread_->GetId();
+auto DeferThreadWrapper::NativeHandle() noexcept(false) {
+  if (desc_) {
+    if (desc_->ShallBeDeleted()) {
+      desc_->DecrementNumberOfReferences();
+      desc_ = nullptr;
+    } else {
+      return desc_->GetThread()->GetNativeHandle();
+    }
+  }
+  throw ExpiredThread("Thread is deleted");
+}
+
+[[nodiscard]] bool DeferThreadWrapper::Joinable() noexcept(false) {
+  if (desc_) {
+    if (desc_->ShallBeDeleted()) {
+      desc_->DecrementNumberOfReferences();
+      desc_ = nullptr;
+    } else {
+      desc_->GetThread()->Joinable();
+    }
+  }
+  throw ExpiredThread("Thread is deleted");
+}
+
+[[nodiscard]] unsigned int
+DeferThreadWrapper::HardwareConcurrency() noexcept(false) {
+  if (desc_) {
+    if (desc_->ShallBeDeleted()) {
+      desc_->DecrementNumberOfReferences();
+      desc_ = nullptr;
+    } else {
+      return desc_->GetThread()->HardwareConcurrency();
+    }
+  }
+  throw ExpiredThread("Thread is deleted");
+}
+
+[[nodiscard]] auto DeferThreadWrapper::GetId() noexcept(false) {
+  if (desc_) {
+    if (desc_->ShallBeDeleted()) {
+      desc_->DecrementNumberOfReferences();
+      desc_ = nullptr;
+    } else {
+      return desc_->GetThread()->GetId();
+    }
+  }
+  throw ExpiredThread("Thread is deleted");
+}
+
+[[nodiscard]] std::size_t GetHashedId(DeferThreadWrapper &wrap) noexcept {
+  return GetHashedId(wrap.GetId());
+}
+
+void DeferThreadWrapper::SendSuspendRequest() noexcept {
+  try {
+    kernel_api::SendSuspendThreadSignal(GetHashedId(*this));
+  } catch (...) {
+    return;
+  }
+}
+
+bool DeferThreadWrapper::Resume() noexcept(false) {
+  try {
+    auto res{kernel_api::ResumeThread(GetHashedId(*this))};
+    return res;
+  } catch (...) {
+    return false;
+  }
 }
 } // namespace api

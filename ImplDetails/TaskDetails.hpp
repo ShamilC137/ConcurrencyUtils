@@ -66,7 +66,7 @@ public:
 
   // Return current number of references with load().
   [[nodiscard]] inline unsigned char GetNumOfRefs(
-      api::MemoryOrder order = api::MemoryOrder::relaxed) const noexcept {
+      api::MemoryOrder order = api::MemoryOrder::acquire) const noexcept {
     return nreferences_.load(order);
   }
 
@@ -89,7 +89,7 @@ public:
   // Shows that target threads still working (with load())
   [[nodiscard]] inline bool IsWaitable(
       api::MemoryOrder order = api::MemoryOrder::acquire) const noexcept {
-    return nacceptors_.load(order) > 0; // task itself is not considered as
+    return nacceptors_.load(order); // task itself is not considered as
                                         // waitable routine
   }
 
@@ -114,13 +114,13 @@ public:
 
   // Decrements number of references and returns new value.
   unsigned char DecrementNumOfRefs(
-      api::MemoryOrder order = api::MemoryOrder::release) noexcept {
+      api::MemoryOrder order = api::MemoryOrder::acq_rel) noexcept {
     return nreferences_.sub(1u, order);
   }
 
   // Increments number of references and returns new value.
   unsigned char IncrementNumOfRefs(
-      api::MemoryOrder order = api::MemoryOrder::release) noexcept {
+      api::MemoryOrder order = api::MemoryOrder::acq_rel) noexcept {
     return nreferences_.add(1u, order);
   }
 

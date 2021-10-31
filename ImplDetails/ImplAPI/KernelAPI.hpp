@@ -4,9 +4,9 @@
 // current project
 #include "../../API/DataStructures/Multithreading/ThreadSignals.hpp"
 #include "../../API/DataStructures/TaskWrapper.hpp"
+#include "../../API/MemoryManagementUtilities.hpp"
 #include "../../Config.hpp"
 #include "../AbstractModule.hpp"
-#include "../../API/MemoryManagementUtilities.hpp"
 
 #include "Errors.hpp"
 
@@ -44,10 +44,39 @@ void AddModule(impl::AbstractModule *module);
 // Returns reference to (i.e. returned value mb changed if it saved as
 // reference) caller thread signals by thread id (api::GetId()).
 // Its value can be used for signal handler (it may be changed from another
-// thread at any moment, that's why it marked as volatile). 
+// thread at any moment, that's why it marked as volatile).
 // Yes, there is data race, but I don't care (one writter, many readers)
-[[nodiscard]] const api::ThreadSignals volatile&
-GetThreadSignalsReference(const std::size_t id);
+[[nodiscard]] const api::ThreadSignals volatile &
+GetThreadSignalsReference(const std::size_t id) noexcept;
+
+// For all functions that set thread signal flag the same rules are applied:
+// The signal will be processed only at the next loop iteration, i.e.
+// the routine loop will first complete the current action (if any)
+// until the end, then handle the given signal (i.e. the thread will work
+// for some time after sending the signal).
+// These rules are applied to functions below
+// vvvvvvvvvv START LINE vvvvvvvvvv
+
+// Sets the "Exit" flag to the associated thread.
+// Returns true if signal was sent, otherwise false.
+bool SendKillThreadSignal(const std::size_t hashed_id) noexcept;
+
+// Sets the "Suspend" flag to the associated thread.
+// Returns true if signals was send, otherwise false.
+bool SendSuspendThreadSignal(const std::size_t hashed_id) noexcept;
+// ^^^^^^^^^^ STOP LINE ^^^^^^^^^^
+
+// Functions below use synchronization primitive to suspend/resume thread.
+// vvvvvvvvvv  START LINE vvvvvvvvvv 
+
+// Resumes associated thread. Returns true if thread was resumed, otherwise
+// false. The thread may be suspended by "SuspendThread".
+bool ResumeThread(const std::size_t hashed_id) noexcept;
+// ^^^^^^^^^^ STOP LINE ^^^^^^^^^^
+
+void UnsetSignal(const std::size_t hashed_id, api::ThreadSignal sig) noexcept;
+
+void DeleteThread(const std::size_t hashed_id);
 } // namespace kernel_api
 } // namespace api
 

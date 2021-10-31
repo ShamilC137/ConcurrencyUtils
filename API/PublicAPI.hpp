@@ -61,8 +61,26 @@ Emit(const api::String &signal_sig, bool is_blocking_call,
 // Adds new module to kernel. Do not transfers ownership
 void AddModule(impl::AbstractModule *module);
 
-// Runs the program
+// Runs the program. Returns error status
 [[nodiscard]] int Run();
+
+// Sends the "Exit" signal to the thread with the given id.
+// Returns true if signal was sent, otherwise false.
+bool SendKillThreadSignal(const std::size_t hashed_id) noexcept;
+
+// Sends the "Exit" signal to the caller thread.
+void SendKillThreadSignal() noexcept;
+
+// Sends the "Suspend" signal to the thread with the given id.
+// Returns true if signal was sent, otherwise false.
+bool SendSuspendThreadSignal(const std::size_t hashed_id) noexcept;
+
+// Sends the "Suspend" signal to the caller thread.
+void SendSuspendThreadSignal() noexcept;
+
+// Sends the "Resume" signal to the thread with the given id.
+// Returns true if signal was send, false otherwise.
+bool ResumeThread(const std::size_t hashed_id) noexcept;
 } // namespace api
 
 #endif // !APPLICATION_API_PUBLICAPI_HPP_

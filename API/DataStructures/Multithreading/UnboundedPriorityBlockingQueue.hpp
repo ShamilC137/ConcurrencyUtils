@@ -60,7 +60,7 @@ private:
   // Waiting for the completion of desired modify operation. Potentially
   // block caller thread.
   void WaitForModifyOperation() const {
-    while (want_to_modify_flag_.wait(true, MemoryOrder::relaxed))
+    while (want_to_modify_flag_.wait(true, MemoryOrder::acquire))
       ;
   }
 
@@ -143,9 +143,9 @@ private:
   // block caller thread.
   void WaitForReadOperations() const {
     // waiting until read_semaphore value will be 0
-    for (auto old{read_semaphore_.load(MemoryOrder::relaxed)}; old != 0u;
-         old = read_semaphore_.load(MemoryOrder::relaxed)) {
-      read_semaphore_.wait(old, MemoryOrder::relaxed);
+    for (auto old{read_semaphore_.load(MemoryOrder::acquire)}; old != 0u;
+         old = read_semaphore_.load(MemoryOrder::acquire)) {
+      read_semaphore_.wait(old, MemoryOrder::acquire);
     }
   }
 
@@ -222,7 +222,7 @@ public:
     // prevent new read operations
     want_to_modify_flag_.test_and_set(api::MemoryOrder::acquire);
     if (!lock.owns_lock() ||
-        read_semaphore_.load(api::MemoryOrder::relaxed) != 0u) {
+        read_semaphore_.load(api::MemoryOrder::acquire) != 0u) {
       want_to_modify_flag_.clear(api::MemoryOrder::release);
       want_to_modify_flag_.notify_all();
       return false;
@@ -239,7 +239,7 @@ public:
     // prevent new read operations
     want_to_modify_flag_.test_and_set(api::MemoryOrder::acquire);
     if (!lock.owns_lock() ||
-        read_semaphore_.load(api::MemoryOrder::relaxed) != 0u ||
+        read_semaphore_.load(api::MemoryOrder::acquire) != 0u ||
         container_.empty()) {
       want_to_modify_flag_.clear(api::MemoryOrder::release);
       want_to_modify_flag_.notify_all();

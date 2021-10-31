@@ -96,6 +96,15 @@
     <ClCompile Include="API\DataStructures\Multithreading\ThreadSignals.cpp">
       <Filter>Исходные файлы\API\DataStructures\Multithreading</Filter>
     </ClCompile>
+    <ClCompile Include="API\DataStructures\Multithreading\DeferThread.cpp">
+      <Filter>Исходные файлы\API\DataStructures\Multithreading</Filter>
+    </ClCompile>
+    <ClCompile Include="ImplDetails\ThreadDescriptor.cpp">
+      <Filter>Исходные файлы\ImplDetails</Filter>
+    </ClCompile>
+    <ClCompile Include="API\DataStructures\Multithreading\Thread.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Config.hpp">
@@ -220,6 +229,9 @@
     </ClInclude>
     <ClInclude Include="Kernel\MMU\AllocatorBlockMMU.hpp">
       <Filter>Файлы заголовков\Kernel\MMU</Filter>
+    </ClInclude>
+    <ClInclude Include="ImplDetails\ThreadDescriptor.hpp">
+      <Filter>Файлы заголовков\ImplDetails</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

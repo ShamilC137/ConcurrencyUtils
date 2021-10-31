@@ -19,6 +19,7 @@ namespace api {
 using ThreadSignalUnderlyingType = unsigned char;
 
 enum class ThreadSignal : ThreadSignalUnderlyingType {
+  kEmpty = 0b0,
   kExitAfterCall = 0b1,
   kExit = 0b10,
   kSuspend = 0b100
@@ -56,6 +57,8 @@ public:
   [[nodiscard]] bool Test(ThreadSignal sig) const volatile noexcept;
 
   void Set(ThreadSignal sig) volatile noexcept;
+
+  void Unset(ThreadSignal sig) volatile noexcept;
 
   // cast
 public:

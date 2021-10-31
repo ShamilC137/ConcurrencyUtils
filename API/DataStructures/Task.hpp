@@ -5,6 +5,7 @@
 #include "../../Config.hpp"
 #include "../../ImplDetails/TaskDetails.hpp"
 #include "Containers/String.hpp"
+#include "Multithreading/Mutex.hpp"
 
 // STL
 #include <tuple>
@@ -282,12 +283,21 @@ public:
   }
 
   void ClearArguments() override {
-    delete args_;
+    if (args_deletion_mutex_.try_lock()) {
+      if (args_) {
+        delete args_;
+        args_ = nullptr;
+      }
+      args_deletion_mutex_.unlock();
+    }
   }
 
   // fields
 private:
   Arguments *args_;
+  // if slots have not priorities, two (or more) slots can try to delete
+  // args
+  api::Mutex args_deletion_mutex_;
 };
 
 // Task that allows to return value from target function. Assumed that result

@@ -1,18 +1,3 @@
-#include "API/DataStructures/Multithreading/DeferThreadWrapper.hpp"
-#include <iostream>
-
-/* void Func() { std::cout << "I was called\n"; }
-struct ex : std::exception {};
-
-
-
-int main() {
-  auto val{api::ThreadSignal::kExitAfterCall};
-  api::DeferThread t(
-      val, [](ex &) { std::cout << "Handle\n"; }, &Func);
-  t.ActivateThread();
-  t.Join();
-}*/
 #include "API/DataStructures/ScopedSlotWrapper.hpp"
 #include "API/DataStructures/Slot.hpp"
 #include "API/DataStructures/TaskWrapper.hpp"

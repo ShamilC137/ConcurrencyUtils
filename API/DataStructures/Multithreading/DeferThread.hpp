@@ -9,33 +9,10 @@
 
 // std
 #include <exception>
+#include <utility>
 
 namespace api {
 class DeferThread;
-
-template <class ThreadRoutine, class... RoutineArgs>
-void RoutineLoop(ThreadSignals signals_mask,
-                 ThreadRoutine (*routine)(RoutineArgs...),
-                 RoutineArgs &&...args) {
-  if (signals_mask.Test(ThreadSignal::kExitAfterCall)) {
-    routine(std::forward<RoutineArgs>(args)...);
-  } else {
-    // current_signal have one value (i.e. ThreadSignal)
-    const auto volatile &current_signal{
-        kernel_api::GetThreadSignalsReference(GetId())};
-    while (true) {
-      switch (current_signal & signals_mask) {
-      case ThreadSignal::kExit:
-        return;
-      case ThreadSignal::kSuspend:
-        // FIXME: suspending thread
-        break;
-      default:
-        routine(std::forward<RoutineArgs>(args)...);
-      }
-    }
-  }
-}
 } // namespace api
 namespace impl {
 template <class ExceptionHandler, class ThreadRoutine, class... RoutineArgs>
@@ -46,6 +23,10 @@ void ThreadLaunchRoutine(api::ThreadSignals sigs, ExceptionHandler &&handler,
 
 namespace api {
 class DeferThread {
+public:
+  using NativeHandle = Thread::native_handle_type;
+  using ID = Thread::id;
+
 public:
   template <class ExceptionHandler, class ThreadRoutine, class... RoutineArgs>
   DeferThread(ThreadSignals sigs, ExceptionHandler &&handler,
@@ -61,49 +42,70 @@ public:
 
   DeferThread &operator=(const DeferThread &) = delete;
 
-  [[nodiscard]] inline api::Thread &GetAttachedThread() noexcept {
-    return thread_;
-  }
+  [[nodiscard]] Thread &GetAttachedThread() noexcept;
 
-  [[nodiscard]] inline const api::Thread &GetAttachedThread() const noexcept {
-    return thread_;
-  }
+  [[nodiscard]] const Thread &GetAttachedThread() const noexcept;
 
-  [[nodiscard]] inline api::AtomicFlag &GetIsActiveFlag() noexcept {
-    return is_active_;
-  }
+  [[nodiscard]] AtomicFlag &GetIsActiveFlag() noexcept;
 
-  [[nodiscard]] const api::AtomicFlag &GetIsActiveFlag() const noexcept {
-    return is_active_;
-  }
+  [[nodiscard]] const AtomicFlag &GetIsActiveFlag() const noexcept;
 
-  void ActivateThread() {
-    is_active_.test_and_set(api::MemoryOrder::release);
-    is_active_.notify_one();
-  }
+  void ActivateThread();
 
-  inline void Join() { thread_.join(); }
+  void DeactivateThread();
 
-  inline void Detach() { thread_.detach(); }
+  void Join();
 
-  [[nodiscard]] inline auto GetNativeHandle() {
-    return thread_.native_handle();
-  }
+  void Detach();
 
-  [[nodiscard]] inline bool Joinable() const noexcept {
-    return thread_.joinable();
-  }
+  [[nodiscard]] NativeHandle GetNativeHandle();
 
-  [[nodiscard]] inline unsigned int HardwareConcurrency() noexcept {
-    return thread_.hardware_concurrency();
-  }
+  [[nodiscard]] bool Joinable() const noexcept;
 
-  [[nodiscard]] inline auto GetId() const noexcept { return thread_.get_id(); }
+  [[nodiscard]] unsigned int HardwareConcurrency() noexcept;
+
+  [[nodiscard]] ID GetId() const noexcept;
 
 private:
-  api::AtomicFlag is_active_;
-  api::Thread thread_;
+  AtomicFlag is_active_;
+  Thread thread_;
 };
+
+// Returns hashed given thread id
+[[nodiscard]] std::size_t GetHashedId(const DeferThread &thread) noexcept;
+
+template <class ThreadRoutine, class... RoutineArgs>
+void RoutineLoop(DeferThread *wrapper, ThreadSignals signals_mask,
+                 ThreadRoutine (*routine)(RoutineArgs...),
+                 RoutineArgs &&...args) {
+  wrapper->GetIsActiveFlag().wait(false, api::MemoryOrder::acquire);
+  if (signals_mask.Test(ThreadSignal::kExitAfterCall)) {
+    routine(std::forward<RoutineArgs>(args)...);
+  } else {
+    // if ID is changed - UB
+    const auto kHashedId{GetHashedId()};
+    // current_signal have one value (i.e. ThreadSignal)
+    // mb changed by main (i.e. kernel) thread
+    const auto volatile &current_signal{
+        kernel_api::GetThreadSignalsReference(kHashedId)};
+    while (true) {
+      switch (current_signal & signals_mask) {
+      case ThreadSignal::kEmpty:
+        routine(std::forward<RoutineArgs>(args)...);
+        break;
+      case ThreadSignal::kExit:
+        kernel_api::DeleteThread(kHashedId);
+        return;
+      case ThreadSignal::kSuspend:
+        kernel_api::UnsetSignal(kHashedId, ThreadSignal::kSuspend);
+        wrapper->DeactivateThread();
+        break;
+      default:
+        assert(false && "Unhandler thread signal");
+      }
+    }
+  }
+}
 } // namespace api
 
 namespace impl {
@@ -111,13 +113,13 @@ template <class ExceptionHandler, class ThreadRoutine, class... RoutineArgs>
 void ThreadLaunchRoutine(api::ThreadSignals sigs, ExceptionHandler &&handler,
                          api::DeferThread *wrapper, ThreadRoutine &&routine,
                          RoutineArgs &&...args) {
-  wrapper->GetIsActiveFlag().wait(false, api::MemoryOrder::acquire);
   using HandlerArguments =
       typename api::Components<std::decay_t<ExceptionHandler>>::ParametersTypes;
   static_assert(HandlerArguments::size < 2u, "Too many handler arguments");
 
   try {
-    api::RoutineLoop(sigs, routine, std::forward<RoutineArgs>(args)...);
+    api::RoutineLoop(wrapper, sigs, routine,
+                     std::forward<RoutineArgs>(args)...);
   } catch (std::exception &ex) {
     if constexpr (HandlerArguments::size == 1u) {
       handler(static_cast<api::TypeExtractor<0u, HandlerArguments>>(ex));

@@ -6,19 +6,35 @@
 // activation) from user.
 
 // current project
+#include "../../../ImplDetails/ThreadDescriptor.hpp"
 #include "DeferThread.hpp"
+
+// STD
+#include <exception>
+
+namespace api {
+struct ExpiredThread : std::exception {
+  using MyBase = std::exception;
+  using MyBase::exception;
+  using MyBase::operator=;
+  using MyBase::what;
+  inline ~ExpiredThread() {}
+};
+} // namespace api
 
 namespace api {
 class DeferThreadWrapper {
 public:
   DeferThreadWrapper() noexcept;
 
-  DeferThreadWrapper(DeferThread *thread) noexcept;
+  ~DeferThreadWrapper() noexcept;
+
+  DeferThreadWrapper(impl::ThreadDescriptor *desc) noexcept;
 
   DeferThreadWrapper(const DeferThreadWrapper &rhs) noexcept;
 
   DeferThreadWrapper(DeferThreadWrapper &&rhs) noexcept;
-  
+
   DeferThreadWrapper &operator=(const DeferThreadWrapper &rhs) noexcept;
 
   DeferThreadWrapper &operator=(DeferThreadWrapper &&rhs) noexcept;
@@ -27,17 +43,24 @@ public:
 
   void Join();
 
-  auto NativeHandle();
+  auto NativeHandle() noexcept(false);
 
-  [[nodiscard]] bool Joinable() const noexcept;
+  [[nodiscard]] bool Joinable() noexcept(false);
 
-  [[nodiscard]] unsigned int HardwareConcurrency() noexcept;
+  [[nodiscard]] unsigned int HardwareConcurrency() noexcept(false);
 
-  [[nodiscard]] auto GetId() const noexcept;
+  [[nodiscard]] auto GetId() noexcept(false);
+
+  void SendSuspendRequest() noexcept;
+
+  bool Resume() noexcept(false);
 
 private:
-  DeferThread *thread_; // pointer to associated thread
+  impl::ThreadDescriptor *desc_; // pointer to associated thread descriptor
 };
+
+[[nodiscard]] std::size_t
+GetHashedId(const DeferThreadWrapper &thread) noexcept;
 } // namespace api
 
 #endif // APPLICATION_API_DATASTRUCTURES_MULTITHREADGING_DEFERTASKWRAPPER

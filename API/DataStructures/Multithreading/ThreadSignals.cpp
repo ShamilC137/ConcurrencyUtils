@@ -40,8 +40,13 @@ void ThreadSignals::Set(ThreadSignal sig) volatile noexcept {
   value_ |= static_cast<Type>(sig);
 }
 
+void ThreadSignals::Unset(ThreadSignal sig) volatile noexcept {
+  value_ &= ~static_cast<Type>(sig);
+}
+
 // cast operator
 ThreadSignals::operator ThreadSignal() const noexcept {
+  // kEmpty signal is not considered if any signal flag is enabled
   if (value_ & (value_ - 1)) {
     const auto kTypeSize{static_cast<Type>(sizeof(Type) * 8u)};
     for (Type index{}; index < kTypeSize; ++index) {
