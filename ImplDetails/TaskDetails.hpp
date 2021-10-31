@@ -157,8 +157,6 @@ private:
       nacceptors_; // Number of this task acceptors.
                    // Setted by kernel. Reflects number of slots which will be
                    // execute this task
-
-  api::AtomicFlag expired_waiting_; // shows that task must be
 };
 
 [[nodiscard]] inline bool operator==(const BaseTask &lhs, const BaseTask &rhs) {

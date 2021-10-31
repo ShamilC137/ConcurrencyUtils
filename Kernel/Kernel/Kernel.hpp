@@ -26,7 +26,8 @@
 #include <cstddef>
 
 namespace api {
-template <class T, class U> class Pair {};
+template <class T, class U>
+class Pair {};
 } // namespace api
 
 namespace impl {
@@ -54,8 +55,8 @@ struct SlotSigPair {
   ModuleDescriptor *md; // associated with this slot module descriptor
 };
 
-// stub. Returns next signal + container of connected slots with its priorities
-api::Pair<api::String, api::Vector<api::Pair<api::String, int>>>
+// FIXME: stub. Returns next signal + container of connected slots with its priorities
+inline api::Pair<api::String, api::Vector<api::Pair<api::String, int>>>
 GetNextEntry() {
   return {};
 }
@@ -71,6 +72,8 @@ public:
   Kernel(const Kernel &) = delete;
 
   Kernel &operator=(const Kernel &) = delete;
+
+  ~Kernel();
 
 private:
   // throws: std::bad_alloc
