@@ -4,16 +4,16 @@
 
 namespace impl {
 template <class...>
-using void_t = void;
+using VoidT = void;
 
 // Checks that operator() exists
 // Base template, assumes that operator() not existing
 template <class T, class = void>
-constexpr static bool has_operator{false};
+constexpr static bool HasOperator{false};
 
 // Existance specialization
 template <class T>
-constexpr static bool has_operator<T, void_t<decltype(helper(&T::operator()))>>{
+constexpr static bool HasOperator<T, VoidT<decltype(helper(&T::operator()))>>{
     true};
 namespace impl_details {
 // Helper for lambdas or noncallable
