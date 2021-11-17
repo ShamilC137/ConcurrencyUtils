@@ -96,6 +96,14 @@ struct Components<Ret (Class::*)(Args...) volatile noexcept> {
   using FunctorType = Class;
 };
 
+// Const volatile member-function specialization
+template <class Ret, class Class, class... Args>
+struct Components<Ret (Class::*)(Args...) const volatile> {
+  using ReturnType = Ret;
+  using ParametersTypes = MPVector<Args...>;
+  using FunctorType = Class;
+};
+
 // Const volatile noexcept member-function pointer
 template <class Ret, class Class, class... Args>
 struct Components<Ret (Class::*)(Args...) const volatile noexcept> {
@@ -107,6 +115,14 @@ struct Components<Ret (Class::*)(Args...) const volatile noexcept> {
 // Lvalue reference member-function pointer specialization
 template <class Ret, class Class, class... Args>
 struct Components<Ret (Class::*)(Args...) &> {
+  using ReturnType = Ret;
+  using ParametersTypes = MPVector<Args...>;
+  using FunctorType = Class;
+};
+
+// Lvalue referenced noexcept member-function pointer
+template <class Ret, class Class, class... Args>
+struct Components<Ret (Class::*)(Args...) &noexcept> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;
@@ -136,6 +152,14 @@ struct Components<Ret (Class::*)(Args...) volatile &noexcept> {
   using FunctorType = Class;
 };
 
+// Lvalue referenced const volatile member-function pointer
+template <class Ret, class Class, class... Args>
+struct Components<Ret (Class::*)(Args...) const volatile &> {
+  using ReturnType = Ret;
+  using ParametersTypes = MPVector<Args...>;
+  using FunctorType = Class;
+};
+
 // Const volatile lvalue noexcept member-function pointer
 template <class Ret, class Class, class... Args>
 struct Components<Ret (Class::*)(Args...) const volatile &noexcept> {
@@ -152,9 +176,25 @@ struct Components<Ret (Class::*)(Args...) &&> {
   using FunctorType = Class;
 };
 
+// Rvalue referenced noexcept member-function pointer specialization
+template <class Ret, class Class, class... Args>
+struct Components<Ret (Class::*)(Args...) &&noexcept> {
+  using ReturnType = Ret;
+  using ParametersTypes = MPVector<Args...>;
+  using FunctorType = Class;
+};
+
 // Const rvalue member-function pointer
 template <class Ret, class Class, class... Args>
 struct Components<Ret (Class::*)(Args...) const &&> {
+  using ReturnType = Ret;
+  using ParametersTypes = MPVector<Args...>;
+  using FunctorType = Class;
+};
+
+// Volatile rvalue member-function pointer
+template <class Ret, class Class, class... Args>
+struct Components<Ret (Class::*)(Args...) volatile &&> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;
@@ -171,6 +211,14 @@ struct Components<Ret (Class::*)(Args...) const &&noexcept> {
 // Volatile rvalue noexcept member-function pointer
 template <class Ret, class Class, class... Args>
 struct Components<Ret (Class::*)(Args...) volatile &&noexcept> {
+  using ReturnType = Ret;
+  using ParametersTypes = MPVector<Args...>;
+  using FunctorType = Class;
+};
+
+// Const rvalue noexcept member-function pointer
+template <class Ret, class Class, class... Args>
+struct Components<Ret (Class::*)(Args...) const volatile &&> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;
