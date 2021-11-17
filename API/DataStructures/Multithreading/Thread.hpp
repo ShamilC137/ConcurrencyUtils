@@ -6,11 +6,9 @@
 
 namespace api {
 using Thread = std::thread;
-
-// Returns hashed given id
-[[nodiscard]] std::size_t GetHashedId(const Thread::id &id) noexcept;
+using ThreadId = std::thread::id;
 
 // Returns hashed caller thread id
-[[nodiscard]] std::size_t GetHashedId() noexcept;
+[[nodiscard]] ThreadId GetId() noexcept;
 } // namespace api
 #endif

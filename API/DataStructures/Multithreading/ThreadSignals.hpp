@@ -20,9 +20,9 @@ using ThreadSignalUnderlyingType = unsigned char;
 
 enum class ThreadSignal : ThreadSignalUnderlyingType {
   kEmpty = 0b0,
-  kExitAfterCall = 0b1,
   kExit = 0b10,
-  kSuspend = 0b100
+  kSuspend = 0b100,
+  kResume = 0b1000,
 };
 
 class ThreadSignals {
@@ -64,13 +64,14 @@ public:
 public:
   // If there are more than one value, cast returns ThreadSignal with the lowest
   // value
-  operator ThreadSignal() const noexcept;
+  operator ThreadSignal() const volatile noexcept;
 
   // friends
 private:
-
   friend ThreadSignals operator&(const volatile ThreadSignals &lhs,
                                  const volatile ThreadSignals &rhs) noexcept;
+
+  friend ThreadSignals operator~(const volatile ThreadSignals &rhs) noexcept;
 
   friend bool operator==(const volatile ThreadSignals &lhs,
                          const volatile ThreadSignals &rhs) noexcept;
@@ -79,7 +80,7 @@ private:
                          const volatile ThreadSignals &rhs) noexcept;
 
 private:
-  Type value_;
+  volatile Type value_;
 };
 
 } // namespace api

@@ -25,19 +25,21 @@ public:
   [[nodiscard]] api::DeferThread *GetThread() noexcept;
 
   // Returns thread state. If true - associated thread could be deleted when
-  // CouldBeDeleted returns true and thread_ is not Joinable
-  [[nodiscard]] const volatile bool &ShallBeDeleted() const noexcept;
+  // MarkAsDeleted returns true and thread_ is not Joinable
+  [[nodiscard]] bool IsDeleted() const noexcept;
 
-  // Returns thread state i.e. could be thread deleted or not
-  [[nodiscard]] bool CouldBeDeleted() noexcept;
+  // Returns thread state i.e. whether thread could be deleted. Always sets
+  // deleted flag (intention to delete).
+  [[nodiscard]] bool MarkAsDeleted() noexcept;
 
   [[nodiscard]] volatile api::ThreadSignals &GetSignals() volatile noexcept;
 
 private:
   api::DeferThread *thread_;
   volatile api::ThreadSignals signals_; // associated thread signals
-  // for DeferThreadWrapper synchronization
-  volatile bool will_be_deleted_;
+  // for DeferThreadWrapper synchronization. Prohibits new DeferThreadWrapper
+  // object creation.
+  volatile bool deleted_;
   api::Atomic<unsigned char> nreferences_;
   api::Mutex mutex_;
 };

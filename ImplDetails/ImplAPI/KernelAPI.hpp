@@ -2,6 +2,7 @@
 #define APPLICATION_IMPLDETAILS_IMPLAPI_KERNELAPI_HPP_
 
 // current project
+#include "../../API/DataStructures/Multithreading/Thread.hpp"
 #include "../../API/DataStructures/Multithreading/ThreadSignals.hpp"
 #include "../../API/DataStructures/TaskWrapper.hpp"
 #include "../../API/MemoryManagementUtilities.hpp"
@@ -47,7 +48,7 @@ void AddModule(impl::AbstractModule *module);
 // thread at any moment, that's why it marked as volatile).
 // Yes, there is data race, but I don't care (one writter, many readers)
 [[nodiscard]] const api::ThreadSignals volatile &
-GetThreadSignalsReference(const std::size_t id) noexcept;
+GetThreadSignalsReference(const api::ThreadId id) noexcept;
 
 // For all functions that set thread signal flag the same rules are applied:
 // The signal will be processed only at the next loop iteration, i.e.
@@ -59,24 +60,28 @@ GetThreadSignalsReference(const std::size_t id) noexcept;
 
 // Sets the "Exit" flag to the associated thread.
 // Returns true if signal was sent, otherwise false.
-bool SendKillThreadSignal(const std::size_t hashed_id) noexcept;
+bool SendKillThreadSignal(const api::ThreadId id) noexcept;
 
 // Sets the "Suspend" flag to the associated thread.
 // Returns true if signals was send, otherwise false.
-bool SendSuspendThreadSignal(const std::size_t hashed_id) noexcept;
+bool SendSuspendThreadSignal(const api::ThreadId id) noexcept;
 // ^^^^^^^^^^ STOP LINE ^^^^^^^^^^
 
 // Functions below use synchronization primitive to suspend/resume thread.
-// vvvvvvvvvv  START LINE vvvvvvvvvv 
+// vvvvvvvvvv  START LINE vvvvvvvvvv
 
 // Resumes associated thread. Returns true if thread was resumed, otherwise
 // false. The thread may be suspended by "SuspendThread".
-bool ResumeThread(const std::size_t hashed_id) noexcept;
+bool ResumeThread(const api::ThreadId id) noexcept;
+
+// Suspends caller thread. Returns true if thread was suspended and false
+// otherwise. If hint is setted up then GetId() is not called.
+bool SuspendThisThread(const api::ThreadId * const id_hint = nullptr) noexcept;
 // ^^^^^^^^^^ STOP LINE ^^^^^^^^^^
 
-void UnsetSignal(const std::size_t hashed_id, api::ThreadSignal sig) noexcept;
+void UnsetSignal(const api::ThreadId id, api::ThreadSignal sig) noexcept;
 
-void DeleteThread(const std::size_t hashed_id);
+void DeleteThread(const api::ThreadId id);
 } // namespace kernel_api
 } // namespace api
 

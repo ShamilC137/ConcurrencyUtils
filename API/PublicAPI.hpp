@@ -29,7 +29,8 @@ Emit(const api::String &signal_sig, bool is_blocking_call,
      impl::ForceExplicitTypeT<Args>... args) noexcept(false) {
   ReturnTaskWrapper<ReturnType, Args...> mytask(
       new ReturnTask<ReturnType, Args...>(signal_sig, priority,
-                                          std::forward<Args>(args)...));
+                                          std::forward<Args>(args)...),
+      {});
   kernel_api::PushToKernelQueue(mytask);
   if (is_blocking_call) {
     mytask.GetTask()->Wait(); // throws
@@ -49,8 +50,8 @@ std::enable_if_t<std::is_same_v<void, ReturnType>, TaskWrapper>
 Emit(const api::String &signal_sig, bool is_blocking_call,
      TaskPriority priority,
      impl::ForceExplicitTypeT<Args>... args) noexcept(false) {
-  TaskWrapper mytask(new Task<Args...>(signal_sig, is_blocking_call, priority,
-                                       std::forward<Args>(args)...));
+  TaskWrapper mytask(
+      new Task<Args...>(signal_sig, priority, std::forward<Args>(args)...), {});
   kernel_api::PushToKernelQueue(mytask);
   if (is_blocking_call) {
     mytask.GetTask()->Wait(); // throws
@@ -66,21 +67,21 @@ void AddModule(impl::AbstractModule *module);
 
 // Sends the "Exit" signal to the thread with the given id.
 // Returns true if signal was sent, otherwise false.
-bool SendKillThreadSignal(const std::size_t hashed_id) noexcept;
+bool SendKillThreadSignal(const ThreadId id) noexcept;
 
 // Sends the "Exit" signal to the caller thread.
 void SendKillThreadSignal() noexcept;
 
 // Sends the "Suspend" signal to the thread with the given id.
 // Returns true if signal was sent, otherwise false.
-bool SendSuspendThreadSignal(const std::size_t hashed_id) noexcept;
+bool SendSuspendThreadSignal(const ThreadId id) noexcept;
 
 // Sends the "Suspend" signal to the caller thread.
 void SendSuspendThreadSignal() noexcept;
 
 // Sends the "Resume" signal to the thread with the given id.
 // Returns true if signal was send, false otherwise.
-bool ResumeThread(const std::size_t hashed_id) noexcept;
+bool ResumeThread(const ThreadId id) noexcept;
 } // namespace api
 
 #endif // !APPLICATION_API_PUBLICAPI_HPP_

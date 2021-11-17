@@ -1,33 +1,29 @@
 #include "PublicAPI.hpp"
 
-// predefined functions
-namespace api {
-// from Thread.hpp (avoiding recursive #include directive)
-[[nodiscard]] std::size_t GetHashedId() noexcept;
-} // namespace api
+#include "DataStructures/Multithreading/Thread.hpp"
 
 namespace api {
 void AddModule(impl::AbstractModule *module) { kernel_api::AddModule(module); }
 
 [[nodiscard]] int Run() { return kernel_api::Run(); }
 
-bool SendKillThreadSignal(const std::size_t hashed_id) noexcept {
-  return kernel_api::SendKillThreadSignal(hashed_id);
+bool SendKillThreadSignal(const ThreadId id) noexcept {
+  return kernel_api::SendKillThreadSignal(id);
 }
 
 void SendKillThreadSignal() noexcept {
-  kernel_api::SendKillThreadSignal(GetHashedId());
+  kernel_api::SendKillThreadSignal(GetId());
 }
 
-bool SendSuspendThreadSignal(const std::size_t hashed_id) noexcept {
-  return kernel_api::SendSuspendThreadSignal(hashed_id);
+bool SendSuspendThreadSignal(const ThreadId id) noexcept {
+  return kernel_api::SendSuspendThreadSignal(id);
 }
 
 void SendSuspendThreadSignal() noexcept {
-  kernel_api::SendSuspendThreadSignal(GetHashedId());
+  kernel_api::SendSuspendThreadSignal(GetId());
 }
 
-bool ResumeThread(const std::size_t hashed_id) noexcept {
-  return kernel_api::ResumeThread(hashed_id);
+bool ResumeThread(const ThreadId id) noexcept {
+  return kernel_api::ResumeThread(id);
 }
-} // namespace api
+}  // namespace api

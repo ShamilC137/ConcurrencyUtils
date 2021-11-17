@@ -3,21 +3,40 @@
 #include "MPVector.hpp"
 
 namespace impl {
-// Helper for lambdas or noncallable
-template <class T> struct ComponentsHelper;
+template <class...>
+using void_t = void;
 
-} // namespace impl
+// Checks that operator() exists
+// Base template, assumes that operator() not existing
+template <class T, class = void>
+constexpr static bool has_operator{false};
+
+// Existance specialization
+template <class T>
+constexpr static bool has_operator<T, void_t<decltype(helper(&T::operator()))>>{
+    true};
+namespace impl_details {
+// Helper for lambdas or noncallable
+template <class T>
+struct ComponentsHelper;
+}  // namespace impl_details
+}  // namespace impl
 
 namespace api {
 // Basic template, works if type is noncallable or functor
-template <class Func> struct Components {
-  using ReturnType = typename impl::ComponentsHelper<Func>::ReturnType;
-  using ParametersTypes = typename impl::ComponentsHelper<Func>::ParametersTypes;
-  using FunctorType = typename impl::ComponentsHelper<Func>::FunctorType;
+template <class Func>
+struct Components {
+  using ReturnType =
+      typename impl::impl_details::ComponentsHelper<Func>::ReturnType;
+  using ParametersTypes =
+      typename impl::impl_details::ComponentsHelper<Func>::ParametersTypes;
+  using FunctorType =
+      typename impl::impl_details::ComponentsHelper<Func>::FunctorType;
 };
 
 // Function pointer specialization
-template <class Ret, class... Args> struct Components<Ret (*)(Args...)> {
+template <class Ret, class... Args>
+struct Components<Ret (*)(Args...)> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
 };
@@ -109,6 +128,14 @@ struct Components<Ret (Class::*)(Args...) const &noexcept> {
   using FunctorType = Class;
 };
 
+// Volatile lvalue noexcept member-function pointer
+template <class Ret, class Class, class... Args>
+struct Components<Ret (Class::*)(Args...) volatile &noexcept> {
+  using ReturnType = Ret;
+  using ParametersTypes = MPVector<Args...>;
+  using FunctorType = Class;
+};
+
 // Const volatile lvalue noexcept member-function pointer
 template <class Ret, class Class, class... Args>
 struct Components<Ret (Class::*)(Args...) const volatile &noexcept> {
@@ -141,6 +168,14 @@ struct Components<Ret (Class::*)(Args...) const &&noexcept> {
   using FunctorType = Class;
 };
 
+// Volatile rvalue noexcept member-function pointer
+template <class Ret, class Class, class... Args>
+struct Components<Ret (Class::*)(Args...) volatile &&noexcept> {
+  using ReturnType = Ret;
+  using ParametersTypes = MPVector<Args...>;
+  using FunctorType = Class;
+};
+
 // Const volatile rvalue noexcept member-function pointer
 template <class Ret, class Class, class... Args>
 struct Components<Ret (Class::*)(Args...) const volatile &&noexcept> {
@@ -148,32 +183,25 @@ struct Components<Ret (Class::*)(Args...) const volatile &&noexcept> {
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;
 };
-} // namespace api
+}  // namespace api
 
 namespace impl {
+namespace impl_details {
 // Additional tools for implementation
 
 // MSVC do not treat decltype(&ClassType::operator()) as dependent type
-template <class T> constexpr typename api::Components<T> helper(T);
-
-template <class...> using void_t = void;
-
-// Checks that operator() exists
-// Base template, assumes that operator() not existing
-template <class T, class = void> constexpr static bool has_operator{false};
-
-// Existance specialization
 template <class T>
-constexpr static bool has_operator<T, void_t<decltype(helper(&T::operator()))>>{
-    true};
+constexpr typename api::Components<T> helper(T);
 
 // Takes pointer to operator() and tries to decay it
-template <class T> struct ComponentsHelper {
+template <class T>
+struct ComponentsHelper {
   static_assert(has_operator<T>, "Type must have functor or function type");
   using ReturnType = typename decltype(helper(&T::operator()))::ReturnType;
   using ParametersTypes =
       typename decltype(helper(&T::operator()))::ParametersTypes;
   using FunctorType = typename decltype(helper(&T::operator()))::FunctorType;
 };
-} // namespace impl
-#endif // APPLICATION_IMPLDETAILS_MP_FUNCTION_TYPES_HPP_
+}  // namespace impl_details
+}  // namespace impl
+#endif  // APPLICATION_IMPLDETAILS_MP_FUNCTION_TYPES_HPP_

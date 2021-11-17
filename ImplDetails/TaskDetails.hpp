@@ -27,15 +27,13 @@ class BaseTask {
   // ctor and dtor
 public:
   // signal_sig - identifier emitter
-  // is_blocking_task - if true, task will be blocked in emitter until
   // all target threads complete their routines. Applyed for derived classes,
   // i.e. Task.
   // idseq - types identificators sequence which describes derived classes
   // retid - nullptr if task will have no return value and contain type
   // identifier of return type otherwise.
-  BaseTask(const api::String &signal_sig, const bool is_blocking_task,
-           api::TaskPriority priority, const int *idseq,
-           const int *retid) noexcept;
+  BaseTask(const api::String &signal_sig, api::TaskPriority priority,
+           const int *idseq, const int *retid) noexcept;
 
   virtual ~BaseTask() noexcept;
   BaseTask &operator=(const BaseTask &rhs) = delete;
@@ -49,9 +47,9 @@ public:
     return sizeof(BaseTask);
   }
 
-  // Returns creator module identifier
-  [[nodiscard]] inline const api::String &GetCreatorModuleID() const noexcept {
-    return signal_sig_;
+  // Returns associated with this task signal signature
+  [[nodiscard]] inline const api::String &GetCausedSignal() const noexcept {
+    return caused_signal_sig_;
   }
 
   // Returns sequence of derived task types identifiers.
@@ -75,12 +73,6 @@ public:
     return static_cast<bool>(retid_ptr_); // explicit cast
   }
 
-  // Returns true if task must wait for target slot to complete
-  // Safe. Read only.
-  [[nodiscard]] inline bool IsBlockingTask() const noexcept {
-    return is_blocking_task_;
-  }
-
   // Return task's priority
   [[nodiscard]] inline api::TaskPriority GetPriority() const noexcept {
     return priority_;
@@ -90,7 +82,7 @@ public:
   [[nodiscard]] inline bool IsWaitable(
       api::MemoryOrder order = api::MemoryOrder::acquire) const noexcept {
     return nacceptors_.load(order); // task itself is not considered as
-                                        // waitable routine
+                                    // waitable routine
   }
 
   // modifiers
@@ -146,9 +138,7 @@ public:
   void Wait(const unsigned char expected_value = 0) noexcept(false);
 
 private:
-  api::String signal_sig_;      // Module identefier
-  const bool is_blocking_task_; // If true, derived task will be blocked until
-                                // target threads routine completion.
+  api::String caused_signal_sig_;    // Module identefier
   const api::TaskPriority priority_; // Task priority is used to compare tasks.
   const int *idseq_ptr_; // Derived classes types identifiers sequence.
   const int *retid_ptr_; // Derived classes return type identifier.

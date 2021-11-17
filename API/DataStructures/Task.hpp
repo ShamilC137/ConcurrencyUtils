@@ -11,7 +11,7 @@
 #include <tuple>
 
 namespace impl {
-
+namespace impl_details {
 template <class... Args> class Arguments {
 public:
   using Tuple = std::tuple<Args...>;
@@ -200,8 +200,8 @@ private:
   PointerType value_{};
   BasePointer safety_object_; // ensure multithreading safety
 };
+} // namespace impl_details
 } // namespace impl
-
 namespace api {
 // Task is the class that encapsulates parameters for slots.
 // Arguments are contained in the tuple which can be unpacked in several ways:
@@ -217,26 +217,23 @@ namespace api {
 template <class... Args> class Task : public impl::BaseTask {
 public:
   using Base = impl::BaseTask;
-  using Tuple = typename impl::Arguments<Args...>::Tuple;
-  using Arguments = impl::Arguments<Args...>;
+  using Tuple = typename impl::impl_details::Arguments<Args...>::Tuple;
+  using Arguments = impl::impl_details::Arguments<Args...>;
 
 public:
   // signal_sig - signal signature
   // is_blocking_task - if true task must wait for its slot complete call
   // task_priority - used for task compare
   // args - target slot arguments
-  Task(api::String signal_sig, bool is_blocking_task, TaskPriority priority,
+  Task(api::String signal_sig, TaskPriority priority,
        impl::ForceExplicitTypeT<Args>... args)
-      : Task(signal_sig, is_blocking_task, priority, nullptr,
-             std::forward<Args>(args)...) {}
+      : Task(signal_sig, priority, nullptr, std::forward<Args>(args)...) {}
 
   ~Task() noexcept override {
-    if (Base::IsBlockingTask()) {
-      try {
-        Base::Wait(); // throws
-      } catch (...) {
-        assert(false && "Deadlock during task destruction");
-      }
+    try {
+      Base::Wait(); // throws
+    } catch (...) {
+      assert(false && "Deadlock during task destruction");
     }
   }
 
@@ -247,13 +244,11 @@ public:
   }
 
 protected:
-  Task(api::String module_id, bool is_blocking_task, TaskPriority priority,
-       const int *retid, impl::ForceExplicitTypeT<Args>... args)
-      : Base(module_id, is_blocking_task, priority,
+  Task(api::String caused_signal_sig, TaskPriority priority, const int *retid,
+       impl::ForceExplicitTypeT<Args>... args)
+      : Base(caused_signal_sig, priority,
              impl::IDSequence<Args...>::CreateIDSequence(), retid),
-        args_{} {
-    args_ = new Arguments{std::forward<Args>(args)...};
-  }
+        args_{new Arguments{std::forward<Args>(args)...}} {}
 
 public:
   template <class Container> void Unpack(Container &where) {
@@ -308,9 +303,9 @@ private:
 // exception, release mode will write message about error in error log.
 template <class ReturnType, class... Args>
 class ReturnTask : public Task<Args...>,
-                   public impl::RetTypeResolution<ReturnType> {
+                   public impl::impl_details::RetTypeResolution<ReturnType> {
   using Base = Task<Args...>;
-  using RetBase = impl::RetTypeResolution<ReturnType>;
+  using RetBase = impl::impl_details::RetTypeResolution<ReturnType>;
 
 public:
   // signal_sig - signal signature
@@ -318,7 +313,7 @@ public:
   // args - target slot arguments
   ReturnTask(String signal_sig, TaskPriority priority,
              impl::ForceExplicitTypeT<Args>... args)
-      : Base(signal_sig, true, priority, &impl::TypeID<ReturnType>::id,
+      : Base(signal_sig, priority, &impl::TypeID<ReturnType>::id,
              std::forward<Args>(args)...),
         RetBase(this) {}
 

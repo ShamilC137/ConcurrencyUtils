@@ -60,7 +60,7 @@ private:
   // Waiting for the completion of desired modify operation. Potentially
   // block caller thread.
   void WaitForModifyOperation() const {
-    while (want_to_modify_flag_.wait(true, MemoryOrder::acquire))
+    while (want_to_modify_flag_.wait(true, MemoryOrder::relaxed))
       ;
   }
 
@@ -69,9 +69,9 @@ public:
   // Returns first element in queue. Potentially block if container is modified.
   [[nodiscard]] reference Front() noexcept(noexcept(container_.front())) {
     WaitForModifyOperation();
-    read_semaphore_.fetch_add(1u, MemoryOrder::acquire);
+    read_semaphore_.fetch_add(1u, MemoryOrder::relaxed);
     decltype(auto) result(container_.front());
-    read_semaphore_.fetch_sub(1u, MemoryOrder::release);
+    read_semaphore_.fetch_sub(1u, MemoryOrder::relaxed);
     read_semaphore_.notify_one(); // notifies write operation
     return result;
   }
@@ -80,9 +80,9 @@ public:
   [[nodiscard]] const_reference Front() const
       noexcept(noexcept(container_.front())) {
     WaitForModifyOperation();
-    read_semaphore_.fetch_add(1u, MemoryOrder::acquire);
+    read_semaphore_.fetch_add(1u, MemoryOrder::relaxed);
     decltype(auto) result(container_.front());
-    read_semaphore_.fetch_sub(1u, MemoryOrder::release);
+    read_semaphore_.fetch_sub(1u, MemoryOrder::relaxed);
     read_semaphore_.notify_one();
     return result;
   }
@@ -90,9 +90,9 @@ public:
   // Returns last element in queue. Potentially block if container is modified.
   [[nodiscard]] reference Back() noexcept(noexcept(container_.back())) {
     WaitForModifyOperation();
-    read_semaphore_.fetch_add(1u, MemoryOrder::acquire);
+    read_semaphore_.fetch_add(1u, MemoryOrder::relaxed);
     decltype(auto) result(container_.back());
-    read_semaphore_.fetch_sub(1u, MemoryOrder::release);
+    read_semaphore_.fetch_sub(1u, MemoryOrder::relaxed);
     read_semaphore_.notify_one();
     return result;
   }
@@ -101,9 +101,9 @@ public:
   [[nodiscard]] const_reference Back() const
       noexcept(noexcept(container_.back())) {
     WaitForModifyOperation();
-    read_semaphore_.fetch_add(1u, MemoryOrder::acquire);
+    read_semaphore_.fetch_add(1u, MemoryOrder::relaxed);
     decltype(auto) result(container_.back());
-    read_semaphore_.fetch_sub(1u, MemoryOrder::release);
+    read_semaphore_.fetch_sub(1u, MemoryOrder::relaxed);
     read_semaphore_.notify_one();
     return result;
   }
@@ -111,9 +111,9 @@ public:
   // Returns container state. Potentially blocks if container is modified.
   [[nodiscard]] bool Empty() const noexcept(noexcept(container_.empty())) {
     WaitForModifyOperation();
-    read_semaphore_.fetch_add(1u, MemoryOrder::acquire);
+    read_semaphore_.fetch_add(1u, MemoryOrder::relaxed);
     decltype(auto) result(container_.empty());
-    read_semaphore_.fetch_sub(1u, MemoryOrder::release);
+    read_semaphore_.fetch_sub(1u, MemoryOrder::relaxed);
     read_semaphore_.notify_one();
     return result;
   }
@@ -121,9 +121,9 @@ public:
   // Returns container state. Potentially blocks if container is modified.
   [[nodiscard]] size_type Size() const noexcept(noexcept(container_.size())) {
     WaitForModifyOperation();
-    read_semaphore_.fetch_add(1, MemoryOrder::acquire);
+    read_semaphore_.fetch_add(1, MemoryOrder::relaxed);
     decltype(auto) result(container_.size());
-    read_semaphore_.fetch_sub(1, MemoryOrder::release);
+    read_semaphore_.fetch_sub(1, MemoryOrder::relaxed);
     read_semaphore_.notify_one();
     return result;
   }
@@ -143,9 +143,9 @@ private:
   // block caller thread.
   void WaitForReadOperations() const {
     // waiting until read_semaphore value will be 0
-    for (auto old{read_semaphore_.load(MemoryOrder::acquire)}; old != 0u;
-         old = read_semaphore_.load(MemoryOrder::acquire)) {
-      read_semaphore_.wait(old, MemoryOrder::acquire);
+    for (auto old{read_semaphore_.load(MemoryOrder::relaxed)}; old != 0u;
+         old = read_semaphore_.load(MemoryOrder::relaxed)) {
+      read_semaphore_.wait(old, MemoryOrder::relaxed);
     }
   }
 
@@ -163,7 +163,7 @@ private:
   template <class... Args> void UnblockingEmplace(Args &&...args) {
     container_.emplace_back(std::forward<Args>(args)...);
     CorrectInsertion();
-    want_to_modify_flag_.clear(api::MemoryOrder::release);
+    want_to_modify_flag_.clear(api::MemoryOrder::relaxed);
     want_to_modify_flag_.notify_all();
     rw_sync_cvar_.notify_all();
   }
@@ -176,7 +176,7 @@ public:
     // there is no opportunity to return correct result of insert operations
     // because of elements reordering
     // disable new read operations
-    want_to_modify_flag_.test_and_set(api::MemoryOrder::acquire);
+    want_to_modify_flag_.test_and_set(api::MemoryOrder::relaxed);
     WaitForReadOperations();
     UnblockingEmplace(std::forward<Args>(args)...);
   }
@@ -199,7 +199,7 @@ public:
       rw_sync_cvar_.wait(lock);
     }
     // disable new read operations
-    want_to_modify_flag_.test_and_set(MemoryOrder::acquire);
+    want_to_modify_flag_.test_and_set(MemoryOrder::relaxed);
     WaitForReadOperations();
     return UnblockingPop();
   }
@@ -220,10 +220,10 @@ public:
   template <class... Args> bool TryEmplace(Args &&...args) {
     api::UniqueLock<api::Mutex> lock(mutex_, boost::try_to_lock_t{});
     // prevent new read operations
-    want_to_modify_flag_.test_and_set(api::MemoryOrder::acquire);
+    want_to_modify_flag_.test_and_set(api::MemoryOrder::relaxed);
     if (!lock.owns_lock() ||
-        read_semaphore_.load(api::MemoryOrder::acquire) != 0u) {
-      want_to_modify_flag_.clear(api::MemoryOrder::release);
+        read_semaphore_.load(api::MemoryOrder::relaxed) != 0u) {
+      want_to_modify_flag_.clear(api::MemoryOrder::relaxed);
       want_to_modify_flag_.notify_all();
       return false;
     }
@@ -237,11 +237,11 @@ public:
   value_type TryPop() noexcept(false) {
     api::UniqueLock<api::Mutex> lock(mutex_, boost::try_to_lock_t{});
     // prevent new read operations
-    want_to_modify_flag_.test_and_set(api::MemoryOrder::acquire);
+    want_to_modify_flag_.test_and_set(api::MemoryOrder::relaxed);
     if (!lock.owns_lock() ||
-        read_semaphore_.load(api::MemoryOrder::acquire) != 0u ||
+        read_semaphore_.load(api::MemoryOrder::relaxed) != 0u ||
         container_.empty()) {
-      want_to_modify_flag_.clear(api::MemoryOrder::release);
+      want_to_modify_flag_.clear(api::MemoryOrder::relaxed);
       want_to_modify_flag_.notify_all();
       throw PopFailed("Failed to extract element");
     }

@@ -2,18 +2,18 @@
 
 namespace impl {
 ThreadDescriptor::ThreadDescriptor(api::DeferThread *thread) noexcept
-    : thread_{thread} {}
+    : thread_{thread}, deleted_{} {}
 
 void ThreadDescriptor::DecrementNumberOfReferences() noexcept {
-  nreferences_.sub(1u, api::MemoryOrder::acq_rel);
+  nreferences_.sub(1u, api::MemoryOrder::relaxed);
 }
 
 bool ThreadDescriptor::IncrementNumberOfReferences() noexcept {
   api::ScopedLock<api::Mutex> lock(mutex_);
-  if (will_be_deleted_) {
+  if (deleted_) {
     return false;
   } else {
-    return nreferences_.add(1u, api::MemoryOrder::acq_rel);
+    return nreferences_.add(1u, api::MemoryOrder::relaxed);
   }
 }
 
@@ -21,19 +21,14 @@ bool ThreadDescriptor::IncrementNumberOfReferences() noexcept {
   return thread_;
 }
 
-[[nodiscard]] const volatile bool &
-ThreadDescriptor::ShallBeDeleted() const noexcept {
-  return will_be_deleted_;
+[[nodiscard]] bool ThreadDescriptor::IsDeleted() const noexcept {
+  return deleted_;
 }
 
-[[nodiscard]] bool ThreadDescriptor::CouldBeDeleted() noexcept {
+[[nodiscard]] bool ThreadDescriptor::MarkAsDeleted() noexcept {
   api::ScopedLock<api::Mutex> lock(mutex_);
-  will_be_deleted_ = true;
-  if (nreferences_.load(api::MemoryOrder::acquire) == 0u) {
-    return true;
-  } else {
-    return false;
-  }
+  deleted_ = true;
+  return nreferences_.load(api::MemoryOrder::relaxed) == 0u;
 }
 
 [[nodiscard]] volatile api::ThreadSignals &

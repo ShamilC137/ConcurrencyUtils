@@ -18,7 +18,7 @@ public:
   BaseSlot(const int *idseq, const int *retid) noexcept;
 
   inline virtual ~BaseSlot() noexcept {
-    assert(nexecuters_.load(api::MemoryOrder::acquire) == 0u &&
+    assert(nexecuters_.load(api::MemoryOrder::relaxed) == 0u &&
            "Slot currently executed");
   }
 
@@ -43,13 +43,13 @@ public:
 
   // Increments number of executors of the slot and returns new value
   inline unsigned char IncrementNumOfExecutors(
-      api::MemoryOrder order = api::MemoryOrder::acquire) noexcept {
+      api::MemoryOrder order = api::MemoryOrder::relaxed) noexcept {
     return nexecuters_.add(1u, order);
   }
 
   // Decrements number of executors of the slot and returns new value
   inline unsigned char DecrementNumOfExecutors(
-      api::MemoryOrder order = api::MemoryOrder::release) noexcept {
+      api::MemoryOrder order = api::MemoryOrder::relaxed) noexcept {
     return nexecuters_.sub(1u, order);
   }
 

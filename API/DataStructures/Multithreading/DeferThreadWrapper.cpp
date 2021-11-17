@@ -50,7 +50,7 @@ DeferThreadWrapper::operator=(DeferThreadWrapper &&rhs) noexcept {
 
 void DeferThreadWrapper::Detach() {
   if (desc_) {
-    if (desc_->ShallBeDeleted()) {
+    if (desc_->IsDeleted()) {
       desc_->DecrementNumberOfReferences();
       desc_ = nullptr;
     } else {
@@ -61,7 +61,7 @@ void DeferThreadWrapper::Detach() {
 
 void DeferThreadWrapper::Join() {
   if (desc_) {
-    if (desc_->ShallBeDeleted()) {
+    if (desc_->IsDeleted()) {
       desc_->DecrementNumberOfReferences();
       desc_ = nullptr;
     } else {
@@ -72,7 +72,7 @@ void DeferThreadWrapper::Join() {
 
 auto DeferThreadWrapper::NativeHandle() noexcept(false) {
   if (desc_) {
-    if (desc_->ShallBeDeleted()) {
+    if (desc_->IsDeleted()) {
       desc_->DecrementNumberOfReferences();
       desc_ = nullptr;
     } else {
@@ -84,11 +84,11 @@ auto DeferThreadWrapper::NativeHandle() noexcept(false) {
 
 [[nodiscard]] bool DeferThreadWrapper::Joinable() noexcept(false) {
   if (desc_) {
-    if (desc_->ShallBeDeleted()) {
+    if (desc_->IsDeleted()) {
       desc_->DecrementNumberOfReferences();
       desc_ = nullptr;
     } else {
-      desc_->GetThread()->Joinable();
+      return desc_->GetThread()->Joinable();
     }
   }
   throw ExpiredThread("Thread is deleted");
@@ -97,7 +97,7 @@ auto DeferThreadWrapper::NativeHandle() noexcept(false) {
 [[nodiscard]] unsigned int
 DeferThreadWrapper::HardwareConcurrency() noexcept(false) {
   if (desc_) {
-    if (desc_->ShallBeDeleted()) {
+    if (desc_->IsDeleted()) {
       desc_->DecrementNumberOfReferences();
       desc_ = nullptr;
     } else {
@@ -109,7 +109,7 @@ DeferThreadWrapper::HardwareConcurrency() noexcept(false) {
 
 [[nodiscard]] auto DeferThreadWrapper::GetId() noexcept(false) {
   if (desc_) {
-    if (desc_->ShallBeDeleted()) {
+    if (desc_->IsDeleted()) {
       desc_->DecrementNumberOfReferences();
       desc_ = nullptr;
     } else {
@@ -119,13 +119,9 @@ DeferThreadWrapper::HardwareConcurrency() noexcept(false) {
   throw ExpiredThread("Thread is deleted");
 }
 
-[[nodiscard]] std::size_t GetHashedId(DeferThreadWrapper &wrap) noexcept {
-  return GetHashedId(wrap.GetId());
-}
-
 void DeferThreadWrapper::SendSuspendRequest() noexcept {
   try {
-    kernel_api::SendSuspendThreadSignal(GetHashedId(*this));
+    kernel_api::SendSuspendThreadSignal(api::GetId(*this));
   } catch (...) {
     return;
   }
@@ -133,10 +129,13 @@ void DeferThreadWrapper::SendSuspendRequest() noexcept {
 
 bool DeferThreadWrapper::Resume() noexcept(false) {
   try {
-    auto res{kernel_api::ResumeThread(GetHashedId(*this))};
-    return res;
+    return kernel_api::ResumeThread(api::GetId(*this));
   } catch (...) {
     return false;
   }
+}
+
+[[nodiscard]] ThreadId GetId(DeferThreadWrapper &thread) noexcept {
+  return thread.GetId();
 }
 } // namespace api

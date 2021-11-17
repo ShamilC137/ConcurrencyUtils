@@ -2,11 +2,10 @@
 
 namespace api {
 TaskWrapper::TaskWrapper() : task_{}, target_{} {}
-TaskWrapper::TaskWrapper(const PointerType &task, const api::String &target,
-                         const api::String &signal) noexcept
-    : task_{task}, target_{target}, signal_{signal} {
+TaskWrapper::TaskWrapper(const PointerType &task, const api::String &target) noexcept
+    : task_{task}, target_{target} {
   if (task_) {
-    task->IncrementNumOfRefs(api::MemoryOrder::release);
+    task->IncrementNumOfRefs(api::MemoryOrder::relaxed);
   }
 }
 
@@ -31,7 +30,7 @@ TaskWrapper &TaskWrapper::operator=(TaskWrapper &&rhs) noexcept {
 }
 
 TaskWrapper::~TaskWrapper() noexcept {
-  if (task_ && task_->DecrementNumOfRefs(api::MemoryOrder::release) == 0u) {
+  if (task_ && task_->DecrementNumOfRefs(api::MemoryOrder::relaxed) == 0u) {
     const auto mysize{task_->SizeInBytes()};
     // ensure that task without slots arguments are deleted
     task_->ClearArguments();

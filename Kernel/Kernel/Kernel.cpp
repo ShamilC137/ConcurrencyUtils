@@ -2,6 +2,7 @@
 #ifdef STL_ALLOCATOR_USAGE
 #include <new>
 #endif
+
 namespace kernel {
 // NOTE: function marked as "Parallel" can be called from few threads
 // and must not block other such functions, but block other call of themselfs
@@ -43,7 +44,7 @@ void Deallocate(void *ptr, const std::size_t nbytes) noexcept {
   GetKernel().Deallocate(ptr, nbytes);
 }
 
-void PushToKernelQueue(const api::TaskWrapper &task) {
+void PushToKernelQueue(const TaskWrapper &task) {
   GetKernel().PushToQueue(task);
 }
 
@@ -52,30 +53,45 @@ void AddModule(impl::AbstractModule *module) { GetKernel().AddModule(module); }
 [[nodiscard]] int Run() { return GetKernel().Run(); }
 
 // FIXME: stub
-[[nodiscard]] const volatile api::ThreadSignals &
-GetThreadSignalsReference(const std::size_t hashed_id) noexcept {
+[[nodiscard]] const volatile ThreadSignals &
+GetThreadSignalsReference(const ThreadId id) noexcept {
   const volatile api::ThreadSignals sigs{};
   return sigs;
 }
 
 // FIXME: stub
-bool SendKillThreadSignal(const std::size_t hashed_id) noexcept {
+bool SendKillThreadSignal(const ThreadId id) noexcept {
   return false;
 }
 
 // FIXME: stub
-bool SendSuspendThreadSignal(const std::size_t hashed_id) noexcept {
+bool SendSuspendThreadSignal(const ThreadId id) noexcept {
   return false;
 }
 
 // FIXME: stub
-bool ResumeThread(const std::size_t hashed_id) noexcept { return false; }
+bool ResumeThread(const ThreadId id) noexcept { return false; }
 
 // FIXME: stub
-void UnsetSignal(const std::size_t hashed_id, api::ThreadSignal sig) noexcept {}
+bool SuspendThisThread(const api::ThreadId * const id_hint) noexcept {
+  /*
+  * expected behaviour:
+  * kernel_api::UnsetSignal(kThreadId, ThreadSignal::kSuspend);
+  * wrapper->DeactivateThread();
+  */
+  if (id_hint) {
+  } else {
+  }
+  return false;
+}
 
 // FIXME: stub
-void DeleteThread(const std::size_t hashed_id) {}
+void UnsetSignal(const ThreadId id, ThreadSignal sig) noexcept {
+  
+}
+
+// FIXME: stub
+void DeleteThread(const ThreadId id) {}
 
 } // namespace kernel_api
 } // namespace api

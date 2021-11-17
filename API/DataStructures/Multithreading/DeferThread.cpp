@@ -17,14 +17,14 @@ namespace api {
   return is_active_;
 }
 
-void DeferThread::ActivateThread() {
-  is_active_.test_and_set(MemoryOrder::release);
+void DeferThread::ActivateThread(api::MemoryOrder order) {
+  is_active_.test_and_set(order);
   is_active_.notify_one();
 }
 
-void DeferThread::DeactivateThread() {
+void DeferThread::DeactivateThread(api::MemoryOrder order) {
   is_active_.clear();
-  is_active_.wait(false, api::MemoryOrder::acquire);
+  is_active_.wait(false, order);
 }
 
 void DeferThread::Join() { thread_.join(); }
@@ -45,9 +45,5 @@ void DeferThread::Detach() { thread_.detach(); }
 
 [[nodiscard]] DeferThread::ID DeferThread::GetId() const noexcept {
   return thread_.get_id();
-}
-
-[[nodiscard]] std::size_t GetHashedId(const DeferThread &thread) noexcept {
-  return GetHashedId(thread.GetId());
 }
 } // namespace api

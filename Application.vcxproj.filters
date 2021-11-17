@@ -103,7 +103,7 @@
       <Filter>Исходные файлы\ImplDetails</Filter>
     </ClCompile>
     <ClCompile Include="API\DataStructures\Multithreading\Thread.cpp">
-      <Filter>Исходные файлы</Filter>
+      <Filter>Исходные файлы\API\DataStructures\Multithreading</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

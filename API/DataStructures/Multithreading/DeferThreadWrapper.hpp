@@ -59,8 +59,8 @@ private:
   impl::ThreadDescriptor *desc_; // pointer to associated thread descriptor
 };
 
-[[nodiscard]] std::size_t
-GetHashedId(const DeferThreadWrapper &thread) noexcept;
+[[nodiscard]] ThreadId
+GetId(DeferThreadWrapper &thread) noexcept;
 } // namespace api
 
 #endif // APPLICATION_API_DATASTRUCTURES_MULTITHREADGING_DEFERTASKWRAPPER
