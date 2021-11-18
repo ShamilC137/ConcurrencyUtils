@@ -221,7 +221,7 @@
     <ClInclude Include="ImplDetails\MP\MPVector.hpp">
       <Filter>Файлы заголовков\ImplDetails\MP</Filter>
     </ClInclude>
-    <ClInclude Include="ImplDetails\MP\Function_types.hpp">
+    <ClInclude Include="ImplDetails\MP\Components.hpp">
       <Filter>Файлы заголовков\ImplDetails\MP</Filter>
     </ClInclude>
     <ClInclude Include="API\DataStructures\Multithreading\ThreadSignals.hpp">

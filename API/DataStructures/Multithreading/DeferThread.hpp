@@ -2,7 +2,7 @@
 #define APPLICATION_API_DATASTRUCTURES_MULTITHREADING_DEFERTHREAD_HPP_
 // current project
 #include "../../../ImplDetails/ImplAPI/KernelAPI.hpp"
-#include "../../../ImplDetails/MP/Function_types.hpp"
+#include "../../../ImplDetails/MP/Components.hpp"
 #include "Atomics.hpp"
 #include "Thread.hpp"
 #include "ThreadSignals.hpp"

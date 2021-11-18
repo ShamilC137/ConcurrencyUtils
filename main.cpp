@@ -15,16 +15,14 @@ struct Str {
 };
 
 int main() {
-  auto f = &Str::foo;
-  api::Components<decltype(f)>;
   api::DeferThread thread(false, &Terminate, &Foo);
   thread.ActivateThread();
-  /* std::this_thread::sleep_for(std::chrono::seconds(1));
+  std::this_thread::sleep_for(std::chrono::seconds(1));
   sigs.Set(api::ThreadSignal::kSuspend);
   std::this_thread::sleep_for(std::chrono::seconds(1));
   thread.ActivateThread();
   std::this_thread::sleep_for(std::chrono::seconds(1));
-  sigs.Set(api::ThreadSignal::kExit);*/
+  sigs.Set(api::ThreadSignal::kExit);
   thread.Join();
   return 0;
 }
