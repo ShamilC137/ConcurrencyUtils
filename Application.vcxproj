@@ -165,7 +165,6 @@
     <ClCompile Include="ImplDetails\AbstractModule.cpp" />
     <ClCompile Include="ImplDetails\SlotDetails.cpp" />
     <ClCompile Include="ImplDetails\TaskDetails.cpp" />
-    <ClCompile Include="ImplDetails\ThreadDescriptor.cpp" />
     <ClCompile Include="Kernel\Kernel\Kernel.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
@@ -204,7 +203,6 @@
     <ClInclude Include="ImplDetails\MP\MPVector.hpp" />
     <ClInclude Include="ImplDetails\SlotDetails.hpp" />
     <ClInclude Include="ImplDetails\TaskDetails.hpp" />
-    <ClInclude Include="ImplDetails\ThreadDescriptor.hpp" />
     <ClInclude Include="ImplDetails\Utility.hpp" />
     <ClInclude Include="Kernel\Kernel\Kernel.hpp" />
     <ClInclude Include="Kernel\MMU\AlignMMU.hpp" />

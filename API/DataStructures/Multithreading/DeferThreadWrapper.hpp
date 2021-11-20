@@ -6,7 +6,6 @@
 // activation) from user.
 
 // current project
-#include "../../../ImplDetails/ThreadDescriptor.hpp"
 #include "DeferThread.hpp"
 
 // STD
@@ -20,16 +19,16 @@ struct ExpiredThread : std::exception {
   using MyBase::what;
   inline ~ExpiredThread() {}
 };
-} // namespace api
+}  // namespace api
 
 namespace api {
 class DeferThreadWrapper {
-public:
+ public:
   DeferThreadWrapper() noexcept;
 
   ~DeferThreadWrapper() noexcept;
 
-  DeferThreadWrapper(impl::ThreadDescriptor *desc) noexcept;
+  DeferThreadWrapper(api::DeferThread *thread) noexcept;
 
   DeferThreadWrapper(const DeferThreadWrapper &rhs) noexcept;
 
@@ -55,12 +54,11 @@ public:
 
   bool Resume() noexcept(false);
 
-private:
-  impl::ThreadDescriptor *desc_; // pointer to associated thread descriptor
+ private:
+  DeferThread *thread_;  // pointer to associated thread
 };
 
-[[nodiscard]] ThreadId
-GetId(DeferThreadWrapper &thread) noexcept;
-} // namespace api
+[[nodiscard]] ThreadId GetId(DeferThreadWrapper &thread) noexcept;
+}  // namespace api
 
-#endif // APPLICATION_API_DATASTRUCTURES_MULTITHREADGING_DEFERTASKWRAPPER
+#endif  // APPLICATION_API_DATASTRUCTURES_MULTITHREADGING_DEFERTASKWRAPPER

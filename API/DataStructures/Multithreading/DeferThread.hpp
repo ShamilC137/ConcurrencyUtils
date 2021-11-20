@@ -13,21 +13,21 @@
 
 namespace api {
 class DeferThread;
-} // namespace api
+}  // namespace api
 namespace impl {
 template <class ExceptionHandler, class ThreadRoutine, class... RoutineArgs>
 void ThreadLaunchRoutine(const bool exit_after_call_flag,
                          ExceptionHandler &&handler, api::DeferThread *wrapper,
                          ThreadRoutine &&routine, RoutineArgs &&...args);
-} // namespace impl
+}  // namespace impl
 
 namespace api {
 class DeferThread {
-public:
+ public:
   using NativeHandle = Thread::native_handle_type;
   using ID = Thread::id;
 
-public:
+ public:
   template <class ExceptionHandler, class ThreadRoutine, class... RoutineArgs>
   DeferThread(const bool exit_after_call_flag, ExceptionHandler &&handler,
               ThreadRoutine &&routine, RoutineArgs &&...args)
@@ -66,9 +66,33 @@ public:
 
   [[nodiscard]] ID GetId() const noexcept;
 
-private:
+  [[nodiscard]] const volatile ThreadSignals &GetSignals() const
+      volatile noexcept;
+
+  [[nodiscard]] void SetSignal(ThreadSignal signal) volatile noexcept;
+
+  [[nodiscard]] void UnsetSignal(ThreadSignal signal) volatile noexcept;
+
+  [[nodiscard]] void Close() noexcept;
+
+  [[nodiscard]] bool IsClosed() const volatile noexcept;
+
+  [[nodiscard]] unsigned char IncrementNumberOfReferences(
+      api::MemoryOrder order = api::MemoryOrder::relaxed) noexcept;
+
+  unsigned char DecrementNumberOfReferences(
+      api::MemoryOrder order = api::MemoryOrder::relaxed) noexcept;
+
+  [[nodiscard]] unsigned char NumberOfReferences(
+      api::MemoryOrder order = api::MemoryOrder::acquire) const noexcept;
+
+ private:
   AtomicFlag is_active_;
   Thread thread_;
+  volatile bool is_closed_;  // if associated thread closed
+  volatile ThreadSignals signals_;
+  Atomic<unsigned char> nreferences_;
+  Mutex close_mutex_;
 };
 
 template <class ThreadRoutine, class... RoutineArgs>
@@ -87,26 +111,28 @@ void RoutineLoop(DeferThread *wrapper, const bool exit_after_call_flag,
     while (true) {
       ThreadSignal current_signal{static_cast<ThreadSignal>(thread_signal)};
       switch (current_signal) {
-      case ThreadSignal::kEmpty:
-        routine(std::forward<RoutineArgs>(args)...);
-        break;
-      case ThreadSignal::kExit:
-        kernel_api::DeleteThread(kThreadId);
-        return;
-      case ThreadSignal::kSuspend:
-        kernel_api::SuspendThisThread(&kThreadId);
-        break;
-      default:
-        assert(false && "Unhandled thread signal");
+        case ThreadSignal::kExit:
+          kernel_api::DeleteThread(kThreadId);
+          return;
+        case ThreadSignal::kSuspend:
+          kernel_api::UnsetSignal(kThreadId, ThreadSignal::kSuspend);
+          kernel_api::SuspendThisThread(&kThreadId);
+          break;
+        case ThreadSignal::kEmpty:
+          routine(std::forward<RoutineArgs>(args)...);
+          break;
+        default:
+          assert(false && "Unhandled thread signal");
       }
     }
   }
 }
-} // namespace api
+}  // namespace api
 
 namespace impl {
 namespace impl_details {
-template <class T> struct TypeResolution {
+template <class T>
+struct TypeResolution {
   using Arguments = typename api::Components<std::decay_t<T>>::ParametersTypes;
   constexpr static std::size_t size{Arguments::size};
 };
@@ -115,19 +141,22 @@ struct Sizer {
   constexpr static std::size_t size{0};
 };
 
-template <> struct TypeResolution<decltype(nullptr)> {
+template <>
+struct TypeResolution<decltype(nullptr)> {
   using Arguments = Sizer;
 };
 
-template <class Callee> struct CallMaker {
+template <class Callee>
+struct CallMaker {
   static void Call(Callee &&callee) { callee(); }
 };
 
-template <> struct CallMaker<decltype(nullptr)> {
+template <>
+struct CallMaker<decltype(nullptr)> {
   static void Call(void *) { /*do nothing*/
   }
 };
-} // namespace impl_details
+}  // namespace impl_details
 
 template <class ExceptionHandler, class ThreadRoutine, class... RoutineArgs>
 void ThreadLaunchRoutine(const bool exit_after_call_flag,
@@ -141,7 +170,9 @@ void ThreadLaunchRoutine(const bool exit_after_call_flag,
   try {
     api::RoutineLoop(wrapper, exit_after_call_flag, routine,
                      std::forward<RoutineArgs>(args)...);
+    wrapper->Close();
   } catch (std::exception &ex) {
+    wrapper->Close();
     if constexpr (HandlerArguments::size == 1u) {
       handler(static_cast<api::TypeExtractor<0u, HandlerArguments>>(ex));
     } else {
@@ -149,8 +180,9 @@ void ThreadLaunchRoutine(const bool exit_after_call_flag,
           std::forward<ExceptionHandler>(handler));
     }
   } catch (...) {
+    wrapper->Close();
     // Unhandled exception error
   }
 }
-} // namespace impl
-#endif // APPLICATION_API_DATASTRUCTURES_MULTITHREADING_DEFERTHREAD_HPP_
+}  // namespace impl
+#endif  // APPLICATION_API_DATASTRUCTURES_MULTITHREADING_DEFERTHREAD_HPP_

@@ -46,4 +46,49 @@ void DeferThread::Detach() { thread_.detach(); }
 [[nodiscard]] DeferThread::ID DeferThread::GetId() const noexcept {
   return thread_.get_id();
 }
-} // namespace api
+
+[[nodiscard]] const volatile ThreadSignals &DeferThread::GetSignals() const
+    volatile noexcept {
+  return signals_;
+}
+
+[[nodiscard]] void DeferThread::SetSignal(
+    ThreadSignal signal) volatile noexcept {
+  signals_.Set(signal);
+}
+
+[[nodiscard]] void DeferThread::UnsetSignal(
+    ThreadSignal signal) volatile noexcept {
+  signals_.Unset(signal);
+}
+
+[[nodiscard]] void DeferThread::Close() noexcept {
+  signals_.Set(ThreadSignal::kExit);
+  ScopedLock<Mutex> lock(close_mutex_);
+  is_closed_ = true;
+}
+
+[[nodiscard]] bool DeferThread::IsClosed() const volatile noexcept {
+  return is_closed_;
+}
+
+[[nodiscard]] unsigned char DeferThread::IncrementNumberOfReferences(
+    api::MemoryOrder order) noexcept {
+  ScopedLock<Mutex> lock(close_mutex_);
+  if (is_closed_) {
+    return 0;
+  } else {
+    return nreferences_.add(1, order);
+  }
+}
+
+unsigned char DeferThread::DecrementNumberOfReferences(
+    api::MemoryOrder order) noexcept {
+  return nreferences_.sub(1, order);
+}
+
+[[nodiscard]] unsigned char DeferThread::NumberOfReferences(
+    api::MemoryOrder order) const noexcept {
+  return nreferences_.load(order);
+}
+}  // namespace api

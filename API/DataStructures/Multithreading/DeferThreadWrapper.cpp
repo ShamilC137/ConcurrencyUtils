@@ -1,119 +1,123 @@
 #include "DeferThreadWrapper.hpp"
 
 namespace api {
-DeferThreadWrapper::DeferThreadWrapper() noexcept : desc_{} {}
+DeferThreadWrapper::DeferThreadWrapper() noexcept : thread_{} {}
 
 DeferThreadWrapper::~DeferThreadWrapper() noexcept {
-  if (desc_) {
-    desc_->DecrementNumberOfReferences();
+  if (thread_) {
+    thread_->DecrementNumberOfReferences();
   }
 }
 
-DeferThreadWrapper::DeferThreadWrapper(impl::ThreadDescriptor *desc) noexcept
-    : desc_{desc} {
-  if (desc_ && !desc_->IncrementNumberOfReferences()) {
-    desc_ = nullptr;
+DeferThreadWrapper::DeferThreadWrapper(DeferThread *thread) noexcept
+    : thread_{thread} {
+  if (thread_ && !thread_->IncrementNumberOfReferences()) {
+    thread_ = nullptr;
   }
 }
 
 DeferThreadWrapper::DeferThreadWrapper(const DeferThreadWrapper &rhs) noexcept
-    : desc_{rhs.desc_} {
-  if (desc_) {
-    if (!desc_->IncrementNumberOfReferences()) {
-      desc_ = nullptr;
+    : thread_{rhs.thread_} {
+  if (thread_) {
+    if (!thread_->IncrementNumberOfReferences()) {
+      thread_ = nullptr;
     }
   }
 }
 
 DeferThreadWrapper::DeferThreadWrapper(DeferThreadWrapper &&rhs) noexcept
-    : desc_{rhs.desc_} {
-  rhs.desc_ = nullptr;
+    : thread_{rhs.thread_} {
+  rhs.thread_ = nullptr;
 }
 
-DeferThreadWrapper &
-DeferThreadWrapper::operator=(const DeferThreadWrapper &rhs) noexcept {
-  desc_ = rhs.desc_;
-  if (desc_) {
-    if (!desc_->IncrementNumberOfReferences()) {
-      desc_ = nullptr;
+DeferThreadWrapper &DeferThreadWrapper::operator=(
+    const DeferThreadWrapper &rhs) noexcept {
+  thread_ = rhs.thread_;
+  if (thread_) {
+    if (!thread_->IncrementNumberOfReferences()) {
+      thread_ = nullptr;
     }
   }
   return *this;
 }
 
-DeferThreadWrapper &
-DeferThreadWrapper::operator=(DeferThreadWrapper &&rhs) noexcept {
-  desc_ = rhs.desc_;
-  rhs.desc_ = nullptr;
+DeferThreadWrapper &DeferThreadWrapper::operator=(
+    DeferThreadWrapper &&rhs) noexcept {
+  thread_ = rhs.thread_;
+  rhs.thread_ = nullptr;
   return *this;
 }
 
 void DeferThreadWrapper::Detach() {
-  if (desc_) {
-    if (desc_->IsDeleted()) {
-      desc_->DecrementNumberOfReferences();
-      desc_ = nullptr;
+  if (thread_) {
+    if (thread_->IsClosed()) {
+      thread_->DecrementNumberOfReferences();
+      thread_ = nullptr;
     } else {
-      desc_->GetThread()->Detach();
+      thread_->Detach();
+      return;
     }
   }
+  throw ExpiredThread("Thread is closed");
 }
 
 void DeferThreadWrapper::Join() {
-  if (desc_) {
-    if (desc_->IsDeleted()) {
-      desc_->DecrementNumberOfReferences();
-      desc_ = nullptr;
+  if (thread_) {
+    if (thread_->IsClosed()) {
+      thread_->DecrementNumberOfReferences();
+      thread_ = nullptr;
     } else {
-      desc_->GetThread()->Join();
+      thread_->Join();
+      return;
     }
   }
+  throw ExpiredThread("Thread is closed");
 }
 
 auto DeferThreadWrapper::NativeHandle() noexcept(false) {
-  if (desc_) {
-    if (desc_->IsDeleted()) {
-      desc_->DecrementNumberOfReferences();
-      desc_ = nullptr;
+  if (thread_) {
+    if (thread_->IsClosed()) {
+      thread_->DecrementNumberOfReferences();
+      thread_ = nullptr;
     } else {
-      return desc_->GetThread()->GetNativeHandle();
+      return thread_->GetNativeHandle();
     }
   }
-  throw ExpiredThread("Thread is deleted");
+  throw ExpiredThread("Thread is closed");
 }
 
 [[nodiscard]] bool DeferThreadWrapper::Joinable() noexcept(false) {
-  if (desc_) {
-    if (desc_->IsDeleted()) {
-      desc_->DecrementNumberOfReferences();
-      desc_ = nullptr;
+  if (thread_) {
+    if (thread_->IsClosed()) {
+      thread_->DecrementNumberOfReferences();
+      thread_ = nullptr;
     } else {
-      return desc_->GetThread()->Joinable();
+      return thread_->Joinable();
     }
   }
   throw ExpiredThread("Thread is deleted");
 }
 
-[[nodiscard]] unsigned int
-DeferThreadWrapper::HardwareConcurrency() noexcept(false) {
-  if (desc_) {
-    if (desc_->IsDeleted()) {
-      desc_->DecrementNumberOfReferences();
-      desc_ = nullptr;
+[[nodiscard]] unsigned int DeferThreadWrapper::HardwareConcurrency() noexcept(
+    false) {
+  if (thread_) {
+    if (thread_->IsClosed()) {
+      thread_->DecrementNumberOfReferences();
+      thread_ = nullptr;
     } else {
-      return desc_->GetThread()->HardwareConcurrency();
+      return thread_->HardwareConcurrency();
     }
   }
   throw ExpiredThread("Thread is deleted");
 }
 
 [[nodiscard]] auto DeferThreadWrapper::GetId() noexcept(false) {
-  if (desc_) {
-    if (desc_->IsDeleted()) {
-      desc_->DecrementNumberOfReferences();
-      desc_ = nullptr;
+  if (thread_) {
+    if (thread_->IsClosed()) {
+      thread_->DecrementNumberOfReferences();
+      thread_ = nullptr;
     } else {
-      return desc_->GetThread()->GetId();
+      return thread_->GetId();
     }
   }
   throw ExpiredThread("Thread is deleted");
@@ -138,4 +142,4 @@ bool DeferThreadWrapper::Resume() noexcept(false) {
 [[nodiscard]] ThreadId GetId(DeferThreadWrapper &thread) noexcept {
   return thread.GetId();
 }
-} // namespace api
+}  // namespace api
