@@ -124,6 +124,7 @@ public:
   // 2) Main thread creation
   // 3) Probably additional threads creation
   // 4) Fills slots table (i.e. slots signatures -> slot)
+  // 5) Sets slots priorities
   // Returns error status.
   // Do not throw exceptions, returns code error instead.
   virtual ModuleInitErrorStatus Init() noexcept = 0;

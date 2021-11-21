@@ -13,19 +13,19 @@
 // code with these members. Use of define will not fix problem because
 // other header also may use "memory" header.
 #include <cassert>
-#include <memory> // for allocator_traits
+#include <memory>  // for allocator_traits
 
 namespace api {
 // Used to compare to task.
 enum class TaskPriority : unsigned char { kLowPriority, kHighPriotity };
-} // namespace api
+}  // namespace api
 
 namespace impl {
 // Basic task which contains RTTI about derived classes and multithreading
 // synchronization functions.
 class BaseTask {
   // ctor and dtor
-public:
+ public:
   // signal_sig - identifier emitter
   // all target threads complete their routines. Applyed for derived classes,
   // i.e. Task.
@@ -40,11 +40,17 @@ public:
   BaseTask &operator=(BaseTask &&rhs) = delete;
 
   // getters
-public:
+ public:
   // Return size in bytes of current type object; used to deallocate object
   // captured with pointer to base class.
   [[nodiscard]] inline virtual std::size_t SizeInBytes() const noexcept {
     return sizeof(BaseTask);
+  }
+
+  // Sets caused signal. Used by kernel to extact module id
+  // and remove it from its signal
+  inline void SetCausedSignal(const api::String &signal) {
+    caused_signal_sig_ = signal;
   }
 
   // Returns associated with this task signal signature
@@ -70,7 +76,7 @@ public:
 
   // Shows that task must return value (i.e. have type ReturnTask)
   [[nodiscard]] inline bool IsMustReturn() const noexcept {
-    return static_cast<bool>(retid_ptr_); // explicit cast
+    return static_cast<bool>(retid_ptr_);  // explicit cast
   }
 
   // Return task's priority
@@ -81,17 +87,17 @@ public:
   // Shows that target threads still working (with load())
   [[nodiscard]] inline bool IsWaitable(
       api::MemoryOrder order = api::MemoryOrder::acquire) const noexcept {
-    return nacceptors_.load(order); // task itself is not considered as
-                                    // waitable routine
+    return nacceptors_.load(order);  // task itself is not considered as
+                                     // waitable routine
   }
 
   // modifiers
-public:
+ public:
   // Sets the basic number of references to task (i.e. number of this task
   // instances, with store()). Used to automatic deletion in TaskWrapper.
-  inline void
-  SetNumOfRefs(const unsigned char nreferences,
-               api::MemoryOrder order = api::MemoryOrder::release) noexcept {
+  inline void SetNumOfRefs(
+      const unsigned char nreferences,
+      api::MemoryOrder order = api::MemoryOrder::release) noexcept {
     nreferences_.store(nreferences, order);
   }
 
@@ -125,7 +131,7 @@ public:
   virtual void ClearArguments() = 0;
 
   // sync operations
-public:
+ public:
   // Potentially blocks the calling thread until unblocked be a notifying
   // operation and load return value equal to expected.
   // Waiting until number of acceptors (i.e. uncompleted slots)
@@ -137,16 +143,17 @@ public:
   // throws: api::Deadlock
   void Wait(const unsigned char expected_value = 0) noexcept(false);
 
-private:
-  api::String caused_signal_sig_;    // Module identefier
-  const api::TaskPriority priority_; // Task priority is used to compare tasks.
-  const int *idseq_ptr_; // Derived classes types identifiers sequence.
-  const int *retid_ptr_; // Derived classes return type identifier.
-  api::Atomic<unsigned char> nreferences_; // Number of references to this task.
+ private:
+  api::String caused_signal_sig_;     // Module identefier
+  const api::TaskPriority priority_;  // Task priority is used to compare tasks.
+  const int *idseq_ptr_;  // Derived classes types identifiers sequence.
+  const int *retid_ptr_;  // Derived classes return type identifier.
   api::Atomic<unsigned char>
-      nacceptors_; // Number of this task acceptors.
-                   // Setted by kernel. Reflects number of slots which will be
-                   // execute this task
+      nreferences_;  // Number of references to this task.
+  api::Atomic<unsigned char>
+      nacceptors_;  // Number of this task acceptors.
+                    // Setted by kernel. Reflects number of slots which will be
+                    // execute this task
 };
 
 [[nodiscard]] inline bool operator==(const BaseTask &lhs, const BaseTask &rhs) {
@@ -172,5 +179,5 @@ private:
 [[nodiscard]] inline bool operator>=(const BaseTask &lhs, const BaseTask &rhs) {
   return !(lhs < rhs);
 }
-} // namespace impl
-#endif // !APPLICATION_IMPLDETAILS_TASKDETAILS_HPP_
+}  // namespace impl
+#endif  // !APPLICATION_IMPLDETAILS_TASKDETAILS_HPP_
