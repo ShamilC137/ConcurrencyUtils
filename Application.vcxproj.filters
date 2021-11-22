@@ -102,6 +102,9 @@
     <ClCompile Include="API\DataStructures\Multithreading\Thread.cpp">
       <Filter>Исходные файлы\API\DataStructures\Multithreading</Filter>
     </ClCompile>
+    <ClCompile Include="Kernel\ThreadManager.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Config.hpp">
@@ -226,6 +229,9 @@
     </ClInclude>
     <ClInclude Include="Kernel\MMU\AllocatorBlockMMU.hpp">
       <Filter>Файлы заголовков\Kernel\MMU</Filter>
+    </ClInclude>
+    <ClInclude Include="Kernel\ThreadManager.hpp">
+      <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

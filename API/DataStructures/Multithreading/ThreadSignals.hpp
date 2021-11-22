@@ -1,19 +1,10 @@
 #ifndef APPLICATION_API_DATASTRUCTURES_MULTITHREADING_THREADSIGNALS_HPP_
 #define APPLICATION_API_DATASTRUCTURES_MULTITHREADING_THREADSIGNALS_HPP_
+// STL
 #include <cassert>
 
-namespace impl {
-template <class, class> constexpr static bool is_same{false};
-template <class T> constexpr static bool is_same<T, T>{true};
-template <class First, class Second = First, class... Types> struct IsAllSame {
-  constexpr static bool value =
-      is_same<First, Second> & IsAllSame<Second, Types...>::value;
-};
-
-template <class First, class Second> struct IsAllSame<First, Second> {
-  constexpr static bool value = is_same<First, Second>;
-};
-} // namespace impl
+// current project
+#include "../../../ImplDetails/Utility.hpp"
 
 namespace api {
 using ThreadSignalUnderlyingType = unsigned char;
@@ -22,14 +13,14 @@ enum class ThreadSignal : ThreadSignalUnderlyingType {
   kEmpty = 0b0,
   kExit = 0b10,
   kSuspend = 0b100,
-  kResume = 0b1000,
+  kResume = 0x80,
 };
 
 class ThreadSignals {
   using Type = ThreadSignalUnderlyingType;
 
   // ctors
-public:
+ public:
   inline ThreadSignals() noexcept : value_{} {}
   template <class... Signals>
   ThreadSignals(Signals... sigs) noexcept : value_{} {
@@ -43,17 +34,17 @@ public:
   ThreadSignals(ThreadSignals &&rhs) noexcept;
 
   // Operators =
-public:
+ public:
   volatile ThreadSignals &operator=(const ThreadSignals &rhs) volatile noexcept;
 
   volatile ThreadSignals &operator=(ThreadSignals &&) volatile noexcept;
 
-private:
+ private:
   // for operator &
   ThreadSignals(Type value);
 
   // Test and set
-public:
+ public:
   [[nodiscard]] bool Test(ThreadSignal sig) const volatile noexcept;
 
   void Set(ThreadSignal sig) volatile noexcept;
@@ -61,13 +52,13 @@ public:
   void Unset(ThreadSignal sig) volatile noexcept;
 
   // cast
-public:
+ public:
   // If there are more than one value, cast returns ThreadSignal with the lowest
   // value
   operator ThreadSignal() const volatile noexcept;
 
   // friends
-private:
+ private:
   friend ThreadSignals operator&(const volatile ThreadSignals &lhs,
                                  const volatile ThreadSignals &rhs) noexcept;
 
@@ -79,10 +70,10 @@ private:
   friend bool operator!=(const volatile ThreadSignals &lhs,
                          const volatile ThreadSignals &rhs) noexcept;
 
-private:
+ private:
   volatile Type value_;
 };
 
-} // namespace api
+}  // namespace api
 
-#endif // APPLICATION_API_DATASTRUCTURES_MULTITHREADING_THREADSIGNALS_HPP_
+#endif  // APPLICATION_API_DATASTRUCTURES_MULTITHREADING_THREADSIGNALS_HPP_

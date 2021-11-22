@@ -8,7 +8,7 @@ namespace api {
 using Thread = std::thread;
 using ThreadId = std::thread::id;
 
-// Returns hashed caller thread id
+// Returns caller thread id
 [[nodiscard]] ThreadId GetId() noexcept;
-} // namespace api
+}  // namespace api
 #endif

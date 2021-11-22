@@ -32,6 +32,9 @@ class DeferThread {
   DeferThread(const bool exit_after_call_flag, ExceptionHandler &&handler,
               ThreadRoutine &&routine, RoutineArgs &&...args)
       : is_active_{},
+        is_closed_{},
+        signals_{},
+        nreferences_{},
         thread_(impl::ThreadLaunchRoutine<ExceptionHandler, ThreadRoutine,
                                           RoutineArgs...>,
                 exit_after_call_flag, std::forward<ExceptionHandler>(handler),
@@ -52,7 +55,8 @@ class DeferThread {
 
   void ActivateThread(api::MemoryOrder order = api::MemoryOrder::release);
 
-  void DeactivateThread(api::MemoryOrder order = api::MemoryOrder::acquire);
+  void DeactivateCallerThread(
+      api::MemoryOrder order = api::MemoryOrder::acquire);
 
   void Join();
 
@@ -96,7 +100,7 @@ class DeferThread {
 };
 
 template <class ThreadRoutine, class... RoutineArgs>
-void RoutineLoop(DeferThread *wrapper, const bool exit_after_call_flag,
+void RoutineLoop(const bool exit_after_call_flag,
                  ThreadRoutine (*routine)(RoutineArgs...),
                  RoutineArgs &&...args) {
   if (exit_after_call_flag) {
@@ -168,7 +172,7 @@ void ThreadLaunchRoutine(const bool exit_after_call_flag,
   static_assert(HandlerArguments::size < 2u, "Too many handler arguments");
 
   try {
-    api::RoutineLoop(wrapper, exit_after_call_flag, routine,
+    api::RoutineLoop(exit_after_call_flag, routine,
                      std::forward<RoutineArgs>(args)...);
     wrapper->Close();
   } catch (std::exception &ex) {

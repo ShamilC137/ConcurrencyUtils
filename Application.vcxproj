@@ -166,6 +166,7 @@
     <ClCompile Include="ImplDetails\SlotDetails.cpp" />
     <ClCompile Include="ImplDetails\TaskDetails.cpp" />
     <ClCompile Include="Kernel\Kernel\Kernel.cpp" />
+    <ClCompile Include="Kernel\ThreadManager.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -210,6 +211,7 @@
     <ClInclude Include="Kernel\MMU\BlockMMU.hpp" />
     <ClInclude Include="Kernel\MMU\Usings.hpp" />
     <ClInclude Include="Kernel\MMU\VirtualMMU.hpp" />
+    <ClInclude Include="Kernel\ThreadManager.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

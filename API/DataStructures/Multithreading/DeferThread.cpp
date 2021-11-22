@@ -22,7 +22,7 @@ void DeferThread::ActivateThread(api::MemoryOrder order) {
   is_active_.notify_one();
 }
 
-void DeferThread::DeactivateThread(api::MemoryOrder order) {
+void DeferThread::DeactivateCallerThread(api::MemoryOrder order) {
   is_active_.clear();
   is_active_.wait(false, order);
 }
@@ -63,9 +63,11 @@ void DeferThread::Detach() { thread_.detach(); }
 }
 
 [[nodiscard]] void DeferThread::Close() noexcept {
-  signals_.Set(ThreadSignal::kExit);
-  ScopedLock<Mutex> lock(close_mutex_);
-  is_closed_ = true;
+  if (!is_closed_) {
+    signals_.Set(ThreadSignal::kExit);
+    ScopedLock<Mutex> lock(close_mutex_);
+    is_closed_ = true;
+  }
 }
 
 [[nodiscard]] bool DeferThread::IsClosed() const volatile noexcept {

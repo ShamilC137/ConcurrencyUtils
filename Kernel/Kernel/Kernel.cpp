@@ -14,7 +14,7 @@ Kernel::Kernel() noexcept(false) : mmu_(kMMUSize) /*throws std::bad_alloc*/ {}
 
 // FIXME: Multithreading
 [[nodiscard]] void *Kernel::Allocate(const std::size_t nbytes) noexcept(false) {
-  return mmu_.Allocate(nbytes); // throws: std::bad_alloc
+  return mmu_.Allocate(nbytes);  // throws: std::bad_alloc
 }
 
 // FIXME: Multithreading
@@ -27,7 +27,7 @@ void Kernel::AddModule(impl::AbstractModule * /*module*/) {}
 
 // FIXME: stub
 [[nodiscard]] int Kernel::Run() { return {}; }
-} // namespace kernel
+}  // namespace kernel
 
 namespace api {
 namespace kernel_api {
@@ -37,7 +37,7 @@ kernel::Kernel &GetKernel() noexcept {
 }
 
 [[nodiscard]] void *Allocate(const std::size_t nbytes) noexcept(false) {
-  return GetKernel().Allocate(nbytes); // throws: std::bad_alloc
+  return GetKernel().Allocate(nbytes);  // throws: std::bad_alloc
 }
 
 void Deallocate(void *ptr, const std::size_t nbytes) noexcept {
@@ -53,32 +53,28 @@ void AddModule(impl::AbstractModule *module) { GetKernel().AddModule(module); }
 [[nodiscard]] int Run() { return GetKernel().Run(); }
 
 // FIXME: stub
-[[nodiscard]] const volatile ThreadSignals &
-GetThreadSignalsReference(const ThreadId id) noexcept {
+[[nodiscard]] const volatile ThreadSignals &GetThreadSignalsReference(
+    const ThreadId id) noexcept {
   const volatile api::ThreadSignals sigs{};
   return sigs;
 }
 
 // FIXME: stub
-bool SendKillThreadSignal(const ThreadId id) noexcept {
-  return false;
-}
+bool SendKillThreadSignal(const ThreadId id) noexcept { return false; }
 
 // FIXME: stub
-bool SendSuspendThreadSignal(const ThreadId id) noexcept {
-  return false;
-}
+bool SendSuspendThreadSignal(const ThreadId id) noexcept { return false; }
 
 // FIXME: stub
 bool ResumeThread(const ThreadId id) noexcept { return false; }
 
 // FIXME: stub
-bool SuspendThisThread(const api::ThreadId * const id_hint) noexcept {
+bool SuspendThisThread(const api::ThreadId *const id_hint) noexcept {
   /*
-  * expected behaviour:
-  * kernel_api::UnsetSignal(kThreadId, ThreadSignal::kSuspend);
-  * wrapper->DeactivateThread();
-  */
+   * expected behaviour:
+   * kernel_api::UnsetSignal(kThreadId, ThreadSignal::kSuspend);
+   * wrapper->DeactivateThread();
+   */
   if (id_hint) {
   } else {
   }
@@ -86,15 +82,12 @@ bool SuspendThisThread(const api::ThreadId * const id_hint) noexcept {
 }
 
 // FIXME: stub
-void UnsetSignal(const ThreadId id, ThreadSignal sig) noexcept {
-  
-}
+void UnsetSignal(const ThreadId id, ThreadSignal sig) noexcept {}
 
 // FIXME: stub
-void DeleteThread(const ThreadId id) {}
-
-} // namespace kernel_api
-} // namespace api
+void DeleteThread(const api::ThreadId id) {}
+}  // namespace kernel_api
+}  // namespace api
 
 // global scope
 // global operator new and global operator delete
