@@ -167,6 +167,7 @@
     <ClCompile Include="ImplDetails\TaskDetails.cpp" />
     <ClCompile Include="Kernel\Kernel\Kernel.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Kernel\TaskManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="API\DataStructures\Containers\Deque.hpp" />
@@ -204,12 +205,14 @@
     <ClInclude Include="ImplDetails\SlotDetails.hpp" />
     <ClInclude Include="ImplDetails\TaskDetails.hpp" />
     <ClInclude Include="ImplDetails\Utility.hpp" />
+    <ClInclude Include="Kernel\KernelUtilities.hpp" />
     <ClInclude Include="Kernel\Kernel\Kernel.hpp" />
     <ClInclude Include="Kernel\MMU\AlignMMU.hpp" />
     <ClInclude Include="Kernel\MMU\AllocatorBlockMMU.hpp" />
     <ClInclude Include="Kernel\MMU\BlockMMU.hpp" />
     <ClInclude Include="Kernel\MMU\Usings.hpp" />
     <ClInclude Include="Kernel\MMU\VirtualMMU.hpp" />
+    <ClInclude Include="Kernel\TaskManager.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
