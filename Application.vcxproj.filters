@@ -103,6 +103,7 @@
       <Filter>Исходные файлы\API\DataStructures\Multithreading</Filter>
     </ClCompile>
     <ClCompile Include="Kernel\TaskManager.cpp">
+    <ClCompile Include="Kernel\ThreadManager.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
@@ -234,6 +235,7 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="Kernel\KernelUtilities.hpp">
+    <ClInclude Include="Kernel\ThreadManager.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

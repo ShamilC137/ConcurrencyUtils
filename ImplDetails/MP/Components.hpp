@@ -1,20 +1,10 @@
 #ifndef APPLICATION_IMPLDETAILS_MP_FUNCTION_TYPES_HPP_
 #define APPLICATION_IMPLDETAILS_MP_FUNCTION_TYPES_HPP_
+// Current project
+#include "../Utility.hpp"
 #include "MPVector.hpp"
 
 namespace impl {
-template <class...>
-using VoidT = void;
-
-// Checks that operator() exists
-// Base template, assumes that operator() not existing
-template <class T, class = void>
-constexpr static bool HasOperator{false};
-
-// Existance specialization
-template <class T>
-constexpr static bool HasOperator<T, VoidT<decltype(helper(&T::operator()))>>{
-    true};
 namespace impl_details {
 // Helper for lambdas or noncallable
 template <class T>

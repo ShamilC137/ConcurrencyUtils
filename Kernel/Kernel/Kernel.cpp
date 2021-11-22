@@ -90,7 +90,6 @@ void UnsetSignal(const ThreadId id, ThreadSignal sig) noexcept {}
 
 // FIXME: stub
 void DeleteThread(const ThreadId id) {}
-
 }  // namespace kernel_api
 }  // namespace api
 

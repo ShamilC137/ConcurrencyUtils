@@ -8,7 +8,6 @@
 #include "../../API/MemoryManagementUtilities.hpp"
 #include "../../Config.hpp"
 #include "../AbstractModule.hpp"
-
 #include "Errors.hpp"
 
 // STL
@@ -19,10 +18,10 @@
 #include <Windows.h>
 #else
 static_assert(false, "Unsupported OS");
-#endif // !WINODOWS32 | WINDOWS64
+#endif  // !WINODOWS32 | WINDOWS64
 
 namespace kernel {
-class Kernel; // singleton
+class Kernel;  // singleton
 }
 
 namespace api {
@@ -47,8 +46,8 @@ void AddModule(impl::AbstractModule *module);
 // Its value can be used for signal handler (it may be changed from another
 // thread at any moment, that's why it marked as volatile).
 // Yes, there is data race, but I don't care (one writter, many readers)
-[[nodiscard]] const api::ThreadSignals volatile &
-GetThreadSignalsReference(const api::ThreadId id) noexcept;
+[[nodiscard]] const api::ThreadSignals volatile &GetThreadSignalsReference(
+    const api::ThreadId id) noexcept;
 
 // For all functions that set thread signal flag the same rules are applied:
 // The signal will be processed only at the next loop iteration, i.e.
@@ -76,13 +75,14 @@ bool ResumeThread(const api::ThreadId id) noexcept;
 
 // Suspends caller thread. Returns true if thread was suspended and false
 // otherwise. If hint is setted up then GetId() is not called.
-bool SuspendThisThread(const api::ThreadId * const id_hint = nullptr) noexcept;
+bool SuspendThisThread(const api::ThreadId *const id_hint = nullptr) noexcept;
 // ^^^^^^^^^^ STOP LINE ^^^^^^^^^^
 
+// Unsets speciefied thread signal.
 void UnsetSignal(const api::ThreadId id, api::ThreadSignal sig) noexcept;
 
 void DeleteThread(const api::ThreadId id);
-} // namespace kernel_api
-} // namespace api
+}  // namespace kernel_api
+}  // namespace api
 
-#endif // !APPLICATION_IMPLDETAILS_IMPLAPI_KERNELAPI_HPP_
+#endif  // !APPLICATION_IMPLDETAILS_IMPLAPI_KERNELAPI_HPP_
