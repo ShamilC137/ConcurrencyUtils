@@ -112,13 +112,13 @@ class BaseTask {
 
   // Decrements number of references and returns new value.
   unsigned char DecrementNumOfRefs(
-      api::MemoryOrder order = api::MemoryOrder::acq_rel) noexcept {
+      api::MemoryOrder order = api::MemoryOrder::relaxed) noexcept {
     return nreferences_.sub(1u, order);
   }
 
   // Increments number of references and returns new value.
   unsigned char IncrementNumOfRefs(
-      api::MemoryOrder order = api::MemoryOrder::acq_rel) noexcept {
+      api::MemoryOrder order = api::MemoryOrder::relaxed) noexcept {
     return nreferences_.add(1u, order);
   }
 

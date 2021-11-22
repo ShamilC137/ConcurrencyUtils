@@ -54,6 +54,8 @@ class DeferThreadWrapper {
 
   bool Resume() noexcept(false);
 
+  [[nodiscard]] bool IsClosed() const noexcept;
+
  private:
   DeferThread *thread_;  // pointer to associated thread
 };

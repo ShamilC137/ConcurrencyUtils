@@ -10,18 +10,19 @@ namespace kernel {
 Kernel::~Kernel() {}
 
 // Ctors
-Kernel::Kernel() noexcept(false) : mmu_(kMMUSize) /*throws std::bad_alloc*/ {}
+Kernel::Kernel() noexcept(false) : stub(kMMUSize) /*throws std::bad_alloc*/ {}
 
 // FIXME: Multithreading
 [[nodiscard]] void *Kernel::Allocate(const std::size_t nbytes) noexcept(false) {
-  return mmu_.Allocate(nbytes);  // throws: std::bad_alloc
+  return stub.Allocate(nbytes);  // throws: std::bad_alloc
 }
 
 // FIXME: Multithreading
 void Kernel::Deallocate(void *ptr, const size_t nbytes) noexcept {
-  mmu_.Deallocate(ptr, nbytes);
+  stub.Deallocate(ptr, nbytes);
 }
 
+// FIXME: Multithreading
 void Kernel::PushToQueue(const api::TaskWrapper &task) {
   task_manager_.PushTask(task);
 }

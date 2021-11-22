@@ -67,6 +67,7 @@ void DeferThreadWrapper::Join() {
       thread_->DecrementNumberOfReferences();
       thread_ = nullptr;
     } else {
+      thread_->Close();
       thread_->Join();
       return;
     }
@@ -136,6 +137,14 @@ bool DeferThreadWrapper::Resume() noexcept(false) {
     return kernel_api::ResumeThread(api::GetId(*this));
   } catch (...) {
     return false;
+  }
+}
+
+bool DeferThreadWrapper::IsClosed() const noexcept {
+  if (thread_) {
+    return thread_->IsClosed();
+  } else {
+    return true;
   }
 }
 

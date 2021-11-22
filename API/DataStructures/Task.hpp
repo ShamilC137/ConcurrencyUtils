@@ -12,13 +12,14 @@
 
 namespace impl {
 namespace impl_details {
-template <class... Args> class Arguments {
-public:
+template <class... Args>
+class Arguments {
+ public:
   using Tuple = std::tuple<Args...>;
 
   Arguments(Args &&...args) : data_{std::forward<Args>(args)...} {}
 
-private:
+ private:
   template <class T, std::size_t... Seq>
   void UnpackHelper(T &where, std::index_sequence<Seq...>) {
     (where.push_back(std::forward<Args>(std::get<Seq>(data_))), ...);
@@ -31,21 +32,23 @@ private:
      ...);
   }
 
-public:
+ public:
   // Extracts the arguments of its tuple to container. Container must have
   // "push_back" method
-  template <class Container> void Unpack(Container &where) {
+  template <class Container>
+  void Unpack(Container &where) {
     constexpr auto size{std::tuple_size_v<Tuple>};
     UnpackHelper(where, std::make_index_sequence<size>{});
   }
 
   // Same as previous one but add const qualifier to tuple tupes
-  template <class T> void Unpack(T &where) const {
+  template <class T>
+  void Unpack(T &where) const {
     constexpr auto size{std::tuple_size_v<Tuple>};
     UnpackHelper(where, std::make_index_sequence<size>{});
   }
 
-private:
+ private:
   template <class Container, class Inserter, std::size_t... Indexes>
   void UnpackHelper(Container &where, Inserter inserter,
                     std::index_sequence<Indexes...>) {
@@ -60,7 +63,7 @@ private:
      ...);
   }
 
-public:
+ public:
   // Extracts tuple parameters and adds them to container using the inserter
   template <class Container, class Inserter>
   void Unpack(Container &where, Inserter inserter) {
@@ -80,7 +83,7 @@ public:
   // Return data tuple
   [[nodiscard]] inline const Tuple &GetTuple() const noexcept { return data_; }
 
-private:
+ private:
   Tuple data_;
 };
 
@@ -95,14 +98,15 @@ private:
 // BaseTask is used for multithreading safety insurance. If the callee thread
 // is working while the caller thread trying to a get result, caller will be
 // blocked until the callee exits.
-template <class RetType> class RetTypeResolution {
-public:
+template <class RetType>
+class RetTypeResolution {
+ public:
   using ValueType = std::decay_t<RetType>;
   using BasePointer = BaseTask *;
   using PointerType = ValueType *;
   using Alloc = std::allocator<ValueType>;
 
-public:
+ public:
   inline RetTypeResolution(const BasePointer &base_task) noexcept
       : safety_object_{base_task} {}
 
@@ -123,7 +127,7 @@ public:
   // Throws: api::Deadlock
   RetType GetResult() noexcept(false) {
     if (safety_object_->IsWaitable()) {
-      safety_object_->Wait(); // throws
+      safety_object_->Wait();  // throws
     }
     if (!value_) {
       throw api::BrokenReturnTask("Result value is empty");
@@ -140,19 +144,20 @@ public:
     }
   }
 
-private:
+ private:
   PointerType value_{};
-  BasePointer safety_object_; // ensure multithreading safety
+  BasePointer safety_object_;  // ensure multithreading safety
 };
 
 // Specialization type: lvalue ref
 // Adopts pointer to result value. If value is expired after adoptation - UB.
-template <class RetType> class RetTypeResolution<RetType &> {
-public:
+template <class RetType>
+class RetTypeResolution<RetType &> {
+ public:
   using PointerType = RetType *;
   using BasePointer = BaseTask *;
 
-public:
+ public:
   inline RetTypeResolution(const BasePointer &base_task) noexcept
       : safety_object_{base_task} {}
 
@@ -163,24 +168,25 @@ public:
   // Throws: api::Deadlock
   RetType &GetResult() const noexcept(false) {
     if (safety_object_->IsWaitable()) {
-      safety_object_->Wait(); // throws
+      safety_object_->Wait();  // throws
     }
     return *value_;
   }
 
-private:
+ private:
   PointerType value_{};
-  BasePointer safety_object_; // ensure multithreading safety
+  BasePointer safety_object_;  // ensure multithreading safety
 };
 
 // Specialization type: pointer
 // Adopts pointer to result value. If value is expired after adoptation - UB.
-template <class RetType> class RetTypeResolution<RetType *> {
-public:
+template <class RetType>
+class RetTypeResolution<RetType *> {
+ public:
   using PointerType = RetType *;
   using BasePointer = BaseTask *;
 
-public:
+ public:
   inline RetTypeResolution(const BasePointer &base_task) noexcept
       : safety_object_{base_task} {}
 
@@ -191,17 +197,17 @@ public:
   // Throws: api::Deadlock
   RetType *GetResult() noexcept(false) {
     if (safety_object_->IsWaitable()) {
-      safety_object_->Wait(); // throws
+      safety_object_->Wait();  // throws
     }
     return value_;
   }
 
-private:
+ private:
   PointerType value_{};
-  BasePointer safety_object_; // ensure multithreading safety
+  BasePointer safety_object_;  // ensure multithreading safety
 };
-} // namespace impl_details
-} // namespace impl
+}  // namespace impl_details
+}  // namespace impl
 namespace api {
 // Task is the class that encapsulates parameters for slots.
 // Arguments are contained in the tuple which can be unpacked in several ways:
@@ -214,13 +220,14 @@ namespace api {
 // If is_blocking_task flag is setted, Task will wait for all threads
 // routine completion.
 // Warning: few thread could read data at the same time.
-template <class... Args> class Task : public impl::BaseTask {
-public:
+template <class... Args>
+class Task : public impl::BaseTask {
+ public:
   using Base = impl::BaseTask;
   using Tuple = typename impl::impl_details::Arguments<Args...>::Tuple;
   using Arguments = impl::impl_details::Arguments<Args...>;
 
-public:
+ public:
   // signal_sig - signal signature
   // is_blocking_task - if true task must wait for its slot complete call
   // task_priority - used for task compare
@@ -231,7 +238,7 @@ public:
 
   ~Task() noexcept override {
     try {
-      Base::Wait(); // throws
+      Base::Wait();  // throws
     } catch (...) {
       assert(false && "Deadlock during task destruction");
     }
@@ -243,19 +250,21 @@ public:
     return sizeof(Task);
   }
 
-protected:
+ protected:
   Task(api::String caused_signal_sig, TaskPriority priority, const int *retid,
        impl::ForceExplicitTypeT<Args>... args)
       : Base(caused_signal_sig, priority,
              impl::IDSequence<Args...>::CreateIDSequence(), retid),
         args_{new Arguments{std::forward<Args>(args)...}} {}
 
-public:
-  template <class Container> void Unpack(Container &where) {
+ public:
+  template <class Container>
+  void Unpack(Container &where) {
     args_->Unpack(where);
   }
 
-  template <class Container> void Unpack(Container &where) const {
+  template <class Container>
+  void Unpack(Container &where) const {
     args_->Unpack(where);
   }
 
@@ -278,21 +287,15 @@ public:
   }
 
   void ClearArguments() override {
-    if (args_deletion_mutex_.try_lock()) {
-      if (args_) {
-        delete args_;
-        args_ = nullptr;
-      }
-      args_deletion_mutex_.unlock();
+    if (args_) {
+      delete args_;
+      args_ = nullptr;
     }
   }
 
   // fields
-private:
+ private:
   Arguments *args_;
-  // if slots have not priorities, two (or more) slots can try to delete
-  // args
-  api::Mutex args_deletion_mutex_;
 };
 
 // Task that allows to return value from target function. Assumed that result
@@ -307,7 +310,7 @@ class ReturnTask : public Task<Args...>,
   using Base = Task<Args...>;
   using RetBase = impl::impl_details::RetTypeResolution<ReturnType>;
 
-public:
+ public:
   // signal_sig - signal signature
   // task_priority - used for task compare
   // args - target slot arguments
@@ -319,9 +322,9 @@ public:
 
   ~ReturnTask() noexcept override {
     assert(!Base::IsWaitable() &&
-           "Callee thread still working"); // if true, it means that GetResult
-                                           // was not called. Such condition
-                                           // treated as unacceptable.
+           "Callee thread still working");  // if true, it means that GetResult
+                                            // was not called. Such condition
+                                            // treated as unacceptable.
   }
 
   // Return the size in bytes of this class; used to correct deallocate object
@@ -330,10 +333,10 @@ public:
     return sizeof(ReturnTask);
   }
 
-  virtual inline void
-  SetNumOfAcceptors(const unsigned char nacceptors,
-                    api::MemoryOrder order =
-                        api::MemoryOrder::release) noexcept(false) override {
+  virtual inline void SetNumOfAcceptors(
+      const unsigned char nacceptors,
+      api::MemoryOrder order =
+          api::MemoryOrder::release) noexcept(false) override {
     if (nacceptors > 1) {
       throw BrokenReturnTask("Return task cannot have more than one acceptor.");
     } else {
@@ -342,6 +345,6 @@ public:
   }
 };
 
-} // namespace api
+}  // namespace api
 
-#endif // !APPLICATION_API_DATASTRUCTURES_TASK_HPP_
+#endif  // !APPLICATION_API_DATASTRUCTURES_TASK_HPP_

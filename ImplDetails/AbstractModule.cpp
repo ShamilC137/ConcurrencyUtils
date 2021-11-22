@@ -18,8 +18,8 @@ api::Vector<api::String> AbstractModule::GetSlotsSignatures() const {
 
 // modifiers
 
-[[nodiscard]] api::TaskWrapper
-AbstractModule::TryExtractTask() noexcept(false) {
+[[nodiscard]] api::TaskWrapper AbstractModule::TryExtractTask() noexcept(
+    false) {
   try {
     return tasks_queue_.TryPop();
   } catch (const api::PopFailed &) {
@@ -30,13 +30,13 @@ AbstractModule::TryExtractTask() noexcept(false) {
   }
 }
 
-ThreadResourceErrorStatus AbstractModule::ExecuteTask() noexcept(false) {
-  auto task{tasks_queue_.Pop()}; // throws: api::PopFailed
+ThreadResourceErrorStatus AbstractModule::ExecuteNextTask() noexcept(false) {
+  auto task{tasks_queue_.Pop()};  // throws: api::PopFailed
   return ExecuteTask(std::move(task));
 }
 
-void AbstractModule::ExecuteTask(api::ForceSlotCall) noexcept(false) {
-  auto task{tasks_queue_.Pop()}; // throws: api::PopFailed
+void AbstractModule::ExecuteNextTask(api::ForceSlotCall) noexcept(false) {
+  auto task{tasks_queue_.Pop()};  // throws: api::PopFailed
   ExecuteTask(std::move(task), {});
 }
 
@@ -44,20 +44,25 @@ void AbstractModule::ExecuteTask(api::TaskWrapper task,
                                  api::ForceSlotCall) noexcept(false) {
   // throws: std::out_of_range
   auto slot_ptr{slots_.at(task.GetTarget()).GetSlot()};
-  (*slot_ptr)(task); // throws: api::BadSlotCall
+  (*slot_ptr)(task);  // throws: api::BadSlotCall
 }
 
-ThreadResourceErrorStatus
-AbstractModule::ExecuteTask(api::TaskWrapper task) noexcept(false) {
-  // throws: std::out_of_range
-  auto slot_ptr{slots_.at(task.GetTarget()).GetSlot()};
+ThreadResourceErrorStatus AbstractModule::ExecuteTask(
+    api::TaskWrapper task) noexcept(false) {
+  // FIXME: few threads can pass, so mutex is used.
+  static api::Mutex mutex{};
+  auto slot_ptr{
+      slots_.at(task.GetTarget()).GetSlot()};  // throws: std::out_of_range
+  api::ScopedLock<api::Mutex> lock(mutex);
   if (slot_ptr->IncrementNumOfExecutors(api::MemoryOrder::relaxed) > 1u) {
     slot_ptr->DecrementNumOfExecutors(api::MemoryOrder::relaxed);
     return ThreadResourceErrorStatus::kBusy;
   }
+  lock.unlock();
+
   // throws: api::BadSlotCall
   (*slot_ptr)(task);
   slot_ptr->DecrementNumOfExecutors();
   return ThreadResourceErrorStatus::kOk;
 }
-} // namespace impl
+}  // namespace impl

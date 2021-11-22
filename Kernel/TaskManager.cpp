@@ -12,7 +12,7 @@ TaskManager::TaskManager() {}
 
 void TaskManager::AddModule(ModuleDescriptor* md) { modules_.push_back(md); }
 
-void TaskManager::DeleteModule(const ModuleDescriptor* md) {
+void TaskManager::EraseModule(const ModuleDescriptor* md) {
   for (auto iter{modules_.begin()}, end{modules_.end()}; iter != end; ++iter) {
     if (md == *iter) {
       modules_.erase(iter);
@@ -37,14 +37,16 @@ bool TaskManager::SendNextTask() noexcept(false) {
   api::Pair signal{impl::GetComponentsStub(real_task->GetCausedSignal())};
   real_task->SetCausedSignal(signal.second);  // erase module id from signature
 
-  // conencted to this signal slots
+  // connected to this signal slots
   decltype(auto) slots{
       connections_signatures_.at(real_task->GetCausedSignal())};
   real_task->SetNumOfAcceptors(slots.size());  // number of slots
   for (auto pair : slots) {
-    task.SetTarget(pair.first);           // target slot signature
-    pair.second->module->PushTask(task);  // adding task to module queue
+    task.SetTarget(pair.first);  // target slot signature
+    pair.second->module->PushTask(
+        std::move(task));  // adding task to module queue
   }
+  return true;
 }
 
 ModuleDescriptor* TaskManager::FindDescriptor(const api::String& id) {

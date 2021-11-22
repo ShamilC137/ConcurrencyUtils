@@ -54,28 +54,68 @@ class TaskManager {
  public:
   TaskManager();
 
-  // Adds module to module table.
+  /// <summary>
+  ///  module manipulation functions
+  /// </summary>
+ public:
+  /// <summary>
+  ///   Adds module to module table. Does not take ownership of the descriptor
+  /// </summary>
+  /// <param name="md"> pointer to module descriptor </param>
+  /// <multithreading> unsafe </multithreading>
   void AddModule(ModuleDescriptor *md);
 
-  // Removes module from module table.
-  void DeleteModule(const ModuleDescriptor *md);
+  /// <summary>
+  ///   Removes module from module table
+  /// </summary>
+  /// <param name="md"> pointer to module descriptor </param>
+  /// <multithreading> unsafe </multithreading>
+  void EraseModule(const ModuleDescriptor *md);
 
-  // Adds task to general queue. Blocks caller until task is pushed
+  /// <summary>
+  ///   task manipulation functions
+  /// </summary>
+ public:
+  /// <summary>
+  ///   Adds task to general queue. Blocks caller until task is pushed
+  /// </summary>
+  /// <param name="task"> task </param>
+  /// <multithreading> safe </multithreading>
   void PushTask(const api::TaskWrapper &task);
 
-  // Fills connections table (signal -> vector of slots). Uses
-  // configuration file for searching signals and slots. Uses modules
-  // for slots existence check.
-  // throws: ModuleNotFound if module signature is not present;
-  //         SlotNotFound if specified module slot is not present.
+  /// <summary>
+  ///   Fills connections table (signal -> vector of slots). Uses
+  ///   configuration file for searching signals and slots. Uses modules
+  ///   for slots existence check.
+  /// </summary>
+  /// <exception type="ModuleNotFound">
+  ///   Thrown when module signature is not present
+  /// </exception>
+  /// <exception type="SlotNotFound">
+  ///   Thrown if specified module slot is not present
+  /// </exception>
+  /// <multithreading> unsafe </multithreading>
   void FillConnectionsTable() noexcept(false);
 
-  // Extracts the next task from queue and sends it to correspong module.
-  // Throws: out_of_range if signal is not present
+  /// <summary>
+  ///   Extracts the next task from queue and sends it to correspong module. If
+  ///   false is returned, task queue is empty.
+  /// </summary>
+  /// <exception type ="std::out_of_range">
+  ///   Thrown if signal is not present
+  /// </exception>
+  /// <returns> true if task is sent and false otherwise </returns>
+  /// <multithreading> partly safe:
+  ///   if connection table is changed during this operation - UB
+  /// </multithreading>
   bool SendNextTask() noexcept(false);
 
  private:
-  // Searches for module descriptor.
+  /// <summary>
+  ///   Searches for module descriptor
+  /// </summary>
+  /// <param name="id"> module identifier </param>
+  /// <multithreading> unsafe </multithreading>
   ModuleDescriptor *FindDescriptor(const api::String &id);
 
  private:

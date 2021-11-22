@@ -3,6 +3,7 @@
 
 // current project
 #include "../../Config.hpp"
+#include "Multithreading/ScopedLock.hpp"
 #include "Task.hpp"
 
 namespace api {
@@ -14,7 +15,7 @@ namespace api {
 // Note: task itself cannot contain target because one task can be binded to
 // few slots (every slot will have its own TaskWrapper)
 class TaskWrapper {
-public:
+ public:
   using PointerType = impl::BaseTask *;
 
   // Takes pointer to task and probably target slot signature.
@@ -37,7 +38,7 @@ public:
     return task_;
   }
 
-  // Kernel 
+  // Kernel
   inline void SetTarget(const api::String &target) { target_ = target; }
 
   [[nodiscard]] inline const api::String &GetTarget() const { return target_; }
@@ -47,11 +48,11 @@ public:
     return task_->GetCausedSignal();
   }
 
-protected:
+ protected:
   PointerType task_;
 
-private:
-  api::String target_; // Associated with this task slot
+ private:
+  api::String target_;  // Associated with this task slot
 };
 
 template <class ReturnType, class... Args>
@@ -98,5 +99,5 @@ struct ReturnTaskWrapper : TaskWrapper {
                                      const TaskWrapper &rhs) {
   return !(lhs > rhs);
 }
-} // namespace api
-#endif // !APPLICATION_API_DATASTRUCTURES_TASKWRAPPER_HPP_
+}  // namespace api
+#endif  // !APPLICATION_API_DATASTRUCTURES_TASKWRAPPER_HPP_

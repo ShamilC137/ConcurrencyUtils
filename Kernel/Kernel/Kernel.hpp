@@ -17,6 +17,7 @@
 #include "../../ImplDetails/ImplAPI/KernelAPI.hpp"
 #include "../MMU/VirtualMMU.hpp"
 #include "../TaskManager.hpp"
+#include "../ThreadManager.hpp"
 
 namespace kernel {
 static constexpr mmu::SizeType kMMUSize{16 * 1024 * 1024};
@@ -46,12 +47,22 @@ class Kernel {
   void Deallocate(void *ptr, const size_t nbytes) noexcept;
 
   // Thread manipulation functions
+ public:
+  template <class ExceptionHandler, class ThreadRoutine, class... RoutineArgs>
+  inline api::DeferThreadWrapper CreateThread(const bool exit_after_call_flag,
+                                              ExceptionHandler &&handler,
+                                              ThreadRoutine &&routine,
+                                              RoutineArgs &&...args);
 
-  // internal logic functions
+  void DeleteThread(const api::ThreadId id) noexcept(false);
+
+  // Task manipulation functions
  public:
   // Adds task to task queue. Potentially blocks caller thread if queue is busy.
   void PushToQueue(const api::TaskWrapper &task);
 
+  // internal logic functions
+ public:
   // Adds new module to kernel
   void AddModule(impl::AbstractModule *module);
 
@@ -66,12 +77,26 @@ class Kernel {
   // fields
  private:
   // memory unit; all allocations pass through it
-  mmu::VirtualMMU<kMMUSize> mmu_;
+  mmu::VirtualMMU<kMMUSize> stub;
   api::AtomicFlag exit_flag_;  // shows that program must be closed, i.e. breaks
                                // run loop
+  // task manager unit; all task pass through it
   TaskManager task_manager_;
+  // thread manager unit; all threads (which created by CreateThread) is pass
+  // through it
+  ThreadManager thread_manager_;
   api::Vector<ModuleDescriptor> modules_;
 };
+
+template <class ExceptionHandler, class ThreadRoutine, class... RoutineArgs>
+inline api::DeferThreadWrapper Kernel::CreateThread(
+    const bool exit_after_call_flag, ExceptionHandler &&handler,
+    ThreadRoutine &&routine, RoutineArgs &&...args) {
+  return thread_manager_.CreateThread(
+      exit_after_call_flag, std::forward<ExceptionHandler>(handler),
+      std::forward<ThreadRoutine>(routine), std::forward<RoutineArgs>(args)...);
+}
+
 }  // namespace kernel
 
 #endif  // !APPLICATION_KERNEL_KERNEL_KERNEL_HPP_
