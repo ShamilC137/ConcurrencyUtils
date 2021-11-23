@@ -6,8 +6,6 @@
 #include "../API/DataStructures/Containers/String.hpp"
 #include "../API/DataStructures/Containers/Vector.hpp"
 #include "../API/DataStructures/Multithreading/Atomics.hpp"
-#include "../API/DataStructures/Multithreading/Mutex.hpp"
-#include "../API/DataStructures/Multithreading/ScopedLock.hpp"s
 #include "../API/DataStructures/Multithreading/UnboundedPriorityBlockingQueue.hpp"
 #include "../API/DataStructures/ScopedSlotWrapper.hpp"
 #include "../API/DataStructures/Slot.hpp"
@@ -33,11 +31,6 @@ namespace impl {
 ///   functions for working with tasks queue and slots
 /// </summary>
 class AbstractModule {
-  // aliases
- public:
-  template <class T>
-  using Allocator = std::allocator<T>;
-
   // Ctors
  public:
   /// <param name="mid"> module identifier </param>
@@ -145,7 +138,9 @@ class AbstractModule {
   /// <exception type="api::PopFailed">
   ///   Thrown if task queue is empty
   /// </exception>
-  /// <multithreading> safe </multithreading>
+  /// <multithreading>
+  ///   Partially safe: could be broken if slots table is changed
+  /// </multithreading>
   ThreadResourceErrorStatus ExecuteNextTask() noexcept(false);
 
   /// <summary>
@@ -163,7 +158,9 @@ class AbstractModule {
   /// <exception type="api::PopFailed">
   ///   Thrown if task queue is empty
   /// </exception>
-  /// <multithreading> safe </multithreading>
+  /// <multithreading>
+  ///   Partially safe: could be broken if slots table is changed
+  /// </multithreading>
   void ExecuteNextTask(api::ForceSlotCall) noexcept(false);
 
   /// <summary>
@@ -181,6 +178,9 @@ class AbstractModule {
   /// <exception type="api::BadSlotCall">
   ///   Thrown if slot and task types are incompatible
   /// </exception>
+  /// <multithreading>
+  ///   Partially safe: could be broken if slots table is changed
+  /// </multithreading>
   ThreadResourceErrorStatus ExecuteTask(api::TaskWrapper task) noexcept(false);
 
   /// <summary>
@@ -196,6 +196,9 @@ class AbstractModule {
   /// <exception type="api::BadSlotCall">
   ///   Thrown if slot and task types are incompatible
   /// </exception>
+  /// <multithreading>
+  ///   Partially safe: could be broken if slots table is changed
+  /// </multithreading>
   void ExecuteTask(api::TaskWrapper task, api::ForceSlotCall) noexcept(false);
 
   // pure virtual functions

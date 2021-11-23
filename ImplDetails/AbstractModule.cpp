@@ -49,20 +49,15 @@ void AbstractModule::ExecuteTask(api::TaskWrapper task,
 
 ThreadResourceErrorStatus AbstractModule::ExecuteTask(
     api::TaskWrapper task) noexcept(false) {
-  // FIXME: few threads can pass, so mutex is used.
-  static api::Mutex mutex{};
   auto slot_ptr{
       slots_.at(task.GetTarget()).GetSlot()};  // throws: std::out_of_range
-  api::ScopedLock<api::Mutex> lock(mutex);
-  if (slot_ptr->IncrementNumOfExecutors(api::MemoryOrder::relaxed) > 1u) {
-    slot_ptr->DecrementNumOfExecutors(api::MemoryOrder::relaxed);
+  if (slot_ptr->Execute()) {
     return ThreadResourceErrorStatus::kBusy;
   }
-  lock.unlock();
 
   // throws: api::BadSlotCall
   (*slot_ptr)(task);
-  slot_ptr->DecrementNumOfExecutors();
+  slot_ptr->Release();
   return ThreadResourceErrorStatus::kOk;
 }
 }  // namespace impl

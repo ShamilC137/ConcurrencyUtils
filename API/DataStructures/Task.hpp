@@ -6,6 +6,7 @@
 #include "../../ImplDetails/TaskDetails.hpp"
 #include "Containers/String.hpp"
 #include "Multithreading/Mutex.hpp"
+#include "Multithreading/ScopedLock.hpp"
 
 // STL
 #include <tuple>
@@ -287,15 +288,19 @@ class Task : public impl::BaseTask {
   }
 
   void ClearArguments() override {
-    if (args_) {
-      delete args_;
-      args_ = nullptr;
+    ScopedLock<Mutex> lock(args_mutex_, boost::interprocess::try_to_lock);
+    if (lock.owns()) {
+      if (args_) {
+        delete args_;
+        args_ = nullptr;
+      }
     }
   }
 
   // fields
  private:
   Arguments *args_;
+  Mutex args_mutex_;
 };
 
 // Task that allows to return value from target function. Assumed that result

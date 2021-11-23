@@ -40,7 +40,8 @@ bool TaskManager::SendNextTask() noexcept(false) {
   // connected to this signal slots
   decltype(auto) slots{
       connections_signatures_.at(real_task->GetCausedSignal())};
-  real_task->SetNumOfAcceptors(slots.size());  // number of slots
+  real_task->SetNumOfAcceptors(
+      static_cast<unsigned char>(slots.size()));  // number of slots
   for (auto pair : slots) {
     task.SetTarget(pair.first);  // target slot signature
     pair.second->module->PushTask(

@@ -3,7 +3,6 @@
 
 // current project
 #include "../../Config.hpp"
-#include "Multithreading/ScopedLock.hpp"
 #include "Task.hpp"
 
 namespace api {

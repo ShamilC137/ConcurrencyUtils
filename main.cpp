@@ -1,4 +1,4 @@
-#include <iostream>
+/*#include <iostream>
 
 #include "API/DataStructures/Multithreading/DeferThread.hpp"
 
@@ -25,8 +25,8 @@ int main() {
   sigs.Set(api::ThreadSignal::kExit);
   thread.Join();
   return 0;
-}
-/*
+}*/
+
 #include <iostream>
 
 #include "API/DataStructures/ScopedSlotWrapper.hpp"
@@ -35,20 +35,25 @@ int main() {
 #include "API/PublicAPI.hpp"
 #include "Kernel/Kernel/Kernel.hpp"
 
+api::Atomic<int> counter{};
+static struct A {
+  api::Atomic<int> &counter_;
+  A() : counter_{counter} {}
+  ~A() { std::cout << "counter: " << counter.load() << '\n'; }
+} obj;
 api::TaskWrapper tasks[20];
 
 void Init() {
   for (int index{}; index < 5; ++index) {
-    tasks[index] = {new api::Task<int>("sig1",
-                                       api::TaskPriority::kHighPriotity, index),
-                    {}};
+    tasks[index] = {
+        new api::Task<int>("sig1", api::TaskPriority::kHighPriotity, index),
+        {}};
     tasks[index].GetTask()->SetNumOfAcceptors(2);
   }
 
   for (int index{5}; index < 10; ++index) {
-    tasks[index] = {new api::Task<int>("sig",
-                                       api::TaskPriority::kHighPriotity, index),
-                    {}};
+    tasks[index] = {
+        new api::Task<int>("sig", api::TaskPriority::kHighPriotity, index), {}};
     tasks[index].GetTask()->SetNumOfAcceptors(2);
   }
 }
@@ -61,7 +66,7 @@ void Waiter() {
 }
 
 void foo(int a1) {
-   std::cout << a1 << '\n';
+  // std::cout << a1 << '\n';
   return;
 }
 
@@ -96,19 +101,20 @@ void Caller2() {
 }
 
 // sig_name is_blocking priority : slot_name slot_name1 slot_name2
-
 int main() {
-  // leak here
-  api::Emit<void, int>("mod", false, api::TaskPriority::kLowPriority, 1);
-  Init();
-  std::thread thr3(Waiter);
-  std::this_thread::sleep_for(std::chrono::seconds(1));
-  std::thread thr1(Caller1);
-  std::thread thr2(Caller2);
+  for (int index{}; index < 1000; ++index) {
+    api::TaskWrapper(
+        api::Emit<void, int>("mod", false, api::TaskPriority::kLowPriority, 1));
+    Init();
+    std::thread thr3(Waiter);
+    // std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::thread thr1(Caller1);
+    std::thread thr2(Caller2);
 
-  thr3.join();
-  thr2.join();
-  thr1.join();
+    thr3.join();
+    thr2.join();
+    thr1.join();
+  }
+
   return 0;
 }
-*/

@@ -11,14 +11,14 @@ namespace impl {
 // given), and operator () that calls correct underlying function with given
 // task.
 class BaseSlot {
-public:
+ public:
   // idseq - derived class types identifiers sequence;
   // retid - derived class return type identifier;
   // priority - slot priority;
   BaseSlot(const int *idseq, const int *retid) noexcept;
 
   inline virtual ~BaseSlot() noexcept {
-    assert(nexecuters_.load(api::MemoryOrder::relaxed) == 0u &&
+    assert(!is_executed_.test(api::MemoryOrder::relaxed) &&
            "Slot currently executed");
   }
 
@@ -41,21 +41,20 @@ public:
     return retid_ptr_;
   }
 
-  // Increments number of executors of the slot and returns new value
-  inline unsigned char IncrementNumOfExecutors(
+  // Sets slot execution state to active
+  inline bool Execute(
       api::MemoryOrder order = api::MemoryOrder::relaxed) noexcept {
-    return nexecuters_.add(1u, order);
+    return is_executed_.test_and_set(order);  // exchange(prev, true)
   }
 
-  // Decrements number of executors of the slot and returns new value
-  inline unsigned char DecrementNumOfExecutors(
+  // Deactivate slot execution state
+  inline void Release(
       api::MemoryOrder order = api::MemoryOrder::relaxed) noexcept {
-    return nexecuters_.sub(1u, order);
+    is_executed_.clear(order);
   }
 
   // Sets the slot priority
-  void SetPriority(const api::String &signal,
-                   const int priority) noexcept {
+  void SetPriority(const api::String &signal, const int priority) noexcept {
     assert(priority != 0);
     priorities_[signal] = priority;
   }
@@ -72,21 +71,22 @@ public:
   void operator()(api::TaskWrapper &task) noexcept(false);
   void operator()(api::TaskWrapper &&task) noexcept(false);
 
-protected:
+ protected:
   // potentially throws: api::Deadlock, api::BadSlotCall
   virtual void RealCall(api::TaskWrapper &task) noexcept(false) = 0;
 
-private:
-  const int *idseq_ptr_; // derived class types identifiers sequence
-  const int *retid_ptr_; // derived class return type identifier
+ private:
+  const int *idseq_ptr_;  // derived class types identifiers sequence
+  const int *retid_ptr_;  // derived class return type identifier
   // Number of current exectures of this slot. All users of slots must change
   // number of executers themselves.
-  api::Atomic<unsigned char> nexecuters_;
+  // api::Atomic<unsigned char> nexecuters_;
+  api::AtomicFlag is_executed_;
   // slot priority; slot with the highest prioprity
   // called first; if no priority is set, -1 is used.
   // Its priotiry depends from signal. Kernel sets the priorities
   api::HashMap<api::String, int> priorities_;
 };
-} // namespace impl
+}  // namespace impl
 
-#endif // !APPLICATION_IMPLDETAILS_SLOTDETAILS_HPP_
+#endif  // !APPLICATION_IMPLDETAILS_SLOTDETAILS_HPP_

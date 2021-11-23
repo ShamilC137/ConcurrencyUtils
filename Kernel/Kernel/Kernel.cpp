@@ -97,7 +97,6 @@ void DeleteThread(const ThreadId id) {}
 // global scope
 // global operator new and global operator delete
 // FIXME::SAL warnings
-
 [[nodiscard]] void *operator new(std::size_t count) noexcept(false) {
 #if ALIGNED_ALLOCATOR_USAGE
   return api::kernel_api::Allocate(count);
