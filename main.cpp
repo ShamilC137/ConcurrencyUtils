@@ -1,7 +1,7 @@
 #include "ImplDetails/MP/Components.hpp"
 #include "ImplDetails/Utility.hpp"
 int main() {
-  api::Components<int (*)(int)>::ParametersTypes;
+  api::Components<int (*)()>::ParametersTypes;
   return 0;
 }
 /*#include <iostream>
