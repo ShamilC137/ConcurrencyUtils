@@ -33,12 +33,7 @@ TaskWrapper &TaskWrapper::operator=(TaskWrapper &&rhs) noexcept {
 TaskWrapper::~TaskWrapper() noexcept {
   // FIXME: PROBABLY problem
   if (task_ && task_->DecrementNumOfRefs(api::MemoryOrder::relaxed) == 0u) {
-    const auto mysize{task_->SizeInBytes()};
-    // ensure that task without slots arguments are deleted
-    task_->ClearArguments();
-    task_->~BaseTask();
-    operator delete(task_, mysize);
-    task_ = nullptr;
+    delete task_;
   }
 }
 }  // namespace api

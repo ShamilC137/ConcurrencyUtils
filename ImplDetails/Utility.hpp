@@ -12,16 +12,11 @@ constexpr static bool is_same{false};
 template <class T>
 constexpr static bool is_same<T, T>{true};
 
-template <class First, class Second = First, class... Types>
-struct IsAllSame {
-  constexpr static bool value =
-      is_same<First, Second> & IsAllSame<Second, Types...>::value;
-};
+template <bool... args>
+constexpr static bool conjunction = (args && ...);
 
-template <class First, class Second>
-struct IsAllSame<First, Second> {
-  constexpr static bool value = is_same<First, Second>;
-};
+template <class T, class... Args>
+constexpr static bool is_all_same = conjunction<is_same<T, Args>...>;
 
 template <class T>
 struct ForceExplicitType {
@@ -41,10 +36,10 @@ struct TypeID : BaseTypeID {
 };
 
 template <class... Args>
-struct IDSequence {
-  static constexpr int (&CreateIDSequence() noexcept)[sizeof...(Args)] {
+struct IdSequence {
+  static constexpr int (&CreateIdSequence() noexcept)[sizeof...(Args)] {
     if (!is_ids_createad) {
-      CreateIDSHelper(std::make_index_sequence<sizeof...(Args)>{});
+      CreateIdsHelper(std::make_index_sequence<sizeof...(Args)>{});
       is_ids_createad = true;
     }
     return ids;
@@ -52,7 +47,7 @@ struct IDSequence {
 
  private:
   template <std::size_t... Indexes>
-  static constexpr void CreateIDSHelper(
+  static constexpr void CreateIdsHelper(
       std::index_sequence<Indexes...>) noexcept {
     ((ids[Indexes] = TypeID<Args>::id), ...);
   }
@@ -63,16 +58,6 @@ struct IDSequence {
 
 template <class...>
 using VoidT = void;
-
-// Checks that operator() exists
-// Base template, assumes that operator() not existing
-template <class T, class = void>
-constexpr static bool HasOperator{false};
-
-// Existance specialization
-template <class T>
-constexpr static bool HasOperator<T, VoidT<decltype(helper(&T::operator()))>>{
-    true};
 }  // namespace impl
 
 namespace api {

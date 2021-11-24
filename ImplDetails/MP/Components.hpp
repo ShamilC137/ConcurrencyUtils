@@ -4,6 +4,15 @@
 #include "../Utility.hpp"
 #include "MPVector.hpp"
 
+/// <summary>
+///   This file contains decomposer (Components) that decompose function type (
+///   pure function type, pointer to function, class member function) on its
+///   types with decomposer helpers.
+///   Components class aliases:
+///   1) ReturnType - function return type;
+///   2) ParametersTypes - MPVector of function parameters types, mb empty.
+///   3)
+/// </summary>
 namespace impl {
 namespace impl_details {
 // Helper for lambdas or noncallable
@@ -231,10 +240,20 @@ namespace impl_details {
 template <class T>
 constexpr typename api::Components<T> helper(T);
 
+// Checks that operator() exists
+// Base template, assumes that operator() not existing
+template <class T, class = void>
+constexpr static bool has_operator{false};
+
+// Existance specialization
+template <class T>
+constexpr static bool has_operator<T, VoidT<decltype(helper(&T::operator()))>>{
+    true};
+
 // Takes pointer to operator() and tries to decay it
 template <class T>
 struct ComponentsHelper {
-  static_assert(HasOperator<T>, "Type must have functor or function type");
+  static_assert(has_operator<T>, "Type must have functor or function type");
   using ReturnType = typename decltype(helper(&T::operator()))::ReturnType;
   using ParametersTypes =
       typename decltype(helper(&T::operator()))::ParametersTypes;

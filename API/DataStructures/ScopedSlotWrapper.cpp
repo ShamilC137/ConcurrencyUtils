@@ -11,17 +11,14 @@ ScopedSlotWrapper::ScopedSlotWrapper(ScopedSlotWrapper &&rhs) noexcept
 
 ScopedSlotWrapper &ScopedSlotWrapper::operator=(
     ScopedSlotWrapper &&rhs) noexcept {
-  this->~ScopedSlotWrapper(); // clear current context
+  this->~ScopedSlotWrapper();  // clear current context
   new (this) ScopedSlotWrapper(std::move(rhs));
   return *this;
 }
 
 ScopedSlotWrapper::~ScopedSlotWrapper() noexcept {
-  if (!slot_) {
-    return;
+  if (slot_) {
+    delete slot_;
   }
-  const auto mysize{slot_->SizeInBytes()};
-  slot_->~BaseSlot();
-  ::operator delete(slot_, mysize);
 }
-} // namespace api
+}  // namespace api

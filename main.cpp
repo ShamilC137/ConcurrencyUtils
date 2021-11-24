@@ -1,3 +1,9 @@
+#include "ImplDetails/MP/Components.hpp"
+#include "ImplDetails/Utility.hpp"
+int main() {
+  api::Components<int (*)(int)>::ParametersTypes;
+  return 0;
+}
 /*#include <iostream>
 
 #include "API/DataStructures/Multithreading/DeferThread.hpp"
@@ -26,7 +32,7 @@ int main() {
   thread.Join();
   return 0;
 }*/
-
+/*
 #include <iostream>
 
 #include "API/DataStructures/ScopedSlotWrapper.hpp"
@@ -118,3 +124,4 @@ int main() {
 
   return 0;
 }
+*/

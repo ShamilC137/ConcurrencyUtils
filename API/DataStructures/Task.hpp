@@ -240,22 +240,22 @@ class Task : public impl::BaseTask {
   ~Task() noexcept override {
     try {
       Base::Wait();  // throws
+      if (args_) {
+        ClearArguments();
+      }
     } catch (...) {
+      if (args_) {
+        ClearArguments();
+      }
       assert(false && "Deadlock during task destruction");
     }
-  }
-
-  // Return the size in bytes of this class; used to correct deallocate object
-  // of this class which captured with pointer to base.
-  [[nodiscard]] inline std::size_t SizeInBytes() const noexcept override {
-    return sizeof(Task);
   }
 
  protected:
   Task(api::String caused_signal_sig, TaskPriority priority, const int *retid,
        impl::ForceExplicitTypeT<Args>... args)
       : Base(caused_signal_sig, priority,
-             impl::IDSequence<Args...>::CreateIDSequence(), retid),
+             impl::IdSequence<Args...>::CreateIdSequence(), retid),
         args_{new Arguments{std::forward<Args>(args)...}} {}
 
  public:

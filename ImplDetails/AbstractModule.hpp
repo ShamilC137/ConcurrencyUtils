@@ -203,14 +203,16 @@ class AbstractModule {
 
   // pure virtual functions
  public:
-  // Module initialization consists of few steps:
-  // 1) Objects creation
-  // 2) Main thread creation
-  // 3) Probably additional threads creation
-  // 4) Fills slots table (i.e. slots signatures -> slot)
-  // 5) Sets slots priorities
-  // Returns error status.
-  // Do not throw exceptions, returns code error instead.
+  /// <summary>
+  ///   Module initialization consists of few steps:
+  ///   1) Objects creation
+  ///   2) Threads creation
+  ///   3) Fills slots table (i.e. slots signatures -> slot)
+  ///   4) Sets slots priorities
+  ///   Does not throw exceptions, returns code error instead
+  /// </summary>
+  /// <returns> initialization error status </returns>
+  /// <multithreading> unsafe </multithreading>
   virtual ModuleInitErrorStatus Init() noexcept = 0;
 
   // fields
