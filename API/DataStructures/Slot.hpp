@@ -9,21 +9,33 @@
 #include <functional>
 
 namespace api {
-// Slot is the class which allows to hide underlying function and call it
-// with given tasks.
+/// <summary>
+///   Slot is the class which allows to hide underlying function and call it
+///   with given tasks.
+/// </summary>
+/// <typeparam name="ReturnType">
+///   Underlying function return type
+/// </typeparam>
+/// <typeparam name="...Args">
+///   Underlying function parameters types
+/// </typeparam>
 template <class ReturnType, class... Args>
 class Slot : public impl::BaseSlot {
  public:
   using Base = impl::BaseSlot;
 
  public:
+  /// <param name="function">
+  ///   Pointer to function
+  ///</param>
   Slot(impl::ForceExplicitTypeT<ReturnType(Args...)> *function)
       : Base(impl::IdSequence<Args...>::CreateIdSequence(),
              &impl::TypeID<ReturnType>::id),
         func_{function} {}
 
-  // Calls underlying function with given task.
-  // throws: api::BadSlotCall
+  /// <summary>
+  ///   Calls underlying function with given task.
+  /// </summary>
   using Base::operator();
 
  private:

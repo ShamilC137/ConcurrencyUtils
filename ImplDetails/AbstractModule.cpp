@@ -43,14 +43,14 @@ void AbstractModule::ExecuteNextTask(api::ForceSlotCall) noexcept(false) {
 void AbstractModule::ExecuteTask(api::TaskWrapper task,
                                  api::ForceSlotCall) noexcept(false) {
   // throws: std::out_of_range
-  auto slot_ptr{slots_.at(task.GetTarget()).GetSlot()};
+  auto slot_ptr{slots_.at(task.GetTarget()).get()};
   (*slot_ptr)(task);  // throws: api::BadSlotCall
 }
 
 ThreadResourceErrorStatus AbstractModule::ExecuteTask(
     api::TaskWrapper task) noexcept(false) {
   auto slot_ptr{
-      slots_.at(task.GetTarget()).GetSlot()};  // throws: std::out_of_range
+      slots_.at(task.GetTarget()).get()};  // throws: std::out_of_range
   if (slot_ptr->Execute()) {
     return ThreadResourceErrorStatus::kBusy;
   }

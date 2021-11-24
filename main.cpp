@@ -22,11 +22,11 @@ struct Str {
 
 int main() {
   api::DeferThread thread(false, &Terminate, &Foo);
-  thread.ActivateThread();
+  thread.Activate();
   std::this_thread::sleep_for(std::chrono::seconds(1));
   sigs.Set(api::ThreadSignal::kSuspend);
   std::this_thread::sleep_for(std::chrono::seconds(1));
-  thread.ActivateThread();
+  thread.Activate();
   std::this_thread::sleep_for(std::chrono::seconds(1));
   sigs.Set(api::ThreadSignal::kExit);
   thread.Join();

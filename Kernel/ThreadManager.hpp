@@ -98,7 +98,7 @@ class ThreadManager {
   bool SetSuspendSignal(const api::ThreadId id) noexcept;
 
   /// <summary>
-  ///   Resumes associated with given id thread, i.e. calls ActivateThread.
+  ///   Resumes associated with given id thread, i.e. calls Activate.
   ///   If thread with given id not exists, returns false.
   /// </summary>
   /// <param name="id">thread id</param>

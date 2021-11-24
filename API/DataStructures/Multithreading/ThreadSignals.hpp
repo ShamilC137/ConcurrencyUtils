@@ -4,6 +4,7 @@
 #include <cassert>
 
 // current project
+#include "../../../Config.hpp"
 #include "../../../ImplDetails/Utility.hpp"
 
 namespace api {
@@ -13,7 +14,9 @@ enum class ThreadSignal : ThreadSignalUnderlyingType {
   kEmpty = 0b0,
   kExit = 0b10,
   kSuspend = 0b100,
-  kResume = 0x80,
+#if IS_DEBUG
+  kResume = 0x80  // used to find deadlocks
+#endif
 };
 
 class ThreadSignals {

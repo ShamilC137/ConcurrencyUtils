@@ -11,6 +11,11 @@
 // STL
 #include <tuple>
 
+/// <summary>
+///   This file contains Task class which encapsulate arguments for
+///   intermodule communication
+/// </summary>
+
 namespace impl {
 namespace impl_details {
 template <class... Args>
@@ -210,17 +215,22 @@ class RetTypeResolution<RetType *> {
 }  // namespace impl_details
 }  // namespace impl
 namespace api {
-// Task is the class that encapsulates parameters for slots.
-// Arguments are contained in the tuple which can be unpacked in several ways:
-// 1) Extract tuple itself with "GetTuple" method
-// 2) Call "Unpack" and pass container to this method to extract the arguments
-// to. Also the "inserter" could be given then "Unpack" will call inserter to
-// add new arguments to container (i.e. inserter(container, std::forward(arg))).
-// The task is used by the Slot which encapsulate the argument extraction work
-// so the user only has to pass pointer to the Task to the Slot.
-// If is_blocking_task flag is setted, Task will wait for all threads
-// routine completion.
-// Warning: few thread could read data at the same time.
+/// <summary>
+/// Task is the class that encapsulates parameters for slots.
+/// Arguments are contained in the tuple which can be unpacked in several ways:
+/// 1) Extract tuple itself with "GetTuple" method
+/// 2) Call "Unpack" and pass container to this method to extract the arguments
+/// to. Also the "inserter" could be given then "Unpack" will call inserter to
+/// add new arguments to container (i.e. inserter(container,
+/// std::forward(arg))). The task is used by the Slot which encapsulate the
+/// argument extraction work so the user only has to pass pointer to the Task to
+/// the Slot. If is_blocking_task flag is setted, Task will wait for all threads
+/// routine completion.
+/// Warning: few thread could read data at the same time.
+/// </summary>
+/// <typeparam name="...Args">
+///   Target slot parameters types
+/// </typeparam>
 template <class... Args>
 class Task : public impl::BaseTask {
  public:
@@ -229,10 +239,15 @@ class Task : public impl::BaseTask {
   using Arguments = impl::impl_details::Arguments<Args...>;
 
  public:
-  // signal_sig - signal signature
-  // is_blocking_task - if true task must wait for its slot complete call
-  // task_priority - used for task compare
-  // args - target slot arguments
+  /// <param name="signal_sig">
+  /// signal full signature
+  /// </param>
+  /// <param name="priority">
+  ///   used for task compare
+  /// </param>
+  /// <param name="...args">
+  ///   target slot arguments
+  /// </param>
   Task(api::String signal_sig, TaskPriority priority,
        impl::ForceExplicitTypeT<Args>... args)
       : Task(signal_sig, priority, nullptr, std::forward<Args>(args)...) {}
@@ -259,34 +274,91 @@ class Task : public impl::BaseTask {
         args_{new Arguments{std::forward<Args>(args)...}} {}
 
  public:
+  /// <summary>
+  ///   Extracts task arguments to given container with push_back
+  /// </summary>
+  /// <typeparam name="Container">
+  ///   Container type
+  /// </typeparam>
+  /// <param name="where">
+  ///   Extraction place
+  /// </param>
   template <class Container>
   void Unpack(Container &where) {
     args_->Unpack(where);
   }
 
+  /// <summary>
+  ///   Extracts task arguments to given container with push_back
+  /// </summary>
+  /// <typeparam name="Container">
+  ///   Container type
+  /// </typeparam>
+  /// <param name="where">
+  ///   Extraction place
+  /// </param>
   template <class Container>
   void Unpack(Container &where) const {
     args_->Unpack(where);
   }
 
+  /// <summary>
+  ///   Extracts arguments from task and pushes it to given container using
+  ///   given inserter.
+  /// </summary>
+  /// <typeparam name="Container">
+  ///   Container type
+  /// </typeparam>
+  /// <typeparam name="Inserter">
+  ///   Inserter type
+  /// </typeparam>
+  /// <param name="where">
+  ///   Extraction place
+  /// </param>
+  /// <param name="inserter">
+  ///   Inserts given argument to container
+  /// </param>
   template <class Container, class Inserter>
   void Unpack(Container &where, Inserter inserter) {
     args_->Unpack(where, inserter);
   }
 
+  /// <summary>
+  ///   Extracts arguments from task and pushes it to given container using
+  ///   given inserter.
+  /// </summary>
+  /// <typeparam name="Container">
+  ///   Container type
+  /// </typeparam>
+  /// <typeparam name="Inserter">
+  ///   Inserter type
+  /// </typeparam>
+  /// <param name="where">
+  ///   Extraction place
+  /// </param>
+  /// <param name="inserter">
+  ///   Inserts given argument to container
+  /// </param>
   template <class Container, class Inserter>
   void Unpack(Container &where, Inserter inserter) const {
     args_->Unpack(where, inserter);
   }
 
-  // Return data tuple
+  /// <returns>
+  ///   Tuple of arguments
+  /// </returns>
   [[nodiscard]] inline Tuple &GetTuple() noexcept { return args_->GetTuple(); }
 
-  // Return data tuple
+  /// <returns>
+  ///   Tuple of arguments
+  /// </returns>
   [[nodiscard]] inline const Tuple &GetTuple() const noexcept {
     return args_->GetTuple();
   }
 
+  /// <summary>
+  ///   Deletes arguments (if present). Safe for multithreading.
+  /// </summary>
   void ClearArguments() override {
     ScopedLock<Mutex> lock(args_mutex_, boost::interprocess::try_to_lock);
     if (lock.owns()) {
@@ -303,12 +375,20 @@ class Task : public impl::BaseTask {
   Mutex args_mutex_;
 };
 
-// Task that allows to return value from target function. Assumed that result
-// of associated with this task slot's routine will be get with "GetResult"
-// which wait for target thread complete the task. If it this did not happen, it
-// means that an error has occured and an exception will be thrown.
-// If ReturnTask is connected with few slots - UB, debug mode will throw
-// exception, release mode will write message about error in error log.
+/// <summary>
+///   Task that allows to return value from target function. Assumed that result
+///   of associated with this task slot's routine will be get with "GetResult"
+///   which wait for target thread complete the task. If it this did not happen,
+///   it means that an error has occured and an exception will be thrown. If
+///   ReturnTask is connected with few slots - UB, debug mode will throw
+///   exception, release mode will write message about error in error log.
+/// </summary>
+/// <typeparam name="ReturnType">
+///   Target function return type
+/// </typeparam>
+/// <typeparam name="...Args">
+///   Target function arguments types
+/// </typeparam>
 template <class ReturnType, class... Args>
 class ReturnTask : public Task<Args...>,
                    public impl::impl_details::RetTypeResolution<ReturnType> {
@@ -316,9 +396,15 @@ class ReturnTask : public Task<Args...>,
   using RetBase = impl::impl_details::RetTypeResolution<ReturnType>;
 
  public:
-  // signal_sig - signal signature
-  // task_priority - used for task compare
-  // args - target slot arguments
+  /// <param name="signal_sig">
+  ///   signal full signature (i.e. with module id)
+  /// </param>
+  /// <param name="priority">
+  ///   used for task compare
+  /// </param>
+  /// <param name="...args">
+  ///   target slot arguments
+  /// </param>
   ReturnTask(String signal_sig, TaskPriority priority,
              impl::ForceExplicitTypeT<Args>... args)
       : Base(signal_sig, priority, &impl::TypeID<ReturnType>::id,
@@ -332,12 +418,15 @@ class ReturnTask : public Task<Args...>,
                                             // treated as unacceptable.
   }
 
-  // Return the size in bytes of this class; used to correct deallocate object
-  // of this class which captured with pointer to base.
-  [[nodiscard]] inline std::size_t SizeInBytes() const noexcept override {
-    return sizeof(ReturnTask);
-  }
-
+  /// <summary>
+  ///   Sets number of task acceptors (i.e. slots). Cannot be more than one.
+  /// </summary>
+  /// <param name="nacceptors">
+  ///   Number of acceptors
+  /// </param>
+  /// <param name="order">
+  ///   store() memory order
+  /// </param>
   virtual inline void SetNumOfAcceptors(
       const unsigned char nacceptors,
       api::MemoryOrder order =

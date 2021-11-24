@@ -3,26 +3,52 @@
 
 // STL
 #include <cstddef>
-#include <type_traits>
 
 // current project
-#include "DataStructures/Containers/String.hpp"
-#include "DataStructures/TaskWrapper.hpp"
-#include "MemoryManagementUtilities.hpp"
-
 #include "../ImplDetails/AbstractModule.hpp"
 #include "../ImplDetails/ImplAPI/KernelAPI.hpp"
+#include "../ImplDetails/Utility.hpp"
+#include "DataStructures/Containers/String.hpp"
+#include "DataStructures/TaskWrapper.hpp"
+
+/// <summary>
+///   This file contains function that could be used in users' scope.
+/// </summary>
 
 namespace api {
-// signal_sig - target signal signature
-// is_blocking_call - if true, blocks caller until the task is completed.
-// args - target function arguments.
-// Return value: ReturnTaskWrapper
-// All template parameters must be explicitly specified.
-// Nonvoid return type specialization. Value can be obtained with GetResult().
 // throws: api::Deadlock
+
+/// <summary>
+///   Signal emit function.
+///   All template parameters must be explicitly specified. Nonvoid return type
+///   specialization. Return value can be obtained with GetResult().
+/// </summary>
+/// <typeparam name="ReturnType">
+///   Task targer function return type
+/// </typeparam>
+/// <typeparam name="...Args">
+///   Task targer function parameters
+/// </typeparam>
+/// <param name="signal_sig">
+///   Caused signal full signature (i.e. with module id)
+/// </param>
+/// <param name="is_blocking_call">
+///   if true, blocks caller until the task is completed.
+/// </param>
+/// <param name="priority">
+///   Task order priority
+/// </param>
+/// <param name="...args">
+///   Task parameters
+/// </param>
+/// <returns>
+///   ReturnTaskWrapper to associated task
+/// </returns>
+/// <exception type="api::Deadlock">
+///   Thrown if Wait() operation is broken
+/// </exception>
 template <class ReturnType, class... Args>
-[[nodiscard]] std::enable_if_t<!std::is_same_v<ReturnType, void>,
+[[nodiscard]] std::enable_if_t<!impl::is_same<ReturnType, void>,
                                ReturnTaskWrapper<ReturnType, Args...>>
 Emit(const api::String &signal_sig, bool is_blocking_call,
      TaskPriority priority,
@@ -30,58 +56,116 @@ Emit(const api::String &signal_sig, bool is_blocking_call,
   ReturnTaskWrapper<ReturnType, Args...> mytask(
       new ReturnTask<ReturnType, Args...>(signal_sig, priority,
                                           std::forward<Args>(args)...),
-      {});
+      /*target slot*/ {});
   kernel_api::PushToKernelQueue(mytask);
   if (is_blocking_call) {
-    mytask.GetTask()->Wait(); // throws
+    mytask.GetTask()->Wait();  // throws
   }
   return mytask;
 }
 
-// signal_sig - target signal signature
-// is_blocking_call - if true, blocks caller until the task is completed.
-// args - target function arguments.
-// Return value: TaskWrapper
-// All template parameters must be explicitly specified.
-// Void return type specialization
-// throws: api::Deadlock
+/// <summary>
+///   Signal emit function.
+///   All template parameters must be explicitly specified. Void return type
+///   specialization.
+/// </summary>
+/// <typeparam name="ReturnType">
+///   Task targer function return type
+/// </typeparam>
+/// <typeparam name="...Args">
+///   Task targer function parameters
+/// </typeparam>
+/// <param name="signal_sig">
+///   Caused signal full signature (i.e. with module id)
+/// </param>
+/// <param name="is_blocking_call">
+///   if true, blocks caller until the task is completed.
+/// </param>
+/// <param name="priority">
+///   Task order priority
+/// </param>
+/// <param name="...args">
+///   Task parameters
+/// </param>
+/// <returns>
+///   TaskWrapper to associated task
+/// </returns>
+/// <exception type="api::Deadlock">
+///   Thrown if Wait() operation is broken
+/// </exception>
 template <class ReturnType, class... Args>
-std::enable_if_t<std::is_same_v<void, ReturnType>, TaskWrapper>
-Emit(const api::String &signal_sig, bool is_blocking_call,
-     TaskPriority priority,
-     impl::ForceExplicitTypeT<Args>... args) noexcept(false) {
+std::enable_if_t<impl::is_same<void, ReturnType>, TaskWrapper> Emit(
+    const api::String &signal_sig, bool is_blocking_call, TaskPriority priority,
+    impl::ForceExplicitTypeT<Args>... args) noexcept(false) {
   TaskWrapper mytask(
-      new Task<Args...>(signal_sig, priority, std::forward<Args>(args)...), {});
+      new Task<Args...>(signal_sig, priority, std::forward<Args>(args)...),
+      /*target slot*/ {});
   kernel_api::PushToKernelQueue(mytask);
   if (is_blocking_call) {
-    mytask.GetTask()->Wait(); // throws
+    mytask.GetTask()->Wait();  // throws
   }
   return mytask;
 }
 
-// Adds new module to kernel. Do not transfers ownership
+/// <summary>
+///   Adds new module to kernel. Do not transfers ownership
+/// </summary>
+/// <param name="module">
+///   Pointer to module
+/// </param>
 void AddModule(impl::AbstractModule *module);
 
-// Runs the program. Returns error status
+/// <summary>
+///   Application start point (i.e. runs other module such GUI and etc).
+/// </summary>
+/// <returns>
+///   Program error status
+/// </returns>
 [[nodiscard]] int Run();
 
-// Sends the "Exit" signal to the thread with the given id.
-// Returns true if signal was sent, otherwise false.
+/// <summary>
+///   Sends the "Exit" signal to the thread with the given id.
+/// </summary>
+/// <param name="id">
+///   Targer thread id
+/// </param>
+/// <returns>
+///   Returns true if signal was sent, otherwise false.
+/// </returns>
 bool SendKillThreadSignal(const ThreadId id) noexcept;
 
-// Sends the "Exit" signal to the caller thread.
+/// <summary>
+///   Sends the "Exit" signal to this thread. Nothing happens if thread does not
+///   belong to kernel threads table.
+/// </summary>
 void SendKillThreadSignal() noexcept;
 
-// Sends the "Suspend" signal to the thread with the given id.
-// Returns true if signal was sent, otherwise false.
+/// <summary>
+///   Sends the "Suspend" signal to the thread with the given id.
+/// </summary>
+/// <param name="id">
+///   Target thread id
+/// </param>
+/// <returns>
+///   Returns true if signal was sent, otherwise false.
+/// </returns>
 bool SendSuspendThreadSignal(const ThreadId id) noexcept;
 
-// Sends the "Suspend" signal to the caller thread.
+/// <summary>
+///   Sends the "Suspend" signal to the caller thread.
+/// </summary>
 void SendSuspendThreadSignal() noexcept;
 
-// Sends the "Resume" signal to the thread with the given id.
-// Returns true if signal was send, false otherwise.
+/// <summary>
+///   Sends the "Resume" signal to the thread with the given id.
+/// </summary>
+/// <param name="id">
+///   Target thread id
+/// </param>
+/// <returns>
+///   Returns true if signal was send, false otherwise.
+/// </returns>
 bool ResumeThread(const ThreadId id) noexcept;
-} // namespace api
+}  // namespace api
 
-#endif // !APPLICATION_API_PUBLICAPI_HPP_
+#endif  // !APPLICATION_API_PUBLICAPI_HPP_

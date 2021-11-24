@@ -72,7 +72,7 @@ bool ThreadManager::SetSuspendSignal(const api::ThreadId id) noexcept {
 
 bool ThreadManager::ResumeThread(const api::ThreadId id) noexcept {
   try {
-    threads_.at(id)->ActivateThread();
+    threads_.at(id)->Activate();
     return true;
   } catch (std::out_of_range) {
     return false;

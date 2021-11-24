@@ -7,7 +7,6 @@
 #include "../API/DataStructures/Containers/Vector.hpp"
 #include "../API/DataStructures/Multithreading/Atomics.hpp"
 #include "../API/DataStructures/Multithreading/UnboundedPriorityBlockingQueue.hpp"
-#include "../API/DataStructures/ScopedSlotWrapper.hpp"
 #include "../API/DataStructures/Slot.hpp"
 #include "../API/DataStructures/Task.hpp"
 #include "../API/DataStructures/TaskWrapper.hpp"
@@ -16,7 +15,7 @@
 
 // STD
 #include <cassert>
-#include <memory>  // allocator traits
+#include <memory>
 
 namespace api {
 // indicates that slot call must be done whether it already called or not
@@ -220,7 +219,7 @@ class AbstractModule {
   api::String
       id_;  // module identifier; used to identify module; must be unique
   // contains slots signatures and binded handlers; signatures must be unique;
-  api::HashMap<api::String, api::ScopedSlotWrapper> slots_;
+  api::HashMap<api::String, std::unique_ptr<BaseSlot>> slots_;
   // Associated with this module queue of tasks. Kernel will push tasks to this
   // queue.
   api::UnboundedPriorityBlockingQueue<api::TaskWrapper> tasks_queue_;

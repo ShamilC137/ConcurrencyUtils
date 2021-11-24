@@ -160,7 +160,6 @@
     <ClCompile Include="API\DataStructures\Multithreading\DeferThreadWrapper.cpp" />
     <ClCompile Include="API\DataStructures\Multithreading\Thread.cpp" />
     <ClCompile Include="API\DataStructures\Multithreading\ThreadSignals.cpp" />
-    <ClCompile Include="API\DataStructures\ScopedSlotWrapper.cpp" />
     <ClCompile Include="API\DataStructures\TaskWrapper.cpp" />
     <ClCompile Include="API\PublicAPI.cpp" />
     <ClCompile Include="ImplDetails\AbstractModule.cpp" />
@@ -192,11 +191,9 @@
     <ClInclude Include="API\DataStructures\Multithreading\ThreadSignals.hpp" />
     <ClInclude Include="API\DataStructures\Multithreading\UnboundedPriorityBlockingQueue.hpp" />
     <ClInclude Include="API\DataStructures\Multithreading\UniqueLock.hpp" />
-    <ClInclude Include="API\DataStructures\ScopedSlotWrapper.hpp" />
     <ClInclude Include="API\DataStructures\Slot.hpp" />
     <ClInclude Include="API\DataStructures\Task.hpp" />
     <ClInclude Include="API\DataStructures\TaskWrapper.hpp" />
-    <ClInclude Include="API\MemoryManagementUtilities.hpp" />
     <ClInclude Include="API\PublicAPI.hpp" />
     <ClInclude Include="Config.hpp" />
     <ClInclude Include="ImplDetails\AbstractModule.hpp" />

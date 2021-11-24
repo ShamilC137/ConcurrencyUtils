@@ -31,16 +31,24 @@ static_assert(false, "Panic: clang")
 #endif
 // compiler determination ^^^
 
+#if MSVC
+#ifdef NDEBUG
+#define IS_DEBUG 0
+#else
+#define IS_DEBUG 1
+#endif
+#endif
+
 // start OS resolution vvv
 #if _WIN32 | _WIN64
 #if _WIN32
 #define WINDOWS32 1
 #else
 #define WINDOWS64 1
-#endif // !_WIN32
+#endif  // !_WIN32
 #else
 static_assert(false, "Panic: unsupported OS");
-#endif // !_WIN32 | _WIN64
+#endif  // !_WIN32 | _WIN64
 // OS resolution ^^^
 
 // this project specific macro vvv
@@ -65,4 +73,4 @@ static_assert(false, "Panic: unsupported OS");
                              // socket_types.h
 #endif
 
-#endif // !APPLICATION_CONFIG_HPP_
+#endif  // !APPLICATION_CONFIG_HPP_

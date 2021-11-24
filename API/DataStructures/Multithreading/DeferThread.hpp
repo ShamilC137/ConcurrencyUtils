@@ -11,23 +11,85 @@
 #include <exception>
 #include <utility>
 
+/// <summary>
+///   This file contains DeferThread class that wraps Thread and all its
+///   helpers.
+/// </summary>
+
 namespace api {
 class DeferThread;
 }  // namespace api
 namespace impl {
+/// <summary>
+///   Controls given thread function. Sets exception handler (if exception
+///   inherits from std::exception). Handles all thread signals.
+/// </summary>
+/// <typeparam name="ExceptionHandler">
+///   Exception handler type
+/// </typeparam>
+/// <typeparam name="ThreadRoutine">
+///   Thread routine function type
+/// </typeparam>
+/// <typeparam name="...RoutineArgs">
+///   Thread routine parameters types
+/// </typeparam>
+/// <param name="call_once_flag">
+///   If true, thread exitting after function call and runs in loop otherwise.
+/// </param>
+/// <param name="handler">
+///   Exceptiong handler
+/// </param>
+/// <param name="wrapper">
+///   Pointer to associated thread
+/// </param>
+/// <param name="routine">
+///   Thread routine function
+/// </param>
+/// <param name="...args">
+///   Thread function arguments
+/// </param>
 template <class ExceptionHandler, class ThreadRoutine, class... RoutineArgs>
-void ThreadLaunchRoutine(const bool exit_after_call_flag,
-                         ExceptionHandler &&handler, api::DeferThread *wrapper,
-                         ThreadRoutine &&routine, RoutineArgs &&...args);
+void ThreadLaunchRoutine(const bool call_once_flag, ExceptionHandler &&handler,
+                         api::DeferThread *wrapper, ThreadRoutine &&routine,
+                         RoutineArgs &&...args);
 }  // namespace impl
 
 namespace api {
+/// <summary>
+///   Wraps Thread class. Provides two thing:
+///   1) defer thread activation
+///   2) endless loop which will call given function if no signals set.
+/// </summary>
 class DeferThread {
  public:
   using NativeHandle = Thread::native_handle_type;
   using ID = Thread::id;
 
  public:
+  /// <typeparam name="ExceptionHandler">
+  ///   Exception handler type
+  /// </typeparam>
+  /// <typeparam name="ThreadRoutine">
+  ///   Thread routine function type
+  /// </typeparam>
+  /// <typeparam name="...RoutineArgs">
+  ///   Thread routine parameters types
+  /// </typeparam>
+  /// <param name="call_once_flag">
+  ///   If true, thread exitting after function call and runs in loop otherwise.
+  /// </param>
+  /// <param name="handler">
+  ///   Exceptiong handler
+  /// </param>
+  /// <param name="wrapper">
+  ///   Pointer to associated thread
+  /// </param>
+  /// <param name="routine">
+  ///   Thread routine function
+  /// </param>
+  /// <param name="...args">
+  ///   Thread function arguments
+  /// </param>
   template <class ExceptionHandler, class ThreadRoutine, class... RoutineArgs>
   DeferThread(const bool exit_after_call_flag, ExceptionHandler &&handler,
               ThreadRoutine &&routine, RoutineArgs &&...args)
@@ -45,16 +107,41 @@ class DeferThread {
 
   DeferThread &operator=(const DeferThread &) = delete;
 
+  /// <returns>
+  ///   Associated with this DeferThread Thread object
+  /// </returns>
   [[nodiscard]] Thread &GetAttachedThread() noexcept;
 
+  /// <returns>
+  ///   Associated with this DeferThread Thread object
+  /// </returns>
   [[nodiscard]] const Thread &GetAttachedThread() const noexcept;
 
+  /// <returns>
+  ///   Associated with this DeferThread flag
+  /// </returns>
   [[nodiscard]] AtomicFlag &GetIsActiveFlag() noexcept;
 
+  /// <returns>
+  ///   Associated with this DeferThread flag
+  /// </returns>
   [[nodiscard]] const AtomicFlag &GetIsActiveFlag() const noexcept;
 
-  void ActivateThread(api::MemoryOrder order = api::MemoryOrder::release);
+  /// <summary>
+  ///   Activates all suspended on associated with this DeferThread flag
+  ///   threads.
+  /// </summary>
+  /// <param name="order">
+  ///   test_and_set() memory order
+  /// </param>
+  void Activate(api::MemoryOrder order = api::MemoryOrder::release);
 
+  /// <summary>
+  ///   Deactivates caller thread (i.e. pushes it to wait() queue)
+  /// </summary>
+  /// <param name="order">
+  ///   wait() memory order
+  /// </param>
   void DeactivateCallerThread(
       api::MemoryOrder order = api::MemoryOrder::acquire);
 
@@ -70,23 +157,76 @@ class DeferThread {
 
   [[nodiscard]] ID GetId() const noexcept;
 
+  /// <summary>
+  ///   This referenced could be changed at any moment by other threads.
+  /// </summary>
+  /// <returns>
+  ///   Reference to signals
+  /// </returns>
   [[nodiscard]] const volatile ThreadSignals &GetSignals() const
       volatile noexcept;
 
-  [[nodiscard]] void SetSignal(ThreadSignal signal) volatile noexcept;
+  /// <summary>
+  ///   Sets given signal
+  /// </summary>
+  /// <param name="signal">
+  ///   Signal to set
+  /// </param>
+  void SetSignal(ThreadSignal signal) volatile noexcept;
 
-  [[nodiscard]] void UnsetSignal(ThreadSignal signal) volatile noexcept;
+  /// <summary>
+  ///   Unsets given signal
+  /// </summary>
+  /// <param name="signal">
+  ///   Signal to unset
+  /// </param>
+  void UnsetSignal(ThreadSignal signal) volatile noexcept;
 
-  [[nodiscard]] void Close() noexcept;
+  /// <summary>
+  ///   Closes this thread. Closed thread is a thread which treated as joined
+  ///   thread by DeferThreadWrapper. Sets "Exit" signal to underlying thread.
+  /// </summary>
+  void Close() noexcept;
 
+  /// <returns>
+  ///   Close state
+  /// </returns>
   [[nodiscard]] bool IsClosed() const volatile noexcept;
 
+ private:
+  friend class DeferThreadWrapper;
+  /// <summary>
+  ///   Increments number of DeferThreadWrapper object referenced on this
+  ///   object.
+  /// </summary>
+  /// <param name="order">
+  ///   add() memory order
+  /// </param>
+  /// <returns>
+  ///   If thread is closed, returns 0, otherwise returns new number of
+  ///   references.
+  /// </returns>
   [[nodiscard]] unsigned char IncrementNumberOfReferences(
       api::MemoryOrder order = api::MemoryOrder::relaxed) noexcept;
 
+  /// <summary>
+  ///   Decrements number of DeferThreadWrapper object referenced on this
+  ///   object.
+  /// </summary>
+  /// <param name="order">
+  ///   sub() memory order
+  /// </param>
+  /// <returns>
+  ///   New number of references
+  /// </returns>
   unsigned char DecrementNumberOfReferences(
       api::MemoryOrder order = api::MemoryOrder::relaxed) noexcept;
 
+ public:
+  /// <returns>
+  ///   Returns number of current DeferThreadWrapper objects referenced on this
+  ///   object.
+  /// </returns>
   [[nodiscard]] unsigned char NumberOfReferences(
       api::MemoryOrder order = api::MemoryOrder::acquire) const noexcept;
 
@@ -99,6 +239,10 @@ class DeferThread {
   Mutex close_mutex_;
 };
 
+/// <summary>
+///   Provides endless loop which handles all thread signals associated with its
+///   thread.
+/// </summary>
 template <class ThreadRoutine, class... RoutineArgs>
 void RoutineLoop(const bool exit_after_call_flag,
                  ThreadRoutine (*routine)(RoutineArgs...),

@@ -59,7 +59,7 @@ void AddModule(impl::AbstractModule *module) { GetKernel().AddModule(module); }
 
 // FIXME: stub
 [[nodiscard]] const volatile ThreadSignals &GetThreadSignalsReference(
-    const ThreadId id) noexcept {
+    const ThreadId id) noexcept(false) {
   const volatile api::ThreadSignals sigs{};
   return sigs;
 }
@@ -90,7 +90,7 @@ bool SuspendThisThread(const api::ThreadId *const id_hint) noexcept {
 void UnsetSignal(const ThreadId id, ThreadSignal sig) noexcept {}
 
 // FIXME: stub
-void DeleteThread(const ThreadId id) {}
+void DeleteThread(const ThreadId id) noexcept {}
 }  // namespace kernel_api
 }  // namespace api
 
@@ -101,7 +101,7 @@ void DeleteThread(const ThreadId id) {}
 #if ALIGNED_ALLOCATOR_USAGE
   return api::kernel_api::Allocate(count);
 #elif STL_ALLOCATOR_USAGE
-  // since we overload operator new, we throw exception by outselves
+  // since we overload operator new, we throw exception by ourselves
   auto ptr{std::malloc(count)};
   if (ptr) {
     return ptr;

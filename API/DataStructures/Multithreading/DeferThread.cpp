@@ -17,7 +17,7 @@ namespace api {
   return is_active_;
 }
 
-void DeferThread::ActivateThread(api::MemoryOrder order) {
+void DeferThread::Activate(api::MemoryOrder order) {
   is_active_.test_and_set(order);
   is_active_.notify_one();
 }
@@ -27,7 +27,10 @@ void DeferThread::DeactivateCallerThread(api::MemoryOrder order) {
   is_active_.wait(false, order);
 }
 
-void DeferThread::Join() { thread_.join(); }
+void DeferThread::Join() {
+  Close();
+  thread_.join();
+}
 
 void DeferThread::Detach() { thread_.detach(); }
 
@@ -52,20 +55,18 @@ void DeferThread::Detach() { thread_.detach(); }
   return signals_;
 }
 
-[[nodiscard]] void DeferThread::SetSignal(
-    ThreadSignal signal) volatile noexcept {
+void DeferThread::SetSignal(ThreadSignal signal) volatile noexcept {
   signals_.Set(signal);
 }
 
-[[nodiscard]] void DeferThread::UnsetSignal(
-    ThreadSignal signal) volatile noexcept {
+void DeferThread::UnsetSignal(ThreadSignal signal) volatile noexcept {
   signals_.Unset(signal);
 }
 
-[[nodiscard]] void DeferThread::Close() noexcept {
+void DeferThread::Close() noexcept {
+  ScopedLock<Mutex> lock(close_mutex_);
   if (!is_closed_) {
     signals_.Set(ThreadSignal::kExit);
-    ScopedLock<Mutex> lock(close_mutex_);
     is_closed_ = true;
   }
 }

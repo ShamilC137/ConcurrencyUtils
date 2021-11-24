@@ -11,6 +11,10 @@
 // STD
 #include <exception>
 
+/// <summary>
+///   This file contains DeferThreadWrapper object and all its helpers.
+/// </summary>
+
 namespace api {
 struct ExpiredThread : std::exception {
   using MyBase = std::exception;
@@ -22,6 +26,10 @@ struct ExpiredThread : std::exception {
 }  // namespace api
 
 namespace api {
+/// <summary>
+///   Wraps DeferThread object. Does not take ownership on it. If thread is
+///   closed, any operation will throw exception.
+/// </summary>
 class DeferThreadWrapper {
  public:
   DeferThreadWrapper() noexcept;
