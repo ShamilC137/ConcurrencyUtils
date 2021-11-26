@@ -20,6 +20,7 @@ enum class ThreadSignal : ThreadSignalUnderlyingType {
 };
 
 class ThreadSignals {
+ public:
   using Type = ThreadSignalUnderlyingType;
 
   // ctors
@@ -38,9 +39,9 @@ class ThreadSignals {
 
   // Operators =
  public:
-  volatile ThreadSignals &operator=(const ThreadSignals &rhs) volatile noexcept;
+  ThreadSignals &operator=(const ThreadSignals &rhs) noexcept;
 
-  volatile ThreadSignals &operator=(ThreadSignals &&) volatile noexcept;
+  ThreadSignals &operator=(ThreadSignals &&) noexcept;
 
  private:
   // for operator &
@@ -48,33 +49,35 @@ class ThreadSignals {
 
   // Test and set
  public:
-  [[nodiscard]] bool Test(ThreadSignal sig) const volatile noexcept;
+  [[nodiscard]] bool Test(ThreadSignal sig) const noexcept;
 
-  void Set(ThreadSignal sig) volatile noexcept;
+  void Set(ThreadSignal sig) noexcept;
 
-  void Unset(ThreadSignal sig) volatile noexcept;
+  void Unset(ThreadSignal sig) noexcept;
 
   // cast
  public:
   // If there are more than one value, cast returns ThreadSignal with the lowest
   // value
-  operator ThreadSignal() const volatile noexcept;
+  operator ThreadSignal() const noexcept;
 
   // friends
  private:
-  friend ThreadSignals operator&(const volatile ThreadSignals &lhs,
-                                 const volatile ThreadSignals &rhs) noexcept;
+  friend ThreadSignals operator&(const ThreadSignals &lhs,
+                                 const ThreadSignals &rhs) noexcept;
 
-  friend ThreadSignals operator~(const volatile ThreadSignals &rhs) noexcept;
+  friend ThreadSignals operator~(const ThreadSignals &rhs) noexcept;
 
-  friend bool operator==(const volatile ThreadSignals &lhs,
-                         const volatile ThreadSignals &rhs) noexcept;
+  friend bool operator==(const ThreadSignals &lhs,
+                         const ThreadSignals &rhs) noexcept;
 
-  friend bool operator!=(const volatile ThreadSignals &lhs,
-                         const volatile ThreadSignals &rhs) noexcept;
+  friend bool operator!=(const ThreadSignals &lhs,
+                         const ThreadSignals &rhs) noexcept;
+
+  friend class DeferThread;
 
  private:
-  volatile Type value_;
+  Type value_;
 };
 
 }  // namespace api

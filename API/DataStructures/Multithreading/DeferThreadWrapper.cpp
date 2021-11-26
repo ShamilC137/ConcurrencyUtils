@@ -124,7 +124,7 @@ auto DeferThreadWrapper::NativeHandle() noexcept(false) {
   throw ExpiredThread("Thread is deleted");
 }
 
-void DeferThreadWrapper::SendSuspendRequest() noexcept {
+void DeferThreadWrapper::SendSuspendSignal() noexcept {
   try {
     kernel_api::SendSuspendThreadSignal(api::GetId(*this));
   } catch (...) {

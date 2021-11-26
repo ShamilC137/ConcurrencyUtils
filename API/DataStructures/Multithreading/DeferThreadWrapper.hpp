@@ -58,7 +58,7 @@ class DeferThreadWrapper {
 
   [[nodiscard]] auto GetId() noexcept(false);
 
-  void SendSuspendRequest() noexcept;
+  void SendSuspendSignal() noexcept;
 
   bool Resume() noexcept(false);
 

@@ -56,6 +56,19 @@ class Kernel {
 
   void DeleteThread(const api::ThreadId id) noexcept(false);
 
+  [[nodiscard]] api::ThreadSignals GetThreadSignals(api::ThreadId id) const
+      noexcept(false);
+
+  bool SendKillSignal(api::ThreadId id) noexcept;
+
+  bool SendSuspendSignal(api::ThreadId id) noexcept;
+
+  bool SuspendThisThread(const api::ThreadId *const id_hint = nullptr) noexcept;
+
+  bool UnsetSignal(api::ThreadId id, api::ThreadSignal signal) noexcept;
+
+  bool Resume(api::ThreadId id) noexcept;
+
   // Task manipulation functions
  public:
   // Adds task to task queue. Potentially blocks caller thread if queue is busy.

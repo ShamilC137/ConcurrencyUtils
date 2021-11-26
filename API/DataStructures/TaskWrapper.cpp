@@ -2,11 +2,12 @@
 
 namespace api {
 TaskWrapper::TaskWrapper() : task_{}, target_{} {}
+
 TaskWrapper::TaskWrapper(const PointerType &task,
                          const api::String &target) noexcept
     : task_{task}, target_{target} {
   if (task_) {
-    task->IncrementNumOfRefs(api::MemoryOrder::relaxed);
+    task->IncrementNumOfRefs(api::MemoryOrder::release);
   }
 }
 
@@ -32,8 +33,9 @@ TaskWrapper &TaskWrapper::operator=(TaskWrapper &&rhs) noexcept {
 
 TaskWrapper::~TaskWrapper() noexcept {
   // FIXME: PROBABLY problem
-  if (task_ && task_->DecrementNumOfRefs(api::MemoryOrder::relaxed) == 0u) {
+  if (task_ && task_->DecrementNumOfRefs(api::MemoryOrder::release) == 0u) {
     delete task_;
+    task_ = nullptr;
   }
 }
 }  // namespace api

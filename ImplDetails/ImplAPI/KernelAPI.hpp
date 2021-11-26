@@ -65,11 +65,8 @@ void AddModule(impl::AbstractModule *module);
 [[nodiscard]] int Run();
 
 /// <summary>
-///   Returns reference to (i.e. returned value mb changed if it saved as
-///   reference) caller thread signals by thread id (api::GetId()).
-///   Its value can be used for signal handler (it may be changed from another
-///   thread at any moment).
-///   Yes, there is data race, but I don't care (one writter, many readers)
+///   Returns thread signals by thread id. Blocks caller thread if thread
+///   signals already modified by other threads.
 /// </summary>
 /// <param name="id"></param>
 /// <returns>
@@ -78,7 +75,7 @@ void AddModule(impl::AbstractModule *module);
 /// <exception type="std::out_of_range">
 ///   Thrown is thread id not belongs to kernel manipulated threads.
 /// </exception>
-[[nodiscard]] const api::ThreadSignals volatile &GetThreadSignalsReference(
+[[nodiscard]] api::ThreadSignals GetThreadSignals(
     const api::ThreadId id) noexcept(false);
 
 // For all functions that set thread signal flag the same rules are applied:
@@ -149,7 +146,10 @@ bool SuspendThisThread(const api::ThreadId *const id_hint = nullptr) noexcept;
 /// <param name="sig">
 ///   Signal that must be unset
 /// </param>
-void UnsetSignal(const api::ThreadId id, api::ThreadSignal sig) noexcept;
+/// <returns>
+///   True if signal unset and false otherwise
+/// </returns>
+bool UnsetSignal(const api::ThreadId id, api::ThreadSignal sig) noexcept;
 
 /// <summary>
 ///   Deletes associated with given id thread. If thread does not belong to
@@ -158,7 +158,10 @@ void UnsetSignal(const api::ThreadId id, api::ThreadSignal sig) noexcept;
 /// <param name="id">
 ///   Thread id
 /// </param>
-void DeleteThread(const api::ThreadId id) noexcept;
+/// <returns>
+///   True if thread deletion request is sent and false otherwise
+/// </returns>
+bool DeleteThread(const api::ThreadId id) noexcept;
 }  // namespace kernel_api
 }  // namespace api
 

@@ -76,8 +76,8 @@ class ThreadManager {
   ///   Thrown if a thread with given id not exists
   /// </exception>
   /// <multithreading> unsafe </multithreading>
-  [[nodiscard]] const api::ThreadSignals volatile &GetThreadSignalsReference(
-      const api::ThreadId id) noexcept(false);
+  [[nodiscard]] api::ThreadSignals GetThreadSignals(
+      const api::ThreadId id) const noexcept(false);
 
   /// <summary>
   ///   Sets kill signal on associated with given id thread.
@@ -86,7 +86,7 @@ class ThreadManager {
   /// <param name="id"> thread id </param>
   /// <returns> true if signal is setted, otherwise false </returns>
   /// <multithreading> unsafe </multithreading>
-  bool SetKillSignal(const api::ThreadId id) noexcept;
+  bool SendKillSignal(const api::ThreadId id) noexcept;
 
   /// <summary>
   ///   Sets suspend signal on associated with given id thread.

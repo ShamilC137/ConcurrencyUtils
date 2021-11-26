@@ -16,14 +16,12 @@ ThreadSignals::ThreadSignals(Type value) : value_{value} {}
 
 // operators =
 
-volatile ThreadSignals &
-ThreadSignals::operator=(const ThreadSignals &rhs) volatile noexcept {
+ThreadSignals &ThreadSignals::operator=(const ThreadSignals &rhs) noexcept {
   value_ = rhs.value_;
   return *this;
 }
 
-volatile ThreadSignals &
-ThreadSignals::operator=(ThreadSignals &&rhs) volatile noexcept {
+ThreadSignals &ThreadSignals::operator=(ThreadSignals &&rhs) noexcept {
   value_ = rhs.value_;
   rhs.value_ = static_cast<Type>(ThreadSignal::kExit);
   return *this;
@@ -31,21 +29,20 @@ ThreadSignals::operator=(ThreadSignals &&rhs) volatile noexcept {
 
 // test and set
 
-[[nodiscard]] bool ThreadSignals::Test(ThreadSignal sig) const
-    volatile noexcept {
+[[nodiscard]] bool ThreadSignals::Test(ThreadSignal sig) const noexcept {
   return value_ & static_cast<Type>(sig);
 }
 
-void ThreadSignals::Set(ThreadSignal sig) volatile noexcept {
+void ThreadSignals::Set(ThreadSignal sig) noexcept {
   value_ |= static_cast<Type>(sig);
 }
 
-void ThreadSignals::Unset(ThreadSignal sig) volatile noexcept {
+void ThreadSignals::Unset(ThreadSignal sig) noexcept {
   value_ &= ~static_cast<Type>(sig);
 }
 
 // cast operator
-ThreadSignals::operator ThreadSignal() const volatile noexcept {
+ThreadSignals::operator ThreadSignal() const noexcept {
   // kEmpty signal is not considered if any signal flag is enabled
   if (value_ & (value_ - 1)) {
     const auto kTypeSize{static_cast<Type>(sizeof(Type) * 8u)};
@@ -63,23 +60,23 @@ ThreadSignals::operator ThreadSignal() const volatile noexcept {
 
 // friends
 
-ThreadSignals operator&(const volatile ThreadSignals &lhs,
-                        const volatile ThreadSignals &rhs) noexcept {
+ThreadSignals operator&(const ThreadSignals &lhs,
+                        const ThreadSignals &rhs) noexcept {
   return static_cast<ThreadSignals::Type>(lhs.value_ & rhs.value_);
 }
 
-ThreadSignals operator~(const volatile ThreadSignals &rhs) noexcept {
+ThreadSignals operator~(const ThreadSignals &rhs) noexcept {
   return static_cast<ThreadSignals::Type>(~rhs.value_);
 }
 
-[[nodiscard]] bool operator==(const volatile ThreadSignals &lhs,
-                              const volatile ThreadSignals &rhs) noexcept {
+[[nodiscard]] bool operator==(const ThreadSignals &lhs,
+                              const ThreadSignals &rhs) noexcept {
   return lhs.value_ == rhs.value_;
 }
 
-[[nodiscard]] bool operator!=(const volatile ThreadSignals &lhs,
-                              const volatile ThreadSignals &rhs) noexcept {
+[[nodiscard]] bool operator!=(const ThreadSignals &lhs,
+                              const ThreadSignals &rhs) noexcept {
   return !(lhs == rhs);
 }
 
-} // namespace api
+}  // namespace api

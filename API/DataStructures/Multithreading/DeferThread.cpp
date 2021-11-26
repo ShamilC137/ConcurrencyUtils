@@ -50,23 +50,24 @@ void DeferThread::Detach() { thread_.detach(); }
   return thread_.get_id();
 }
 
-[[nodiscard]] const volatile ThreadSignals &DeferThread::GetSignals() const
-    volatile noexcept {
-  return signals_;
+[[nodiscard]] ThreadSignals DeferThread::GetSignals() noexcept {
+  return signals_.load(api::MemoryOrder::acquire);
 }
 
-void DeferThread::SetSignal(ThreadSignal signal) volatile noexcept {
-  signals_.Set(signal);
+void DeferThread::SetSignal(ThreadSignal signal) noexcept {
+  signals_.fetch_or(static_cast<ThreadSignals::Type>(signal),
+                    api::MemoryOrder::release);
 }
 
-void DeferThread::UnsetSignal(ThreadSignal signal) volatile noexcept {
-  signals_.Unset(signal);
+void DeferThread::UnsetSignal(ThreadSignal signal) noexcept {
+  signals_.fetch_or(~static_cast<ThreadSignals::Type>(signal),
+                    api::MemoryOrder::release);
 }
 
 void DeferThread::Close() noexcept {
   ScopedLock<Mutex> lock(close_mutex_);
   if (!is_closed_) {
-    signals_.Set(ThreadSignal::kExit);
+    SetSignal(ThreadSignal::kExit);
     is_closed_ = true;
   }
 }

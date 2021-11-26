@@ -19,7 +19,7 @@ ThreadManager::~ThreadManager() noexcept {
   }
 }
 
-void ThreadManager::DeleteThread(const api::ThreadId id) {
+void ThreadManager::DeleteThread(const api::ThreadId id) noexcept(false) {
   decltype(auto) thread{threads_.at(id)};
   threads_.erase(id);
 
@@ -47,12 +47,12 @@ OperationResult ThreadManager::ManageClosedThread() {
   return OperationResult::kFail;  // if all threads are busy now
 }
 
-const api::ThreadSignals volatile &ThreadManager::GetThreadSignalsReference(
-    const api::ThreadId id) noexcept(false) {
+[[nodiscard]] api::ThreadSignals ThreadManager::GetThreadSignals(
+    const api::ThreadId id) const noexcept(false) {
   return threads_.at(id)->GetSignals();
 }
 
-bool ThreadManager::SetKillSignal(const api::ThreadId id) noexcept {
+bool ThreadManager::SendKillSignal(const api::ThreadId id) noexcept {
   try {
     threads_.at(id)->SetSignal(api::ThreadSignal::kExit);
     return true;
@@ -79,8 +79,8 @@ bool ThreadManager::ResumeThread(const api::ThreadId id) noexcept {
   }
 }
 
-void ThreadManager::SuspendThisThread(const api::ThreadId *id_hint) noexcept(
-    false) {
+void ThreadManager::SuspendThisThread(
+    const api::ThreadId *const id_hint) noexcept(false) {
   api::ThreadId id;
   if (id_hint) {
     id = *id_hint;

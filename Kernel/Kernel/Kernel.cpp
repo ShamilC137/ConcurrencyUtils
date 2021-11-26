@@ -22,7 +22,40 @@ void Kernel::Deallocate(void *ptr, const size_t nbytes) noexcept {
   stub.Deallocate(ptr, nbytes);
 }
 
-// FIXME: Multithreading
+void Kernel::DeleteThread(const api::ThreadId id) noexcept(false) {
+  thread_manager_.DeleteThread(id);
+}
+
+api::ThreadSignals Kernel::GetThreadSignals(api::ThreadId id) const
+    noexcept(false) {
+  return thread_manager_.GetThreadSignals(id);
+}
+
+bool Kernel::SendKillSignal(api::ThreadId id) noexcept {
+  return thread_manager_.SendKillSignal(id);
+}
+
+bool Kernel::SendSuspendSignal(api::ThreadId id) noexcept {
+  return thread_manager_.SetSuspendSignal(id);
+}
+
+bool Kernel::SuspendThisThread(const api::ThreadId *const id_hint) noexcept {
+  try {
+    thread_manager_.SuspendThisThread(id_hint);
+  } catch (...) {
+    return false;
+  }
+  return true;
+}
+
+bool Kernel::UnsetSignal(api::ThreadId id, api::ThreadSignal signal) noexcept {
+  return thread_manager_.UnsetSignal(id, signal);
+}
+
+bool Kernel::Resume(api::ThreadId id) noexcept {
+  return thread_manager_.ResumeThread(id);
+}
+
 void Kernel::PushToQueue(const api::TaskWrapper &task) {
   task_manager_.PushTask(task);
 }
@@ -57,40 +90,41 @@ void AddModule(impl::AbstractModule *module) { GetKernel().AddModule(module); }
 
 [[nodiscard]] int Run() { return GetKernel().Run(); }
 
-// FIXME: stub
-[[nodiscard]] const volatile ThreadSignals &GetThreadSignalsReference(
-    const ThreadId id) noexcept(false) {
-  const volatile api::ThreadSignals sigs{};
-  return sigs;
+[[nodiscard]] ThreadSignals GetThreadSignals(const ThreadId id) noexcept(
+    false) {
+  return GetKernel().GetThreadSignals(id);
 }
 
-// FIXME: stub
-bool SendKillThreadSignal(const ThreadId id) noexcept { return false; }
+bool SendKillThreadSignal(const ThreadId id) noexcept {
+  return GetKernel().SendKillSignal(id);
+}
 
-// FIXME: stub
-bool SendSuspendThreadSignal(const ThreadId id) noexcept { return false; }
+bool SendSuspendThreadSignal(const ThreadId id) noexcept {
+  return GetKernel().SendSuspendSignal(id);
+}
 
-// FIXME: stub
-bool ResumeThread(const ThreadId id) noexcept { return false; }
+bool ResumeThread(const ThreadId id) noexcept { return GetKernel().Resume(id); }
 
-// FIXME: stub
 bool SuspendThisThread(const api::ThreadId *const id_hint) noexcept {
   /*
    * expected behaviour:
    * kernel_api::UnsetSignal(kThreadId, ThreadSignal::kSuspend);
    * wrapper->DeactivateThread();
    */
-  if (id_hint) {
-  } else {
-  }
-  return false;
+  return GetKernel().SuspendThisThread(id_hint);
 }
 
-// FIXME: stub
-void UnsetSignal(const ThreadId id, ThreadSignal sig) noexcept {}
+bool UnsetSignal(const ThreadId id, ThreadSignal sig) noexcept {
+  return GetKernel().UnsetSignal(id, sig);
+}
 
-// FIXME: stub
-void DeleteThread(const ThreadId id) noexcept {}
+bool DeleteThread(const ThreadId id) noexcept {
+  try {
+    GetKernel().DeleteThread(id);
+  } catch (...) {
+    return false;
+  }
+  return true;
 }  // namespace kernel_api
 }  // namespace api
 

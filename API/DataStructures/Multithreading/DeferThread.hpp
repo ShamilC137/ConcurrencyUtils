@@ -157,14 +157,10 @@ class DeferThread {
 
   [[nodiscard]] ID GetId() const noexcept;
 
-  /// <summary>
-  ///   This referenced could be changed at any moment by other threads.
-  /// </summary>
   /// <returns>
-  ///   Reference to signals
+  ///   Current thread signals
   /// </returns>
-  [[nodiscard]] const volatile ThreadSignals &GetSignals() const
-      volatile noexcept;
+  [[nodiscard]] ThreadSignals GetSignals() noexcept;
 
   /// <summary>
   ///   Sets given signal
@@ -172,7 +168,7 @@ class DeferThread {
   /// <param name="signal">
   ///   Signal to set
   /// </param>
-  void SetSignal(ThreadSignal signal) volatile noexcept;
+  void SetSignal(ThreadSignal signal) noexcept;
 
   /// <summary>
   ///   Unsets given signal
@@ -180,7 +176,7 @@ class DeferThread {
   /// <param name="signal">
   ///   Signal to unset
   /// </param>
-  void UnsetSignal(ThreadSignal signal) volatile noexcept;
+  void UnsetSignal(ThreadSignal signal) noexcept;
 
   /// <summary>
   ///   Closes this thread. Closed thread is a thread which treated as joined
@@ -233,10 +229,10 @@ class DeferThread {
  private:
   AtomicFlag is_active_;
   Thread thread_;
-  volatile bool is_closed_;  // if associated thread closed
-  volatile ThreadSignals signals_;
-  Atomic<unsigned char> nreferences_;
+  volatile bool is_closed_;  // if associated thread closed; guarded by mutex
   Mutex close_mutex_;
+  Atomic<ThreadSignals::Type> signals_;
+  Atomic<unsigned char> nreferences_;
 };
 
 /// <summary>
@@ -254,10 +250,9 @@ void RoutineLoop(const bool exit_after_call_flag,
     const auto kThreadId{GetId()};
     // current_signal have one value (i.e. ThreadSignal)
     // mb changed by main (i.e. kernel) thread
-    const auto volatile &thread_signal{
-        kernel_api::GetThreadSignalsReference(kThreadId)};
     while (true) {
-      ThreadSignal current_signal{static_cast<ThreadSignal>(thread_signal)};
+      auto current_signal{
+          static_cast<ThreadSignal>(kernel_api::GetThreadSignals(kThreadId))};
       switch (current_signal) {
         case ThreadSignal::kExit:
           kernel_api::DeleteThread(kThreadId);
