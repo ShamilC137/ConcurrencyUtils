@@ -19,30 +19,15 @@ class ThreadManager {
 
  public:
   /// <summary>
-  /// Creates new thread, adds it to threads' table
+  ///   Adds given thread to threads' table. Takes ownership on thread.
   /// </summary>
-  /// <typeparam name="ExceptionHandler"> exception handler type </typeparam>
-  /// <typeparam name="ThreadRoutine">
-  ///   underlying thread function type
-  /// </typeparam>
-  /// <typeparam name="...RoutineArgs">
-  ///   thread function arguments
-  /// </typeparam>
-  /// <param name="exit_after_call_flag">
-  ///   is should exit after given function call flag
+  /// <param name="thread">
+  ///   Allocated thread
   /// </param>
-  /// <param name="handler">
-  ///   exception handler (if exception inherited from std::exception is raised)
-  /// </param>
-  /// <param name="routine"> underlying thread routine </param>
-  /// <param name="...args"> thread routine arguments</param>
-  /// <returns> wrapper to created thread </returns>
-  /// <multithreading> safe </multithreading>
-  template <class ExceptionHandler, class ThreadRoutine, class... RoutineArgs>
-  inline api::DeferThreadWrapper CreateThread(const bool exit_after_call_flag,
-                                              ExceptionHandler &&handler,
-                                              ThreadRoutine &&routine,
-                                              RoutineArgs &&...args);
+  /// <returns>
+  ///   Wrapper to given thread
+  /// </returns>
+  api::DeferThreadWrapper AddThread(api::DeferThread *thread);
 
   /// <summary>
   ///   Deletes the thread from the threads' table. Closes the thread and, if
@@ -146,20 +131,5 @@ class ThreadManager {
   mutable api::SharedMutex threads_mutex_;
   mutable api::Mutex closed_threads_mutex_;
 };
-
-template <class ExceptionHandler, class ThreadRoutine, class... RoutineArgs>
-inline api::DeferThreadWrapper ThreadManager::CreateThread(
-    const bool exit_after_call_flag, ExceptionHandler &&handler,
-    ThreadRoutine &&routine, RoutineArgs &&...args) {
-  auto thread{new api::DeferThread(exit_after_call_flag,
-                                   std::forward<ExceptionHandler>(handler),
-                                   std::forward<ThreadRoutine>(routine),
-                                   std::forward<RoutineArgs>(args)...)};
-  threads_mutex_.lock();
-  threads_[thread->GetId()] = thread;
-  threads_mutex_.unlock();
-  return api::DeferThreadWrapper(thread);
-}
-
 }  // namespace kernel
 #endif  // APPLICATION_KERNEL_THREADMANAGER_HPP_

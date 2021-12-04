@@ -147,7 +147,7 @@ class BaseSlot {
   /// <multithreading>
   ///   undefined
   /// </multithreading>
-  void operator()(api::TaskWrapper &task) noexcept(false);
+  void operator()(api::TaskWrapper &task) const noexcept(false);
 
   /// <summary>
   ///   Calls underlying function. May throw underlying function exception.
@@ -164,12 +164,12 @@ class BaseSlot {
   /// <multithreading>
   ///   undefined
   /// </multithreading>
-  void operator()(api::TaskWrapper &&task) noexcept(false);
+  void operator()(api::TaskWrapper &&task) const noexcept(false);
 
  protected:
   // potentially throws: api::Deadlock, api::BadSlotCall
   // Makes real call to underlying function
-  virtual void RealCall(api::TaskWrapper &task) noexcept(false) = 0;
+  virtual void RealCall(api::TaskWrapper &task) const noexcept(false) = 0;
 
  private:
   const int *idseq_ptr_;  // derived class types identifiers sequence

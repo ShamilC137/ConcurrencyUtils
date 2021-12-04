@@ -57,7 +57,7 @@ class Slot : public impl::BaseSlot {
   // Calls the underlying function with parameters from task.
   // Throws: api::Deadlock, api::BadSlotCall
   // FIXME: void ReturnType stub
-  virtual void RealCall(TaskWrapper &task_wrap) noexcept(false) override {
+  virtual void RealCall(TaskWrapper &task_wrap) const noexcept(false) override {
     decltype(auto) task{task_wrap.GetTask()};
     if (task->GetIDSequencePtr() != Base::GetIDSequencePtr()) {
       throw api::BadSlotCall("Task and slot parameters types are incompatible");
