@@ -6,6 +6,8 @@
 #include "../API/DataStructures/Containers/String.hpp"
 #include "../API/DataStructures/Containers/Vector.hpp"
 #include "../API/DataStructures/Multithreading/Atomics.hpp"
+#include "../API/DataStructures/Multithreading/SharedLockGuard.hpp"
+#include "../API/DataStructures/Multithreading/SharedMutex.hpp"
 #include "../API/DataStructures/Multithreading/UnboundedPriorityBlockingQueue.hpp"
 #include "../API/DataStructures/Slot.hpp"
 #include "../API/DataStructures/Task.hpp"
@@ -48,7 +50,7 @@ class AbstractModule {
   ///   Extracts all slots signatures.
   /// </summary>
   /// <returns> vector of signatures </returns>
-  /// <multithreading> unsafe </multithreading>
+  /// <multithreading> safe </multithreading>
   [[nodiscard]] api::Vector<api::String> GetSlotsSignatures() const;
 
   // modifying functions
@@ -59,12 +61,12 @@ class AbstractModule {
   /// </summary>
   /// <param name="slot_sig"> slot signature </param>
   /// <param name="slot"> pointer to slot </param>
-  /// <multithreading> unsafe </multithreading>
-  inline void AddSlotToTable(const api::String &slot_sig,
-                             impl::BaseSlot *slot) {
-    const auto is_inserted{slots_.try_emplace(slot_sig, slot).second};
-    assert(is_inserted && "Panic: AddSlotToTable, key already exists");
-  }
+  /// <returns>
+  ///   True if slot is added and false otherwise. If slot is not added, it's
+  ///   deleted.
+  /// </returns>
+  /// <multithreading> safe </multithreading>
+  bool AddSlotToTable(const api::String &slot_sig, impl::BaseSlot *slot);
 
   /// <returns> tasks' queue size </returns>
   /// <multithreading> safe </multithreading>
@@ -138,7 +140,7 @@ class AbstractModule {
   ///   Thrown if task queue is empty
   /// </exception>
   /// <multithreading>
-  ///   Partially safe: could be broken if slots table is changed
+  ///   safe
   /// </multithreading>
   ThreadResourceErrorStatus ExecuteNextTask() noexcept(false);
 
@@ -158,7 +160,7 @@ class AbstractModule {
   ///   Thrown if task queue is empty
   /// </exception>
   /// <multithreading>
-  ///   Partially safe: could be broken if slots table is changed
+  ///   safe
   /// </multithreading>
   void ExecuteNextTask(api::ForceSlotCall) noexcept(false);
 
@@ -178,9 +180,10 @@ class AbstractModule {
   ///   Thrown if slot and task types are incompatible
   /// </exception>
   /// <multithreading>
-  ///   Partially safe: could be broken if slots table is changed
+  ///   safe
   /// </multithreading>
-  ThreadResourceErrorStatus ExecuteTask(api::TaskWrapper task) noexcept(false);
+  ThreadResourceErrorStatus ExecuteTask(api::TaskWrapper task) const
+      noexcept(false);
 
   /// <summary>
   ///   Extract task from tasks queue and execute it. Potentially blocks caller
@@ -196,9 +199,10 @@ class AbstractModule {
   ///   Thrown if slot and task types are incompatible
   /// </exception>
   /// <multithreading>
-  ///   Partially safe: could be broken if slots table is changed
+  ///   safe
   /// </multithreading>
-  void ExecuteTask(api::TaskWrapper task, api::ForceSlotCall) noexcept(false);
+  void ExecuteTask(api::TaskWrapper task, api::ForceSlotCall) const
+      noexcept(false);
 
   // pure virtual functions
  public:
@@ -223,6 +227,8 @@ class AbstractModule {
   // Associated with this module queue of tasks. Kernel will push tasks to this
   // queue.
   api::UnboundedPriorityBlockingQueue<api::TaskWrapper> tasks_queue_;
+
+  mutable api::SharedMutex slots_mutex_;
 };
 }  // namespace impl
 #endif  // !APPLICATION_IMPLDETAILS_ABSTRACTMODULE_HPP_

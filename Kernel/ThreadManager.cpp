@@ -19,6 +19,13 @@ ThreadManager::~ThreadManager() noexcept {
   }
 }
 
+api::DeferThreadWrapper ThreadManager::AddThread(api::DeferThread *thread) {
+  threads_mutex_.lock();
+  threads_[thread->GetId()] = thread;
+  threads_mutex_.unlock();
+  return api::DeferThreadWrapper(thread);
+}
+
 void ThreadManager::DeleteThread(const api::ThreadId id) noexcept(false) {
   threads_mutex_.lock();
   decltype(auto) thread{threads_.at(id)};
