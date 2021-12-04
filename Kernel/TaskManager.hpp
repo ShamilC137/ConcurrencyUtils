@@ -2,30 +2,23 @@
 #define APPLICATION_KERNEL_TASK_MANAGER_HPP_
 
 // current project
+#include "../API/DataStructures//Multithreading/SharedMutex.hpp"
 #include "../API/DataStructures/Containers/HashMap.hpp"
 #include "../API/DataStructures/Containers/Vector.hpp"
+#include "../API/DataStructures/Multithreading/SharedLockGuard.hpp"
 #include "../API/DataStructures/Multithreading/UnboundedPriorityBlockingQueue.hpp"
 #include "../API/DataStructures/TaskWrapper.hpp"
 #include "../ImplDetails/AbstractModule.hpp"
 #include "KernelUtilities.hpp"
 
+// FIXME: stub
 namespace api {
 template <class T, class U>
-class Pair {
- public:
+struct Pair {
   T first;
   U second;
 };
 }  // namespace api
-
-namespace impl {
-// FIXME: stub. Returns next signal + container of connected slots with its
-// priorities
-inline api::Pair<api::String, api::Vector<api::Pair<api::String, int>>>
-GetNextEntryStub() {
-  return {};
-}
-}  // namespace impl
 
 namespace kernel {
 struct ModuleNotFound : std::exception {
@@ -62,14 +55,14 @@ class TaskManager {
   ///   Adds module to module table. Does not take ownership of the descriptor
   /// </summary>
   /// <param name="md"> pointer to module descriptor </param>
-  /// <multithreading> unsafe </multithreading>
+  /// <multithreading> safe </multithreading>
   void AddModule(ModuleDescriptor *md);
 
   /// <summary>
   ///   Removes module from module table
   /// </summary>
   /// <param name="md"> pointer to module descriptor </param>
-  /// <multithreading> unsafe </multithreading>
+  /// <multithreading> safe </multithreading>
   void EraseModule(const ModuleDescriptor *md);
 
   /// <summary>
@@ -94,7 +87,7 @@ class TaskManager {
   /// <exception type="SlotNotFound">
   ///   Thrown if specified module slot is not present
   /// </exception>
-  /// <multithreading> unsafe </multithreading>
+  /// <multithreading> safe </multithreading>
   void FillConnectionsTable() noexcept(false);
 
   /// <summary>
@@ -115,7 +108,7 @@ class TaskManager {
   ///   Searches for module descriptor
   /// </summary>
   /// <param name="id"> module identifier </param>
-  /// <multithreading> unsafe </multithreading>
+  /// <multithreading> safe </multithreading>
   ModuleDescriptor *FindDescriptor(const api::String &id);
 
  private:
@@ -129,9 +122,12 @@ class TaskManager {
   // Cannot work with objects for now.
   api::HashMap<api::String,
                api::Vector<api::Pair<api::String, ModuleDescriptor *>>>
-      connections_signatures_;
+      connections_signatures_;  // guarded by shared mutex
   // Container of modules.
-  api::Vector<ModuleDescriptor *> modules_;
+  api::Vector<ModuleDescriptor *> modules_;  // guarded by mutex
+
+  api::SharedMutex modules_mutex_;
+  api::SharedMutex connections_mutex_;
 };
 }  // namespace kernel
 #endif  // APPLICATION_KERNEL_TASK_MANAGER_HPP_
