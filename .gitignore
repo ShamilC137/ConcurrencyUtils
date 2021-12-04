@@ -1,4 +1,7 @@
-/Debug
+Debug/
+x64/
+.vs/
 Application.vcxproj
 Application.vcxproj.filters
 Application.vcxproj.user
+Application.sln

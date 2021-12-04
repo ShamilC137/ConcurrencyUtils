@@ -20,40 +20,48 @@ ThreadManager::~ThreadManager() noexcept {
 }
 
 void ThreadManager::DeleteThread(const api::ThreadId id) noexcept(false) {
+  threads_mutex_.lock();
   decltype(auto) thread{threads_.at(id)};
   threads_.erase(id);
+  threads_mutex_.unlock();
 
   thread->Close();
   // delete thread if it is no longer active
   if (IsDeleteAvailable(thread)) {
     delete thread;
   } else {
+    api::ScopedLock<api::Mutex> lock(closed_threads_mutex_);
     closed_threads_.push_back(thread);
   }
 }
 
 OperationResult ThreadManager::ManageClosedThread() {
+  api::ScopedLock<api::Mutex> lock(closed_threads_mutex_);
   if (closed_threads_.empty()) {
     return OperationResult::kNone;
   }
 
-  for (auto thread : closed_threads_) {
-    if (IsDeleteAvailable(thread)) {
-      delete thread;
+  for (auto iter = closed_threads_.begin(), end = closed_threads_.end();
+       iter != end; ++iter) {
+    if (IsDeleteAvailable(*iter)) {
+      delete *iter;
+      closed_threads_.erase(iter);
       return OperationResult::kSuccess;
     }
   }
-
+  // <<<<
   return OperationResult::kFail;  // if all threads are busy now
 }
 
 [[nodiscard]] api::ThreadSignals ThreadManager::GetThreadSignals(
     const api::ThreadId id) const noexcept(false) {
+  api::SharedLockGuard<api::SharedMutex> lock(threads_mutex_);
   return threads_.at(id)->GetSignals();
 }
 
 bool ThreadManager::SendKillSignal(const api::ThreadId id) noexcept {
   try {
+    api::SharedLockGuard<api::SharedMutex> lock(threads_mutex_);
     threads_.at(id)->SetSignal(api::ThreadSignal::kExit);
     return true;
   } catch (std::out_of_range) {
@@ -63,6 +71,7 @@ bool ThreadManager::SendKillSignal(const api::ThreadId id) noexcept {
 
 bool ThreadManager::SetSuspendSignal(const api::ThreadId id) noexcept {
   try {
+    api::SharedLockGuard<api::SharedMutex> lock(threads_mutex_);
     threads_.at(id)->SetSignal(api::ThreadSignal::kSuspend);
     return true;
   } catch (std::out_of_range) {
@@ -72,6 +81,7 @@ bool ThreadManager::SetSuspendSignal(const api::ThreadId id) noexcept {
 
 bool ThreadManager::ResumeThread(const api::ThreadId id) noexcept {
   try {
+    api::SharedLockGuard<api::SharedMutex> lock(threads_mutex_);
     threads_.at(id)->Activate();
     return true;
   } catch (std::out_of_range) {
@@ -87,12 +97,14 @@ void ThreadManager::SuspendThisThread(
   } else {
     id = api::GetId();
   }
+  api::SharedLockGuard<api::SharedMutex> lock(threads_mutex_);
   threads_.at(id)->DeactivateCallerThread();
 }
 
 bool ThreadManager::UnsetSignal(const api::ThreadId id,
                                 api::ThreadSignal signal) noexcept {
   try {
+    api::SharedLockGuard<api::SharedMutex> lock(threads_mutex_);
     threads_.at(id)->UnsetSignal(signal);
     return true;
   } catch (std::out_of_range) {

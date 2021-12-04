@@ -6,7 +6,10 @@
 #include "../API/DataStructures/Containers/HashMap.hpp"
 #include "../API/DataStructures/Multithreading/DeferThread.hpp"
 #include "../API/DataStructures/Multithreading/DeferThreadWrapper.hpp"
-#include "../API/DataStructures/Multithreading/ThreadPool.hpp"
+#include "../API/DataStructures/Multithreading/Mutex.hpp"
+#include "../API/DataStructures/Multithreading/ScopedLock.hpp"
+#include "../API/DataStructures/Multithreading/SharedLockGuard.hpp"
+#include "../API/DataStructures/Multithreading/SharedMutex.hpp"
 #include "../ImplDetails/Utility.hpp"
 
 namespace kernel {
@@ -34,7 +37,7 @@ class ThreadManager {
   /// <param name="routine"> underlying thread routine </param>
   /// <param name="...args"> thread routine arguments</param>
   /// <returns> wrapper to created thread </returns>
-  /// <multithreading> unsafe </multithreading>
+  /// <multithreading> safe </multithreading>
   template <class ExceptionHandler, class ThreadRoutine, class... RoutineArgs>
   inline api::DeferThreadWrapper CreateThread(const bool exit_after_call_flag,
                                               ExceptionHandler &&handler,
@@ -51,7 +54,7 @@ class ThreadManager {
   /// <exception type="std:out_of_range">
   ///    Thrown if the thread with given id is not found
   /// </exception>
-  /// <multithreading> unsafe </multithreading>
+  /// <multithreading> safe </multithreading>
   void DeleteThread(const api::ThreadId id) noexcept(false);
 
   /// <summary>
@@ -63,7 +66,7 @@ class ThreadManager {
   ///   kFail if all thread are busy
   ///   kSucces if thread is deleted
   /// </ returns>
-  /// <multithreading> unsafe </multithreading>
+  /// <multithreading> safe </multithreading>
   api::OperationResult ManageClosedThread();
 
  public:
@@ -75,7 +78,7 @@ class ThreadManager {
   /// <exception type="std::out_of_range">
   ///   Thrown if a thread with given id not exists
   /// </exception>
-  /// <multithreading> unsafe </multithreading>
+  /// <multithreading> safe </multithreading>
   [[nodiscard]] api::ThreadSignals GetThreadSignals(
       const api::ThreadId id) const noexcept(false);
 
@@ -85,7 +88,7 @@ class ThreadManager {
   /// </summary>
   /// <param name="id"> thread id </param>
   /// <returns> true if signal is setted, otherwise false </returns>
-  /// <multithreading> unsafe </multithreading>
+  /// <multithreading> safe </multithreading>
   bool SendKillSignal(const api::ThreadId id) noexcept;
 
   /// <summary>
@@ -94,7 +97,7 @@ class ThreadManager {
   /// </summary>
   /// <param name="id"> thread id </param>
   /// <returns>true if signal is setted, otherwise false</returns>
-  /// <multithreading> unsafe </multithreading>
+  /// <multithreading> safe </multithreading>
   bool SetSuspendSignal(const api::ThreadId id) noexcept;
 
   /// <summary>
@@ -103,7 +106,7 @@ class ThreadManager {
   /// </summary>
   /// <param name="id">thread id</param>
   /// <returns>true if thread is resumed, otherwise false</returns>
-  /// <multithreading> unsafe </multithreading>
+  /// <multithreading> safe </multithreading>
   bool ResumeThread(const api::ThreadId id) noexcept;
 
   /// <summary>
@@ -114,7 +117,7 @@ class ThreadManager {
   /// <exception type="std::out_of_range">
   ///   Thrown if given id not belongs to threads' table
   /// </exception>
-  /// <multithreading> unsafe </multithreading>
+  /// <multithreading> safe </multithreading>
   void SuspendThisThread(const api::ThreadId *id_hint) noexcept(false);
 
   /// <summary>
@@ -124,19 +127,24 @@ class ThreadManager {
   /// <param name="id"> thread id </param>
   /// <param name="signal"> thread signal </param>
   /// <returns> true if signal is unsetted and false otherwise </returns>
-  /// <multithreading> unsafe </multithreading>
+  /// <multithreading> safe </multithreading>
   bool UnsetSignal(const api::ThreadId id, api::ThreadSignal signal) noexcept;
 
  private:
   /// <summary>
   ///   table of all threads, that created with CreateThread.
   ///   Key - thread id, value - pointer to associated thread. Own threads.
+  ///   Guarded by shared_mutex.
   /// </summary>
   api::HashMap<api::ThreadId, api::DeferThread *> threads_;
   /// <summary>
   ///   Container of closed threads. Owns threads.
+  ///   Guarded by mutex.
   /// </summary>
   api::Deque<api::DeferThread *> closed_threads_;
+
+  mutable api::SharedMutex threads_mutex_;
+  mutable api::Mutex closed_threads_mutex_;
 };
 
 template <class ExceptionHandler, class ThreadRoutine, class... RoutineArgs>
@@ -147,7 +155,9 @@ inline api::DeferThreadWrapper ThreadManager::CreateThread(
                                    std::forward<ExceptionHandler>(handler),
                                    std::forward<ThreadRoutine>(routine),
                                    std::forward<RoutineArgs>(args)...)};
+  threads_mutex_.lock();
   threads_[thread->GetId()] = thread;
+  threads_mutex_.unlock();
   return api::DeferThreadWrapper(thread);
 }
 

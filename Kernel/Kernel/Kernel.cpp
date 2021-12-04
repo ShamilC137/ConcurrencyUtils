@@ -125,6 +125,7 @@ bool DeleteThread(const ThreadId id) noexcept {
     return false;
   }
   return true;
+}
 }  // namespace kernel_api
 }  // namespace api
 
