@@ -56,11 +56,9 @@ class DeferThreadWrapper {
 
   [[nodiscard]] unsigned int HardwareConcurrency() noexcept(false);
 
-  [[nodiscard]] auto GetId() noexcept(false);
+  [[nodiscard]] DeferThread::ID GetId() noexcept(false);
 
-  void SendSuspendSignal() noexcept;
-
-  bool Resume() noexcept(false);
+  void Start() noexcept;
 
   [[nodiscard]] bool IsClosed() const noexcept;
 

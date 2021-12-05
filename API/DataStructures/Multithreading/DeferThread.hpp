@@ -250,11 +250,16 @@ void RoutineLoop(const bool exit_after_call_flag,
     const auto kThreadId{GetId()};
     // current_signal have one value (i.e. ThreadSignal)
     // mb changed by main (i.e. kernel) thread
+
+    bool is_executed{};
     while (true) {
       auto current_signal{
           static_cast<ThreadSignal>(kernel_api::GetThreadSignals(kThreadId))};
       switch (current_signal) {
         case ThreadSignal::kExit:
+          if (!is_executed) {
+            routine(std::forward<RoutineArgs>(args)...);
+          }
           kernel_api::DeleteThread(kThreadId);
           return;
         case ThreadSignal::kSuspend:
@@ -263,6 +268,7 @@ void RoutineLoop(const bool exit_after_call_flag,
           break;
         case ThreadSignal::kEmpty:
           routine(std::forward<RoutineArgs>(args)...);
+          is_executed = true;
           break;
         default:
           assert(false && "Unhandled thread signal");

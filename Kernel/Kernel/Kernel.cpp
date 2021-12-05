@@ -22,6 +22,10 @@ void Kernel::Deallocate(void *ptr, const size_t nbytes) noexcept {
   stub.Deallocate(ptr, nbytes);
 }
 
+api::DeferThreadWrapper Kernel::RegisterThread(api::DeferThread *thread) {
+  return thread_manager_.AddThread(thread);
+}
+
 void Kernel::DeleteThread(const api::ThreadId id) noexcept(false) {
   thread_manager_.DeleteThread(id);
 }
@@ -125,6 +129,10 @@ bool DeleteThread(const ThreadId id) noexcept {
     return false;
   }
   return true;
+}
+
+api::DeferThreadWrapper RegisterThread(api::DeferThread *thread) {
+  return GetKernel().RegisterThread(thread);
 }
 }  // namespace kernel_api
 }  // namespace api

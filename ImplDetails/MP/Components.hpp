@@ -44,7 +44,7 @@ struct Components<Ret(Args...)> {
 
 // Function with ellipsis specialization
 template <class Ret, class... Args>
-struct Components<Ret(Args......)> {
+struct Components<Ret(Args..., ...)> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   static constexpr bool ellipsis = true;
@@ -60,7 +60,7 @@ struct Components<Ret(Args...) noexcept> {
 
 // Noexcept function with ellipsis specialization
 template <class Ret, class... Args>
-struct Components<Ret(Args......) noexcept> {
+struct Components<Ret(Args..., ...) noexcept> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   static constexpr bool ellipsis = true;
@@ -84,7 +84,7 @@ struct Components<Ret (*)(Args...) noexcept> {
 
 // Function pointer with ellipsis specialization
 template <class Ret, class... Args>
-struct Components<Ret (*)(Args......)> {
+struct Components<Ret (*)(Args..., ...)> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   static constexpr bool ellipsis = true;
@@ -92,7 +92,7 @@ struct Components<Ret (*)(Args......)> {
 
 // Noexcept function pointer with ellipsis specialization
 template <class Ret, class... Args>
-struct Components<Ret (*)(Args......) noexcept> {
+struct Components<Ret (*)(Args..., ...) noexcept> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   static constexpr bool ellipsis = true;
@@ -109,7 +109,7 @@ struct Components<Ret (Class::*)(Args...)> {
 
 // Member-function pointer with ellipsis specialization
 template <class Ret, class Class, class... Args>
-struct Components<Ret (Class::*)(Args......)> {
+struct Components<Ret (Class::*)(Args..., ...)> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;
@@ -127,7 +127,7 @@ struct Components<Ret (Class::*)(Args...) const> {
 
 // Const member-function pointer with ellipsis specialization
 template <class Ret, class Class, class... Args>
-struct Components<Ret (Class::*)(Args......) const> {
+struct Components<Ret (Class::*)(Args..., ...) const> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;
@@ -145,7 +145,7 @@ struct Components<Ret (Class::*)(Args...) volatile> {
 
 // Volatile member-function pointer with ellipsis specialization
 template <class Ret, class Class, class... Args>
-struct Components<Ret (Class::*)(Args......) volatile> {
+struct Components<Ret (Class::*)(Args..., ...) volatile> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;
@@ -163,7 +163,7 @@ struct Components<Ret (Class::*)(Args...) noexcept> {
 
 // Noexcept member-function pointer with ellipsis specialization
 template <class Ret, class Class, class... Args>
-struct Components<Ret (Class::*)(Args......) noexcept> {
+struct Components<Ret (Class::*)(Args..., ...) noexcept> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;
@@ -181,7 +181,7 @@ struct Components<Ret (Class::*)(Args...) const noexcept> {
 
 // Const noexcept member-function with ellipsis pointer
 template <class Ret, class Class, class... Args>
-struct Components<Ret (Class::*)(Args......) const noexcept> {
+struct Components<Ret (Class::*)(Args..., ...) const noexcept> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;
@@ -199,7 +199,7 @@ struct Components<Ret (Class::*)(Args...) volatile noexcept> {
 
 // Volatile noexcept member-function with ellipsis pointer
 template <class Ret, class Class, class... Args>
-struct Components<Ret (Class::*)(Args......) volatile noexcept> {
+struct Components<Ret (Class::*)(Args..., ...) volatile noexcept> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;
@@ -217,7 +217,7 @@ struct Components<Ret (Class::*)(Args...) const volatile> {
 
 // Const volatile member-function with ellipsis specialization
 template <class Ret, class Class, class... Args>
-struct Components<Ret (Class::*)(Args......) const volatile> {
+struct Components<Ret (Class::*)(Args..., ...) const volatile> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;
@@ -235,7 +235,7 @@ struct Components<Ret (Class::*)(Args...) const volatile noexcept> {
 
 // Const volatile noexcept member-function with ellipsis pointer
 template <class Ret, class Class, class... Args>
-struct Components<Ret (Class::*)(Args......) const volatile noexcept> {
+struct Components<Ret (Class::*)(Args..., ...) const volatile noexcept> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;
@@ -253,7 +253,7 @@ struct Components<Ret (Class::*)(Args...) &> {
 
 // Lvalue reference member-function with ellipsis pointer specialization
 template <class Ret, class Class, class... Args>
-struct Components<Ret (Class::*)(Args......) &> {
+struct Components<Ret (Class::*)(Args..., ...) &> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;
@@ -271,7 +271,7 @@ struct Components<Ret (Class::*)(Args...) &noexcept> {
 
 // Lvalue referenced noexcept member-function with ellipsis pointer
 template <class Ret, class Class, class... Args>
-struct Components<Ret (Class::*)(Args......) &noexcept> {
+struct Components<Ret (Class::*)(Args..., ...) &noexcept> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;
@@ -289,7 +289,7 @@ struct Components<Ret (Class::*)(Args...) const &> {
 
 // Const lvalue member-function with ellipsis pointer
 template <class Ret, class Class, class... Args>
-struct Components<Ret (Class::*)(Args......) const &> {
+struct Components<Ret (Class::*)(Args..., ...) const &> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;
@@ -307,7 +307,7 @@ struct Components<Ret (Class::*)(Args...) volatile &> {
 
 // Volatile lvalue member-function with ellipsis pointer
 template <class Ret, class Class, class... Args>
-struct Components<Ret (Class::*)(Args......) volatile &> {
+struct Components<Ret (Class::*)(Args..., ...) volatile &> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;
@@ -325,7 +325,7 @@ struct Components<Ret (Class::*)(Args...) const &noexcept> {
 
 // Const lvalue noexcept member-function with ellipsis pointer
 template <class Ret, class Class, class... Args>
-struct Components<Ret (Class::*)(Args......) const &noexcept> {
+struct Components<Ret (Class::*)(Args..., ...) const &noexcept> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;
@@ -343,7 +343,7 @@ struct Components<Ret (Class::*)(Args...) volatile &noexcept> {
 
 // Volatile lvalue noexcept member-function with ellipsis pointer
 template <class Ret, class Class, class... Args>
-struct Components<Ret (Class::*)(Args......) volatile &noexcept> {
+struct Components<Ret (Class::*)(Args..., ...) volatile &noexcept> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;
@@ -361,7 +361,7 @@ struct Components<Ret (Class::*)(Args...) const volatile &> {
 
 // Lvalue referenced const volatile member-function with ellipsis pointer
 template <class Ret, class Class, class... Args>
-struct Components<Ret (Class::*)(Args......) const volatile &> {
+struct Components<Ret (Class::*)(Args..., ...) const volatile &> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;
@@ -379,7 +379,7 @@ struct Components<Ret (Class::*)(Args...) const volatile &noexcept> {
 
 // Const volatile lvalue noexcept member-function with ellipsis pointer
 template <class Ret, class Class, class... Args>
-struct Components<Ret (Class::*)(Args......) const volatile &noexcept> {
+struct Components<Ret (Class::*)(Args..., ...) const volatile &noexcept> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;
@@ -397,7 +397,7 @@ struct Components<Ret (Class::*)(Args...) &&> {
 
 // Rvalue reference member-function with ellipsis pointer specialization
 template <class Ret, class Class, class... Args>
-struct Components<Ret (Class::*)(Args......) &&> {
+struct Components<Ret (Class::*)(Args..., ...) &&> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;
@@ -416,7 +416,7 @@ struct Components<Ret (Class::*)(Args...) &&noexcept> {
 // Rvalue referenced noexcept member-function with ellipsis pointer
 // specialization
 template <class Ret, class Class, class... Args>
-struct Components<Ret (Class::*)(Args......) &&noexcept> {
+struct Components<Ret (Class::*)(Args..., ...) &&noexcept> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;
@@ -434,7 +434,7 @@ struct Components<Ret (Class::*)(Args...) const &&> {
 
 // Const rvalue member-function with ellipsis pointer
 template <class Ret, class Class, class... Args>
-struct Components<Ret (Class::*)(Args......) const &&> {
+struct Components<Ret (Class::*)(Args..., ...) const &&> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;
@@ -452,7 +452,7 @@ struct Components<Ret (Class::*)(Args...) volatile &&> {
 
 // Volatile rvalue member-function with ellipsis pointer
 template <class Ret, class Class, class... Args>
-struct Components<Ret (Class::*)(Args......) volatile &&> {
+struct Components<Ret (Class::*)(Args..., ...) volatile &&> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;
@@ -470,7 +470,7 @@ struct Components<Ret (Class::*)(Args...) const &&noexcept> {
 
 // Const rvalue noexcept member-function with ellipsis pointer
 template <class Ret, class Class, class... Args>
-struct Components<Ret (Class::*)(Args......) const &&noexcept> {
+struct Components<Ret (Class::*)(Args..., ...) const &&noexcept> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;
@@ -488,7 +488,7 @@ struct Components<Ret (Class::*)(Args...) volatile &&noexcept> {
 
 // Volatile rvalue noexcept member-function with ellipsis pointer
 template <class Ret, class Class, class... Args>
-struct Components<Ret (Class::*)(Args......) volatile &&noexcept> {
+struct Components<Ret (Class::*)(Args..., ...) volatile &&noexcept> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;
@@ -506,7 +506,7 @@ struct Components<Ret (Class::*)(Args...) const volatile &&> {
 
 // Const rvalue noexcept member-function with ellipsis pointer
 template <class Ret, class Class, class... Args>
-struct Components<Ret (Class::*)(Args......) const volatile &&> {
+struct Components<Ret (Class::*)(Args..., ...) const volatile &&> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;
@@ -524,7 +524,7 @@ struct Components<Ret (Class::*)(Args...) const volatile &&noexcept> {
 
 // Const volatile rvalue noexcept member-function with ellipsis pointer
 template <class Ret, class Class, class... Args>
-struct Components<Ret (Class::*)(Args......) const volatile &&noexcept> {
+struct Components<Ret (Class::*)(Args..., ...) const volatile &&noexcept> {
   using ReturnType = Ret;
   using ParametersTypes = MPVector<Args...>;
   using FunctorType = Class;

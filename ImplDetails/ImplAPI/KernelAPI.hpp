@@ -29,6 +29,9 @@ class Kernel;  // singleton
 }
 
 namespace api {
+// resolve recursive include
+class DeferThread;
+class DeferThreadWrapper;
 namespace kernel_api {
 /// <summary>
 ///   Creates kernel if it has not already been created and returns reference
@@ -162,6 +165,18 @@ bool UnsetSignal(const api::ThreadId id, api::ThreadSignal sig) noexcept;
 ///   True if thread deletion request is sent and false otherwise
 /// </returns>
 bool DeleteThread(const api::ThreadId id) noexcept;
+
+/// <summary>
+///   Registers given thread in the kernel. Kernel takes ownership on the
+///   thread.
+/// </summary>
+/// <param name="thread">
+///   Allocated thread.
+/// </param>
+/// <returns>
+///   Wrapper on given thread
+/// </returns>
+api::DeferThreadWrapper RegisterThread(api::DeferThread *thread);
 }  // namespace kernel_api
 }  // namespace api
 

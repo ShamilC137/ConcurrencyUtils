@@ -2,9 +2,9 @@
 #define APPLICATION_IMPLDETAILS_TASKDETAILS_HPP_
 
 // current project
-#include "../../Config.hpp"
 #include "../API/DataStructures/Containers/String.hpp"
 #include "../API/DataStructures/Multithreading/Atomics.hpp"
+#include "..\..\Config.hpp"
 #include "Utility.hpp"
 
 // STL

@@ -1,7 +1,13 @@
-#include "ImplDetails/MP/Components.hpp"
-#include "ImplDetails/Utility.hpp"
+#include <iostream>
+
+#include "API\PublicAPI.hpp"
+void Foo(int a) {  // std::cout << a << '\n';
+}
+
 int main() {
-  api::Components<int (*)()>::ParametersTypes;
+  auto thread{api::CreateThread(false, nullptr, &Foo, 1)};
+  thread.Start();
+  thread.Join();
   return 0;
 }
 /*#include <iostream>

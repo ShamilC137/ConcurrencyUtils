@@ -48,11 +48,7 @@ class Kernel {
 
   // Thread manipulation functions
  public:
-  template <class ExceptionHandler, class ThreadRoutine, class... RoutineArgs>
-  inline api::DeferThreadWrapper CreateThread(const bool exit_after_call_flag,
-                                              ExceptionHandler &&handler,
-                                              ThreadRoutine &&routine,
-                                              RoutineArgs &&...args);
+  api::DeferThreadWrapper RegisterThread(api::DeferThread *thread);
 
   void DeleteThread(const api::ThreadId id) noexcept(false);
 
@@ -100,16 +96,6 @@ class Kernel {
   ThreadManager thread_manager_;
   api::Vector<ModuleDescriptor> modules_;
 };
-
-template <class ExceptionHandler, class ThreadRoutine, class... RoutineArgs>
-inline api::DeferThreadWrapper Kernel::CreateThread(
-    const bool exit_after_call_flag, ExceptionHandler &&handler,
-    ThreadRoutine &&routine, RoutineArgs &&...args) {
-  return thread_manager_.CreateThread(
-      exit_after_call_flag, std::forward<ExceptionHandler>(handler),
-      std::forward<ThreadRoutine>(routine), std::forward<RoutineArgs>(args)...);
-}
-
 }  // namespace kernel
 
 #endif  // !APPLICATION_KERNEL_KERNEL_KERNEL_HPP_

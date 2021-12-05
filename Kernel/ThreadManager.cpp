@@ -15,7 +15,17 @@ using namespace api;
 
 ThreadManager::~ThreadManager() noexcept {
   for (auto &entry : threads_) {
+    if (entry.second->Joinable()) {
+      entry.second->Join();
+    }
     delete entry.second;
+  }
+
+  for (auto &thread : closed_threads_) {
+    if (thread->Joinable()) {
+      thread->Join();
+    }
+    delete thread;
   }
 }
 

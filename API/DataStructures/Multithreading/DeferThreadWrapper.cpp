@@ -55,10 +55,8 @@ void DeferThreadWrapper::Detach() {
       thread_ = nullptr;
     } else {
       thread_->Detach();
-      return;
     }
   }
-  throw ExpiredThread("Thread is closed");
 }
 
 void DeferThreadWrapper::Join() {
@@ -69,10 +67,8 @@ void DeferThreadWrapper::Join() {
     } else {
       thread_->Close();
       thread_->Join();
-      return;
     }
   }
-  throw ExpiredThread("Thread is closed");
 }
 
 auto DeferThreadWrapper::NativeHandle() noexcept(false) {
@@ -112,7 +108,7 @@ auto DeferThreadWrapper::NativeHandle() noexcept(false) {
   throw ExpiredThread("Thread is deleted");
 }
 
-[[nodiscard]] auto DeferThreadWrapper::GetId() noexcept(false) {
+[[nodiscard]] DeferThread::ID DeferThreadWrapper::GetId() noexcept(false) {
   if (thread_) {
     if (thread_->IsClosed()) {
       thread_->DecrementNumberOfReferences();
@@ -124,21 +120,7 @@ auto DeferThreadWrapper::NativeHandle() noexcept(false) {
   throw ExpiredThread("Thread is deleted");
 }
 
-void DeferThreadWrapper::SendSuspendSignal() noexcept {
-  try {
-    kernel_api::SendSuspendThreadSignal(api::GetId(*this));
-  } catch (...) {
-    return;
-  }
-}
-
-bool DeferThreadWrapper::Resume() noexcept(false) {
-  try {
-    return kernel_api::ResumeThread(api::GetId(*this));
-  } catch (...) {
-    return false;
-  }
-}
+void DeferThreadWrapper::Start() noexcept { thread_->Activate(); }
 
 bool DeferThreadWrapper::IsClosed() const noexcept {
   if (thread_) {

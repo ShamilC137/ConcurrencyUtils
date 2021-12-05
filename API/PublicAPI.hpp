@@ -9,6 +9,7 @@
 #include "../ImplDetails/ImplAPI/KernelAPI.hpp"
 #include "../ImplDetails/Utility.hpp"
 #include "DataStructures/Containers/String.hpp"
+#include "DataStructures/Multithreading/DeferThreadWrapper.hpp"
 #include "DataStructures/TaskWrapper.hpp"
 
 /// <summary>
@@ -166,6 +167,35 @@ void SendSuspendThreadSignal() noexcept;
 ///   Returns true if signal was send, false otherwise.
 /// </returns>
 bool ResumeThread(const ThreadId id) noexcept;
+
+/// <summary>
+///   Creates new thread. Thread is deactivated by default.
+/// </summary>
+/// <param name="exit_after_call_flag">
+///   If true, thread will be closed after function complete
+/// </param>
+/// <param name="handler">
+///   Exception handler. Handler can take zero or one parameter.
+/// </param>
+/// <param name="routine">
+///   Thread routine
+/// </param>
+/// <param name="...args">
+/// Thread routine arguments
+/// </param>
+/// <returns>
+///   Wrapper to the created thread.
+/// </returns>
+template <class ExceptionHandler, class ThreadRoutine, class... RoutineArgs>
+DeferThreadWrapper CreateThread(const bool exit_after_call_flag,
+                                ExceptionHandler &&handler,
+                                ThreadRoutine &&routine,
+                                RoutineArgs &&...args) {
+  auto thread = new DeferThread(
+      exit_after_call_flag, std::forward<ExceptionHandler>(handler),
+      std::forward<ThreadRoutine>(routine), std::forward<RoutineArgs>(args)...);
+  return kernel_api::RegisterThread(thread);
+}
 }  // namespace api
 
 #endif  // !APPLICATION_API_PUBLICAPI_HPP_
