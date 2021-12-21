@@ -61,6 +61,11 @@ void AbstractModule::ExecuteTask(api::TaskWrapper task,
   (*slot_ptr)(task);  // throws: api::BadSlotCall
 }
 
+// FIXME: implement
+void AbstractModule::SetSlotsPriorities() noexcept(false) {
+  // assert(slot_priority != 0 && slot_priority >= -1)
+}
+
 ThreadResourceErrorStatus AbstractModule::ExecuteTask(
     api::TaskWrapper task) const noexcept(false) {
   slots_mutex_.lock_shared();

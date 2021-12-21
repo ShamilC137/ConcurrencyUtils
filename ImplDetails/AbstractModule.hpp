@@ -204,6 +204,15 @@ class AbstractModule {
   void ExecuteTask(api::TaskWrapper task, api::ForceSlotCall) const
       noexcept(false);
 
+  /// <summary>
+  ///   Reads the configuration file and sets added to the slots' table slots
+  ///   priorities.
+  /// </summary>
+  /// <exception std::out_of_range>
+  ///   Thrown if read slot signature is not added to the slots' table
+  /// </exception>
+  void SetSlotsPriorities() noexcept(false);
+
   // pure virtual functions
  public:
   /// <summary>
@@ -215,7 +224,7 @@ class AbstractModule {
   ///   Does not throw exceptions, returns code error instead
   /// </summary>
   /// <returns> initialization error status </returns>
-  /// <multithreading> unsafe </multithreading>
+  /// <multithreading> totally unsafe </multithreading>
   virtual ModuleInitErrorStatus Init() noexcept = 0;
 
   // fields

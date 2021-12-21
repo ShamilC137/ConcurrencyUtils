@@ -2,6 +2,9 @@
 #define APPLICATION_IMPLDETAILS_SLOTDETAILS_HPP_
 // current project
 #include "../API/DataStructures/Containers/HashMap.hpp"
+#include "../API/DataStructures/Multithreading/ScopedLock.hpp"
+#include "../API/DataStructures/Multithreading/SharedLockGuard.hpp"
+#include "../API/DataStructures/Multithreading/SharedMutex.hpp"
 #include "../API/DataStructures/TaskWrapper.hpp"
 #include "TaskDetails.hpp"
 #include "Utility.hpp"
@@ -107,12 +110,9 @@ class BaseSlot {
   ///   slot priority
   /// </param>
   /// <multithreading>
-  ///   unsafe
+  ///   safe
   /// </multithreading>
-  void SetPriority(const api::String &signal, const int priority) noexcept {
-    assert(priority != 0);
-    priorities_[signal] = priority;
-  }
+  void SetPriority(const api::String &signal, const int priority) noexcept;
 
   /// <summary>
   ///   Return current priority
@@ -125,12 +125,10 @@ class BaseSlot {
   ///   Thrown if priority with given signal does not exist
   /// </exception>
   /// <multithreading>
-  ///   unsafe
+  ///   safe
   /// </multithreading>
-  [[nodiscard]] inline int GetPriority(const api::String &signal) const
-      noexcept(false) {
-    return priorities_.at(signal);
-  }
+  [[nodiscard]] int GetPriority(const api::String &signal) const
+      noexcept(false);
 
   /// <summary>
   ///   Calls underlying function. May throw underlying function exception.
@@ -181,7 +179,10 @@ class BaseSlot {
   // slot priority; slot with the highest prioprity
   // called first; if no priority is set, -1 is used.
   // Its priotiry depends from signal. Kernel sets the priorities
+  // Guarded by mutex.
   api::HashMap<api::String, int> priorities_;
+
+  mutable api::SharedMutex priorities_mutex_;
 };
 }  // namespace impl
 

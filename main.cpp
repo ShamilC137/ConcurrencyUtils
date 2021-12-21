@@ -1,12 +1,12 @@
 #include <iostream>
 
 #include "API\PublicAPI.hpp"
-void Foo(int a) {  // std::cout << a << '\n';
-}
+void Foo(int a) { std::cout << a << '\n'; }
 
 int main() {
   auto thread{api::CreateThread(false, nullptr, &Foo, 1)};
   thread.Start();
+  std::this_thread::sleep_for(std::chrono::seconds(1));
   thread.Join();
   return 0;
 }

@@ -2,9 +2,12 @@
 #define APPLICATION_IMPLDETAILS_TASKDETAILS_HPP_
 
 // current project
+#include "../../Config.hpp"
 #include "../API/DataStructures/Containers/String.hpp"
 #include "../API/DataStructures/Multithreading/Atomics.hpp"
-#include "..\..\Config.hpp"
+#include "../API/DataStructures/Multithreading/ScopedLock.hpp"
+#include "../API/DataStructures/Multithreading/SharedLockGuard.hpp"
+#include "../API/DataStructures/Multithreading/SharedMutex.hpp"
 #include "Utility.hpp"
 
 // STL
@@ -51,11 +54,9 @@ class BaseTask {
   ///   Signature
   /// </param>
   /// <multithreading>
-  ///   unsafe
+  ///   safe
   /// <multithreading>
-  inline void SetCausedSignal(const api::String &signal) {
-    caused_signal_sig_ = signal;
-  }
+  void SetCausedSignal(const api::String &signal);
 
   /// <summary>
   ///   Returns associated with this task signal signature
@@ -64,11 +65,9 @@ class BaseTask {
   ///   signal signature
   /// </returns>
   /// <multithreading>
-  ///   set-get unsafe
+  ///   safe
   /// <multithreading>
-  [[nodiscard]] inline const api::String &GetCausedSignal() const noexcept {
-    return caused_signal_sig_;
-  }
+  [[nodiscard]] inline const api::String &GetCausedSignal() const noexcept;
 
   /// <summary>
   ///   Returns sequence of derived task types identifiers.
@@ -230,6 +229,8 @@ class BaseTask {
       nacceptors_;  // Number of this task acceptors.
                     // Setted by kernel. Reflects number of slots which will be
                     // execute this task
+
+  mutable api::SharedMutex signal_mutex_;
 };
 
 [[nodiscard]] inline bool operator==(const BaseTask &lhs, const BaseTask &rhs) {

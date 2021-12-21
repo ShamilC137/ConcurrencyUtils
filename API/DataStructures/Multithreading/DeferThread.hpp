@@ -94,14 +94,15 @@ class DeferThread {
   DeferThread(const bool exit_after_call_flag, ExceptionHandler &&handler,
               ThreadRoutine &&routine, RoutineArgs &&...args)
       : is_active_{},
-        is_closed_{},
-        signals_{},
-        nreferences_{},
         thread_(impl::ThreadLaunchRoutine<ExceptionHandler, ThreadRoutine,
                                           RoutineArgs...>,
                 exit_after_call_flag, std::forward<ExceptionHandler>(handler),
                 this, std::forward<ThreadRoutine>(routine),
-                std::forward<RoutineArgs>(args)...) {}
+                std::forward<RoutineArgs>(args)...),
+        is_closed_{},
+        close_mutex_{},
+        signals_{},
+        nreferences_{} {}
 
   DeferThread(const DeferThread &) = delete;
 
