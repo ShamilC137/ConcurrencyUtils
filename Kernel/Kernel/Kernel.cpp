@@ -1,5 +1,5 @@
 #include "Kernel.hpp"
-#ifdef STL_ALLOCATOR_USAGE
+#if STL_ALLOCATOR_USAGE
 #include <new>
 #endif
 
@@ -64,8 +64,10 @@ void Kernel::PushToQueue(const api::TaskWrapper &task) {
   task_manager_.PushTask(task);
 }
 
-// FIXME: stub
-void Kernel::AddModule(impl::AbstractModule * /*module*/) {}
+void Kernel::AddModule(impl::AbstractModule *module) {
+  decltype(auto) added{modules_.emplace_back(ModuleDescriptor{module})};
+  task_manager_.AddModule(&added);
+}
 
 // FIXME: stub
 [[nodiscard]] int Kernel::Run() { return {}; }

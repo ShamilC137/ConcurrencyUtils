@@ -2,7 +2,7 @@
 
 // FIXME: stub
 namespace impl {
-api::String GetPureSignature(const api::String&) { return api::String{}; }
+api::String GetPureSignature(const api::String& full_sig) { return full_sig; }
 }  // namespace impl
 
 namespace kernel {
@@ -47,7 +47,7 @@ bool TaskManager::SendNextTask() noexcept(false) {
   connections_mutex_.unlock_shared();
   real_task->SetNumOfAcceptors(
       static_cast<unsigned char>(slots.size()));  // number of slots
-  for (auto pair : slots) {
+  for (auto& pair : slots) {
     task.SetTarget(pair.first);  // target slot signature
     pair.second->module->PushTask(
         std::move(task));  // adding task to module queue

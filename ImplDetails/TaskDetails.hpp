@@ -67,7 +67,7 @@ class BaseTask {
   /// <multithreading>
   ///   safe
   /// <multithreading>
-  [[nodiscard]] inline const api::String &GetCausedSignal() const noexcept;
+  [[nodiscard]] const api::String &GetCausedSignal() const noexcept;
 
   /// <summary>
   ///   Returns sequence of derived task types identifiers.

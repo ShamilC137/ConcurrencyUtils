@@ -21,7 +21,7 @@ void BaseTask::SetCausedSignal(const api::String &signal) {
   caused_signal_sig_ = signal;
 }
 
-inline const api::String &BaseTask::GetCausedSignal() const noexcept {
+const api::String &BaseTask::GetCausedSignal() const noexcept {
   api::SharedLockGuard<api::SharedMutex> lock(signal_mutex_);
   return caused_signal_sig_;
 }

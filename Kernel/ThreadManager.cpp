@@ -31,8 +31,10 @@ ThreadManager::~ThreadManager() noexcept {
 
 api::DeferThreadWrapper ThreadManager::AddThread(api::DeferThread *thread) {
   threads_mutex_.lock();
-  threads_[thread->GetId()] = thread;
-  threads_mutex_.unlock();
+  if (threads_.find(thread->GetId()) == threads_.end()) {
+    threads_[thread->GetId()] = thread;
+    threads_mutex_.unlock();
+  }
   return api::DeferThreadWrapper(thread);
 }
 
