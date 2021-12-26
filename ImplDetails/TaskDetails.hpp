@@ -142,7 +142,8 @@ class BaseTask {
   /// <summary>
   ///   Sets the number of task acceptors (i.e. associated with this task
   ///   slots) with store(). When the slot completes its work, it automaticly
-  ///   decrements number of acceptors. Used for acception priority.
+  ///   decrements number of acceptors. Used for acception priority. Derived
+  ///   classes may throw
   /// </summary>
   /// <param name="nacceptors">
   ///   Number of task acceptors
@@ -155,7 +156,7 @@ class BaseTask {
   /// </multithreading>
   virtual inline void SetNumOfAcceptors(
       const unsigned char nacceptors,
-      api::MemoryOrder order = api::MemoryOrder::release) noexcept {
+      api::MemoryOrder order = api::MemoryOrder::release) noexcept(false) {
     nacceptors_.store(nacceptors, order);
   }
 
