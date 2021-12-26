@@ -1,15 +1,23 @@
+/*
 #include <iostream>
 
-#include "API\PublicAPI.hpp"
-void Foo(int a) { std::cout << a << '\n'; }
+#include "API/DataStructures/Slot.hpp"
+struct Str {
+  int a{1};
+  void Foo() { std::cout << "Hello " << a << '\n'; };
+};
 
 int main() {
-  auto thread{api::CreateThread(false, nullptr, &Foo, 1)};
-  thread.Start();
-  std::this_thread::sleep_for(std::chrono::seconds(1));
-  thread.Join();
+  Str str;
+  api::Slot<void> slot{&str, &Str::Foo};
+  api::TaskWrapper task{
+      new api::Task<>("sig", api::TaskPriority::kHighPriotity), {}};
+  slot.SetPriority("sig", 1);
+  task.GetTask()->SetNumOfAcceptors(1);
+  slot(task);
   return 0;
 }
+*/
 /*#include <iostream>
 
 #include "API/DataStructures/Multithreading/DeferThread.hpp"
@@ -40,8 +48,8 @@ int main() {
 }*/
 /*
 #include <iostream>
+#include <memory>
 
-#include "API/DataStructures/ScopedSlotWrapper.hpp"
 #include "API/DataStructures/Slot.hpp"
 #include "API/DataStructures/TaskWrapper.hpp"
 #include "API/PublicAPI.hpp"
@@ -73,22 +81,22 @@ void Init() {
 void Waiter() {
   for (int index{}; index < 10; ++index) {
     tasks[index].GetTask()->Wait();
-    // std::cout << "Done waiting\n";
+    std::cout << "Done waiting\n";
   }
 }
 
 void foo(int a1) {
-  // std::cout << a1 << '\n';
+  std::cout << a1 << '\n';
   return;
 }
 
 void Caller1() {
-  api::ScopedSlotWrapper slot_wrap(new api::Slot<void, int>(foo));
-  slot_wrap.GetSlot()->SetPriority("sig", 1);
-  slot_wrap.GetSlot()->SetPriority("sig1", -1);
+  std::unique_ptr<impl::BaseSlot> slot_wrap(new api::Slot<void, int>(foo));
+  slot_wrap.get()->SetPriority("sig", 1);
+  slot_wrap.get()->SetPriority("sig1", -1);
   for (int index{}; index < 10; ++index) {
     try {
-      (*slot_wrap.GetSlot())(tasks[index]);
+      (*slot_wrap.get())(tasks[index]);
     } catch (api::Deadlock &lc) {
       std::cout << lc.what() << '\n';
       std::terminate();
@@ -98,12 +106,12 @@ void Caller1() {
 }
 
 void Caller2() {
-  api::ScopedSlotWrapper slot_wrap1(new api::Slot<void, int>(foo));
-  slot_wrap1.GetSlot()->SetPriority("sig", 2);
-  slot_wrap1.GetSlot()->SetPriority("sig1", -1);
+  std::unique_ptr<impl::BaseSlot> slot_wrap1(new api::Slot<void, int>(foo));
+  slot_wrap1.get()->SetPriority("sig", 2);
+  slot_wrap1.get()->SetPriority("sig1", -1);
   for (int index{}; index < 10; ++index) {
     try {
-      (*slot_wrap1.GetSlot())(tasks[index]);
+      (*slot_wrap1.get())(tasks[index]);
     } catch (api::Deadlock &lc) {
       std::cout << lc.what();
       std::terminate();
@@ -114,12 +122,12 @@ void Caller2() {
 
 // sig_name is_blocking priority : slot_name slot_name1 slot_name2
 int main() {
-  for (int index{}; index < 1000; ++index) {
+  for (int index{}; index < 1; ++index) {
     api::TaskWrapper(
         api::Emit<void, int>("mod", false, api::TaskPriority::kLowPriority, 1));
     Init();
     std::thread thr3(Waiter);
-    // std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     std::thread thr1(Caller1);
     std::thread thr2(Caller2);
 

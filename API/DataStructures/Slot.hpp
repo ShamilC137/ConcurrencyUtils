@@ -8,6 +8,50 @@
 // STD
 #include <functional>
 
+namespace impl {
+namespace impl_details {
+
+template <class ReturnType, class... Args>
+struct Callee {
+  virtual ~Callee(){};
+
+  virtual ReturnType Call(Args...) const = 0;
+};
+
+template <class ReturnType, class Object, class... Args>
+class CalleeObject : public Callee<ReturnType, Args...> {
+ public:
+  CalleeObject(Object *obj, ReturnType (Object::*func)(Args...))
+      : obj_{obj}, func_{func} {}
+
+  ~CalleeObject() override {}
+
+  ReturnType Call(Args... args) const override {
+    return (obj_->*func_)(std::forward<Args>(args)...);
+  }
+
+ private:
+  Object *obj_;
+  ReturnType (Object::*func_)(Args...);
+};
+
+template <class ReturnType, class... Args>
+class CalleeFunction : public Callee<ReturnType, Args...> {
+ public:
+  CalleeFunction(ReturnType (*func)(Args...)) : func_{func} {}
+
+  ~CalleeFunction() {}
+
+  ReturnType Call(Args... args) const override {
+    return func_(std::forward<Args>(args)...);
+  }
+
+ private:
+  ReturnType (*func_)(Args...);
+};
+}  // namespace impl_details
+}  // namespace impl
+
 namespace api {
 /// <summary>
 ///   Slot is the class which allows to hide underlying function and call it
@@ -31,7 +75,16 @@ class Slot : public impl::BaseSlot {
   Slot(impl::ForceExplicitTypeT<ReturnType(Args...)> *function)
       : Base(impl::IdSequence<Args...>::CreateIdSequence(),
              &impl::TypeID<ReturnType>::id),
-        func_{function} {}
+        callee_{new impl::impl_details::CalleeFunction(function)} {}
+
+  template <class Object>
+  Slot(Object *obj,
+       impl::ForceExplicitTypeT<ReturnType (Object::*)(Args...)> function)
+      : Base(impl::IdSequence<Args...>::CreateIdSequence(),
+             &impl::TypeID<ReturnType>::id),
+        callee_{new impl::impl_details::CalleeObject(obj, function)} {}
+
+  ~Slot() { delete callee_; }
 
   /// <summary>
   ///   Calls underlying function with given task.
@@ -40,17 +93,18 @@ class Slot : public impl::BaseSlot {
 
  private:
   template <std::size_t... Indexes>
-  void NonReturningCall(Task<Args...> *task, std::index_sequence<Indexes...>) {
+  void NonReturningCall(Task<Args...> *task,
+                        std::index_sequence<Indexes...>) const {
     decltype(auto) parameters{task->GetTuple()};
-    func_(std::forward<Args>(std::get<Indexes>(parameters))...);
+    callee_->Call(std::forward<Args>(std::get<Indexes>(parameters))...);
   }
 
   template <std::size_t... Indexes>
   void ReturningCall(ReturnTask<ReturnType, Args...> *task,
-                     std::index_sequence<Indexes...>) {
+                     std::index_sequence<Indexes...>) const {
     decltype(auto) parameters{task->GetTuple()};
     task->SetResult(std::forward<ReturnType>(
-        func_(std::forward<Args>(std::get<Indexes>(parameters))...)));
+        callee_->Call(std::forward<Args>(std::get<Indexes>(parameters))...)));
   }
 
  protected:
@@ -95,7 +149,7 @@ class Slot : public impl::BaseSlot {
   }
 
  private:
-  std::function<ReturnType(Args...)> func_;
+  impl::impl_details::Callee<ReturnType, Args...> *callee_;
 };
 
 }  // namespace api
