@@ -5,6 +5,8 @@ namespace impl {
 
 AbstractModule::AbstractModule(const api::String &mid) : id_{mid} {}
 
+AbstractModule::~AbstractModule() noexcept {}
+
 // getters
 
 api::Vector<api::String> AbstractModule::GetSlotsSignatures() const {

@@ -37,6 +37,8 @@ class AbstractModule {
   /// <param name="mid"> module identifier </param>
   AbstractModule(const api::String &mid);
 
+  virtual ~AbstractModule() noexcept;
+
   // getters
  public:
   /// <summary>
