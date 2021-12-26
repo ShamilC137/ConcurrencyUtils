@@ -10,19 +10,33 @@ namespace kernel {
 Kernel::~Kernel() {}
 
 // Ctors
-Kernel::Kernel() noexcept(false) : stub(kMMUSize) /*throws std::bad_alloc*/ {}
+Kernel::Kernel() noexcept(false)
+    : run{}, stub(kMMUSize) /*throws std::bad_alloc*/ {}
 
 // FIXME: Multithreading
 [[nodiscard]] void *Kernel::Allocate(const std::size_t nbytes) noexcept(false) {
+  if (exit_flag_.test()) {
+    return nullptr;
+  }
   return stub.Allocate(nbytes);  // throws: std::bad_alloc
 }
 
 // FIXME: Multithreading
 void Kernel::Deallocate(void *ptr, const size_t nbytes) noexcept {
+  if (exit_flag_.test()) {
+    return;
+  }
   stub.Deallocate(ptr, nbytes);
 }
 
 api::DeferThreadWrapper Kernel::RegisterThread(api::DeferThread *thread) {
+  if (exit_flag_.test()) {
+    thread->Close();
+    thread->Activate();
+    thread->Join();
+    delete thread;
+    return {};
+  }
   return thread_manager_.AddThread(thread);
 }
 
@@ -61,16 +75,79 @@ bool Kernel::Resume(api::ThreadId id) noexcept {
 }
 
 void Kernel::PushToQueue(const api::TaskWrapper &task) {
+  if (exit_flag_.test()) {
+    return;
+  }
   task_manager_.PushTask(task);
 }
 
 void Kernel::AddModule(impl::AbstractModule *module) {
+  if (exit_flag_.test()) {
+    return;
+  }
   decltype(auto) added{modules_.emplace_back(ModuleDescriptor{module})};
   task_manager_.AddModule(&added);
 }
 
-// FIXME: stub
-[[nodiscard]] int Kernel::Run() { return {}; }
+// FIXME: check
+void Kernel::OnExitRoutine() { thread_manager_.ForceDeleteAll(); }
+
+// FIXME: complete
+int Kernel::EventLoop() {
+  while (true) {
+    if (exit_flag_.test(api::MemoryOrder::acquire)) {
+      OnExitRoutine();
+      break;
+    }
+
+    for (unsigned char counter{}; counter < kMaxTasksPerLoop; ++counter) {
+      if (!task_manager_.SendNextTask()) {
+        break;
+      }
+    }
+
+    if (exit_flag_.test(api::MemoryOrder::acquire)) {
+      OnExitRoutine();
+      break;
+    }
+    for (unsigned char counter{}; counter < kMaxThreadsPerLoop; ++counter) {
+      if (thread_manager_.ManageClosedThread() !=
+          api::OperationResult::kSuccess) {
+        break;
+      }
+    }
+
+    // FIXME: error handling must be here
+  }
+  return static_cast<int>(KernelStatus::kOk);
+}
+
+// Stuff:
+// 1) Init all modules
+// 2) Start all threads
+// 3) Event loop:
+//  3.1) Chech tasks
+//  3.2) Check threads
+//  3.3) Check errors
+//  Need to check exit_flag before any step at the step 3.
+[[nodiscard]] int Kernel::Run() {
+  if (run.test_and_set()) {
+    return static_cast<int>(KernelStatus::kRun);
+  }
+
+  for (auto &md : modules_) {
+    if (auto status{md.module->Init()};
+        status != impl::ModuleInitErrorStatus::kOk) {
+      return static_cast<int>(status);
+    }
+  }
+
+  thread_manager_.StartAll();
+
+  return EventLoop();
+}
+
+void Kernel::Exit() noexcept { exit_flag_.test_and_set(); }
 }  // namespace kernel
 
 namespace api {

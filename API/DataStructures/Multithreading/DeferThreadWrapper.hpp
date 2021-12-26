@@ -9,16 +9,16 @@
 #include "DeferThread.hpp"
 
 // STD
-#include <exception>
+#include <stdexcept>
 
 /// <summary>
 ///   This file contains DeferThreadWrapper object and all its helpers.
 /// </summary>
 
 namespace api {
-struct ExpiredThread : std::exception {
-  using MyBase = std::exception;
-  using MyBase::exception;
+struct ExpiredThread : std::runtime_error {
+  using MyBase = std::runtime_error;
+  using MyBase::MyBase;
   using MyBase::operator=;
   using MyBase::what;
   inline ~ExpiredThread() {}

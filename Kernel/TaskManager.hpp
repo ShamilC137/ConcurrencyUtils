@@ -21,15 +21,15 @@ struct Pair {
 }  // namespace api
 
 namespace kernel {
-struct ModuleNotFound : std::exception {
-  using Base = std::exception;
+struct ModuleNotFound : std::runtime_error {
+  using Base = std::runtime_error;
   using Base::Base;
   using Base::what;
   using Base::operator=;
 };
 
-struct SlotNotFound : std::exception {
-  using Base = std::exception;
+struct SlotNotFound : std::runtime_error {
+  using Base = std::runtime_error;
   using Base::Base;
   using Base::what;
   using Base::operator=;

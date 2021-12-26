@@ -50,9 +50,28 @@ class ThreadManager {
   ///   kNone if closed thread container is empty
   ///   kFail if all thread are busy
   ///   kSucces if thread is deleted
-  /// </ returns>
-  /// <multithreading> safe </multithreading>
+  /// </returns>
+  /// <multithreading>
+  ///   safe
+  /// </multithreading>
   api::OperationResult ManageClosedThread();
+
+  /// <summary>
+  ///   Starts all threads
+  /// </summary>
+  /// <multithreading>
+  ///   safe
+  /// </multithreading>
+  void StartAll();
+
+ private:
+  void UnsafeDeleteAll();
+
+ public:
+  /// <summary>
+  ///   Deletes all threads whether they are referenced or not.
+  /// </summary>
+  void ForceDeleteAll();
 
  public:
   /// <summary>
@@ -63,7 +82,9 @@ class ThreadManager {
   /// <exception type="std::out_of_range">
   ///   Thrown if a thread with given id not exists
   /// </exception>
-  /// <multithreading> safe </multithreading>
+  /// <multithreading>
+  ///   safe
+  /// </multithreading>
   [[nodiscard]] api::ThreadSignals GetThreadSignals(
       const api::ThreadId id) const noexcept(false);
 

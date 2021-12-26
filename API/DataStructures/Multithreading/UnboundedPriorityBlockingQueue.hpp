@@ -2,22 +2,22 @@
 #define APPLICATION_API_MULTITHREADING_UNBOUNDEDPRIORITYBLOCKINGQUEUE_HPP_
 
 // current project
+#include "../Containers/Deque.hpp"
 #include "Atomics.hpp"
 #include "ConditionVariable.hpp"
 #include "Mutex.hpp"
 #include "ScopedLock.hpp"
 #include "UniqueLock.hpp"
 
-#include "../Containers/Deque.hpp"
-
 // STL
 #include <exception>
 
 namespace api {
-struct PopFailed : std::exception {
-  using Base = std::exception;
+struct PopFailed : std::runtime_error {
+  using Base = std::runtime_error;
   using Base::Base;
   using Base::what;
+  using Base::operator=;
 };
 // This container represents unbounded priority queue allowing one writter and
 // multiple readers. "Push" and "Emplace" operations just adding a new element
@@ -35,7 +35,7 @@ struct PopFailed : std::exception {
 // methods may cause deadlock!
 template <class Value, class Container = api::Deque<Value>>
 class UnboundedPriorityBlockingQueue {
-public:
+ public:
   // STL compatible type aliases
   using value_type = typename Container::value_type;
   using reference = typename Container::reference;
@@ -47,16 +47,16 @@ public:
                 "held on type and adapted container type must be the same");
 
   // ctors
-public:
+ public:
   UnboundedPriorityBlockingQueue() = default;
   // copy and move operators are deleted cause of multithreading (must lock
   // write operations for correct copy)
   UnboundedPriorityBlockingQueue(const UnboundedPriorityBlockingQueue &) =
       delete;
-  UnboundedPriorityBlockingQueue &
-  operator=(const UnboundedPriorityBlockingQueue &) = delete;
+  UnboundedPriorityBlockingQueue &operator=(
+      const UnboundedPriorityBlockingQueue &) = delete;
 
-private:
+ private:
   // Waiting for the completion of desired modify operation. Potentially
   // block caller thread.
   void WaitForModifyOperation() const {
@@ -65,14 +65,14 @@ private:
   }
 
   // access operations
-public:
+ public:
   // Returns first element in queue. Potentially block if container is modified.
   [[nodiscard]] reference Front() noexcept(noexcept(container_.front())) {
     WaitForModifyOperation();
     read_semaphore_.fetch_add(1u, MemoryOrder::relaxed);
     decltype(auto) result(container_.front());
     read_semaphore_.fetch_sub(1u, MemoryOrder::relaxed);
-    read_semaphore_.notify_one(); // notifies write operation
+    read_semaphore_.notify_one();  // notifies write operation
     return result;
   }
 
@@ -128,7 +128,7 @@ public:
     return result;
   }
 
-private:
+ private:
   // corrects last insertion with its priority
   void CorrectInsertion() {
     auto inserted{container_.rbegin()};
@@ -150,7 +150,7 @@ private:
   }
 
   // modify operations
-public:
+ public:
   // Adds new element to container. Potentially block if container already
   // modified.
   void Push(const_reference value) { Emplace(value); }
@@ -159,8 +159,9 @@ public:
   // modified.
   void Push(value_type &&value) { Emplace(std::move(value)); }
 
-private:
-  template <class... Args> void UnblockingEmplace(Args &&...args) {
+ private:
+  template <class... Args>
+  void UnblockingEmplace(Args &&...args) {
     container_.emplace_back(std::forward<Args>(args)...);
     CorrectInsertion();
     want_to_modify_flag_.clear(api::MemoryOrder::relaxed);
@@ -168,11 +169,12 @@ private:
     rw_sync_cvar_.notify_all();
   }
 
-public:
+ public:
   // Adds new element to container. Potentially block if container already
   // modified.
-  template <class... Args> void Emplace(Args &&...args) {
-    ScopedLock<api::Mutex> lock(mutex_); // disable other modifications
+  template <class... Args>
+  void Emplace(Args &&...args) {
+    ScopedLock<api::Mutex> lock(mutex_);  // disable other modifications
     // there is no opportunity to return correct result of insert operations
     // because of elements reordering
     // disable new read operations
@@ -181,20 +183,20 @@ public:
     UnblockingEmplace(std::forward<Args>(args)...);
   }
 
-private:
+ private:
   value_type UnblockingPop() {
     auto last{std::move(container_.front())};
     container_.pop_front();
-    want_to_modify_flag_.clear(MemoryOrder::release); // enable read ops
+    want_to_modify_flag_.clear(MemoryOrder::release);  // enable read ops
     want_to_modify_flag_.notify_all();
     return last;
   }
 
-public:
+ public:
   // Extract element from container and return this element. Potentially blocks
   // if container already modified or queue is empty.
   value_type Pop() {
-    UniqueLock<Mutex> lock(mutex_); // disable other modifications
+    UniqueLock<Mutex> lock(mutex_);  // disable other modifications
     while (container_.empty()) {
       rw_sync_cvar_.wait(lock);
     }
@@ -214,10 +216,11 @@ public:
   // Not blocks caller thread.
   bool TryPush(value_type &&value) { return TryEmplace(std::move(value)); }
 
-  // Add new element to container. If add operation cannot be performed, 
+  // Add new element to container. If add operation cannot be performed,
   // returns false.
   // Not blocks caller thread.
-  template <class... Args> bool TryEmplace(Args &&...args) {
+  template <class... Args>
+  bool TryEmplace(Args &&...args) {
     api::UniqueLock<api::Mutex> lock(mutex_, boost::try_to_lock_t{});
     // prevent new read operations
     want_to_modify_flag_.test_and_set(api::MemoryOrder::relaxed);
@@ -231,8 +234,8 @@ public:
     return true;
   }
 
-  // Extract last element of queue. If pop operation cannot be performed, 
-  //  
+  // Extract last element of queue. If pop operation cannot be performed,
+  //
   // exception PopFailed. Not blocks caller thread.
   value_type TryPop() noexcept(false) {
     api::UniqueLock<api::Mutex> lock(mutex_, boost::try_to_lock_t{});
@@ -249,7 +252,7 @@ public:
   }
 
   // fields
-private:
+ private:
   // mutex for modifying operations sync
   Mutex mutex_;
   // prevents write operation while reading
@@ -261,8 +264,8 @@ private:
   // conditional variable for modifying operations sync
   ConditionVariable rw_sync_cvar_;
   // queue
-  Container container_; // All writes operations guarded by mutex
+  Container container_;  // All writes operations guarded by mutex
 };
-} // namespace api
+}  // namespace api
 
-#endif // !APPLICATION_API_MULTITHREADING_UNBOUNDEDPRIORITYBLOCKINGQUEUE_HPP_
+#endif  // !APPLICATION_API_MULTITHREADING_UNBOUNDEDPRIORITYBLOCKINGQUEUE_HPP_

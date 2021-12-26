@@ -2,7 +2,7 @@
 #define APPLICATION_IMPLDETAILS_UTILITY_HPP_
 
 // STL
-#include <exception>
+#include <stdexcept>
 #include <type_traits>
 
 namespace impl {
@@ -61,20 +61,20 @@ using VoidT = void;
 }  // namespace impl
 
 namespace api {
-struct BadSlotCall : std::exception {
-  using Base = std::exception;
+struct BadSlotCall : std::runtime_error {
+  using Base = std::runtime_error;
   using Base::Base;
   using Base::what;
 };
 
-struct BrokenReturnTask : std::exception {
-  using Base = std::exception;
+struct BrokenReturnTask : std::logic_error {
+  using Base = std::logic_error;
   using Base::Base;
   using Base::what;
 };
 
-struct Deadlock : std::exception {
-  using Base = std::exception;
+struct Deadlock : std::logic_error {
+  using Base = std::logic_error;
   using Base::Base;
   using Base::what;
 };

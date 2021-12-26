@@ -13,36 +13,22 @@ namespace kernel {
 using namespace impl::impl_details;
 using namespace api;
 
-ThreadManager::~ThreadManager() noexcept {
-  for (auto &entry : threads_) {
-    if (entry.second->Joinable()) {
-      entry.second->Join();
-    }
-    delete entry.second;
-  }
-
-  for (auto &thread : closed_threads_) {
-    if (thread->Joinable()) {
-      thread->Join();
-    }
-    delete thread;
-  }
-}
+ThreadManager::~ThreadManager() noexcept { UnsafeDeleteAll(); }
 
 api::DeferThreadWrapper ThreadManager::AddThread(api::DeferThread *thread) {
-  threads_mutex_.lock();
+  api::ScopedLock<api::SharedMutex> lock(threads_mutex_);
   if (threads_.find(thread->GetId()) == threads_.end()) {
     threads_[thread->GetId()] = thread;
-    threads_mutex_.unlock();
   }
+  lock.unlock();
   return api::DeferThreadWrapper(thread);
 }
 
 void ThreadManager::DeleteThread(const api::ThreadId id) noexcept(false) {
-  threads_mutex_.lock();
+  api::ScopedLock<api::SharedMutex> lock(threads_mutex_);
   decltype(auto) thread{threads_.at(id)};
   threads_.erase(id);
-  threads_mutex_.unlock();
+  lock.unlock();
 
   thread->Close();
   // delete thread if it is no longer active
@@ -68,8 +54,36 @@ OperationResult ThreadManager::ManageClosedThread() {
       return OperationResult::kSuccess;
     }
   }
-  // <<<<
   return OperationResult::kFail;  // if all threads are busy now
+}
+
+void ThreadManager::StartAll() {
+  api::SharedLockGuard<api::SharedMutex> lock(threads_mutex_);
+  for (auto &pair : threads_) {
+    pair.second->Activate();
+  }
+}
+
+void ThreadManager::UnsafeDeleteAll() {
+  for (auto &entry : threads_) {
+    entry.second->Close();
+    if (entry.second->Joinable()) {
+      entry.second->Join();
+    }
+    delete entry.second;
+  }
+
+  for (auto &thread : closed_threads_) {
+    if (thread->Joinable()) {
+      thread->Join();
+    }
+    delete thread;
+  }
+}
+
+void ThreadManager::ForceDeleteAll() {
+  api::ScopedLock<api::SharedMutex> lock(threads_mutex_);
+  UnsafeDeleteAll();
 }
 
 [[nodiscard]] api::ThreadSignals ThreadManager::GetThreadSignals(

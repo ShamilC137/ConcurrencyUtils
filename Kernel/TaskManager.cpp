@@ -37,14 +37,15 @@ bool TaskManager::SendNextTask() noexcept(false) {
 
   api::TaskWrapper task{tasks_queue_.Pop()};
   decltype(auto) real_task{task.GetTask()};
-  api::String signal{impl::GetPureSignature(real_task->GetCausedSignal())};
-  real_task->SetCausedSignal(signal);  // erase module id from signature
 
   // connected to this signal slots
   connections_mutex_.lock_shared();
   decltype(auto) slots{
       connections_signatures_.at(real_task->GetCausedSignal())};
   connections_mutex_.unlock_shared();
+
+  // caused signal structure: module name::full signature is_blocking_call
+  // slot_priority
   real_task->SetNumOfAcceptors(
       static_cast<unsigned char>(slots.size()));  // number of slots
   for (auto& pair : slots) {

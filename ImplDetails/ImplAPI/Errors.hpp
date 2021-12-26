@@ -7,9 +7,7 @@
 
 namespace impl {
 // Error while module initialization
-enum class ModuleInitErrorStatus : unsigned char {
-
-};
+enum class ModuleInitErrorStatus : unsigned char { kOk };
 
 enum class ThreadResourceErrorStatus : unsigned char {
   kMin,         // minimal value of the enumeration
@@ -19,13 +17,9 @@ enum class ThreadResourceErrorStatus : unsigned char {
 };
 
 // Thread error code which must be handled by kernel
-enum class ThreadError : unsigned char {
-
-};
+enum class ThreadError : unsigned char {};
 
 // Module error code which must be handled by kernel
-enum class ModuleError : unsigned char {
-
-};
+enum class ModuleError : unsigned char {};
 }  // namespace impl
 #endif  // APPLICATION_IMPLDETAILS_IMPLAPI_ERRORS_HPP_
