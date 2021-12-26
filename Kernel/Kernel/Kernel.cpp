@@ -41,11 +41,17 @@ api::DeferThreadWrapper Kernel::RegisterThread(api::DeferThread *thread) {
 }
 
 void Kernel::DeleteThread(const api::ThreadId id) noexcept(false) {
+  if (exit_flag_.test(api::MemoryOrder::acquire)) {
+    return;
+  }
   thread_manager_.DeleteThread(id);
 }
 
 api::ThreadSignals Kernel::GetThreadSignals(api::ThreadId id) const
     noexcept(false) {
+  if (exit_flag_.test(api::MemoryOrder::acquire)) {
+    return {api::ThreadSignal::kExit};
+  }
   return thread_manager_.GetThreadSignals(id);
 }
 

@@ -28,7 +28,7 @@ class ThreadSignals {
   inline ThreadSignals() noexcept : value_{} {}
   template <class... Signals>
   ThreadSignals(Signals... sigs) noexcept : value_{} {
-    static_assert(impl::is_all_same<ThreadSignal, Signals...>::value,
+    static_assert(impl::is_all_same<ThreadSignal, Signals...>,
                   "Constructor takes only ThreadSignal");
     ((Set(sigs)), ...);
   }
