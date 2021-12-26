@@ -13,11 +13,18 @@
 #include "../../API/DataStructures/Multithreading/ThreadPool.hpp"
 #include "../../API/DataStructures/Multithreading/UnboundedPriorityBlockingQueue.hpp"
 #include "../../API/DataStructures/TaskWrapper.hpp"
+#include "../../Config.hpp"
 #include "../../ImplDetails/AbstractModule.hpp"
 #include "../../ImplDetails/ImplAPI/KernelAPI.hpp"
 #include "../MMU/VirtualMMU.hpp"
 #include "../TaskManager.hpp"
 #include "../ThreadManager.hpp"
+
+#if TEST_ENABLED
+namespace test {
+class TestModule;
+}
+#endif
 
 namespace kernel {
 // Memory pool size for whole program (including STL)
@@ -281,6 +288,10 @@ class Kernel {
   // through it
   ThreadManager thread_manager_;
   api::Vector<ModuleDescriptor> modules_;
+
+#if TEST_ENABLED
+  friend class test::TestModule;
+#endif
 };
 }  // namespace kernel
 

@@ -1,10 +1,5 @@
 #include "TaskManager.hpp"
 
-// FIXME: stub
-namespace impl {
-api::String GetPureSignature(const api::String& full_sig) { return full_sig; }
-}  // namespace impl
-
 namespace kernel {
 TaskManager::TaskManager() {}
 

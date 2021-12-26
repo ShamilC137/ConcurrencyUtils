@@ -164,6 +164,7 @@ int Kernel::EventLoop() {
     }
   }
 
+  task_manager_.FillConnectionsTable();
   thread_manager_.StartAll();
 
   return EventLoop();

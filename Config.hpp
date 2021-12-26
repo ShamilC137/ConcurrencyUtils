@@ -63,6 +63,8 @@ static_assert(false, "Panic: unsupported OS");
 // if 1 all aliased containers must use aligned allocator
 #define ALIGNED_ALLOCATOR_USAGE 0
 // allocator resolution flags ^^^
+// If this flag is 1, test module works
+#define TEST_ENABLED 1
 // this project specific macro ^^^
 
 // OS dependent macro

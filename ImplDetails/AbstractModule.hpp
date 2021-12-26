@@ -19,6 +19,12 @@
 #include <cassert>
 #include <memory>
 
+#if TEST_ENABLED
+namespace test {
+class TestModule;
+}
+#endif
+
 namespace api {
 // indicates that slot call must be done whether it already called or not
 struct ForceSlotCall {};
@@ -240,6 +246,10 @@ class AbstractModule {
   api::UnboundedPriorityBlockingQueue<api::TaskWrapper> tasks_queue_;
 
   mutable api::SharedMutex slots_mutex_;
+
+#if TEST_ENABLED
+  friend class test::TestModule;
+#endif
 };
 }  // namespace impl
 #endif  // !APPLICATION_IMPLDETAILS_ABSTRACTMODULE_HPP_
