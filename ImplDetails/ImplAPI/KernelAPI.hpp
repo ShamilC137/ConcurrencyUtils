@@ -68,6 +68,11 @@ void AddModule(impl::AbstractModule *module);
 [[nodiscard]] int Run();
 
 /// <summary>
+///   Breaks kernel event loop. The kernel goes to the protected mode.
+/// </summary>
+void Exit();
+
+/// <summary>
 ///   Returns thread signals by thread id. Blocks caller thread if thread
 ///   signals already modified by other threads.
 /// </summary>

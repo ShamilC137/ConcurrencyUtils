@@ -173,6 +173,8 @@ void AddModule(impl::AbstractModule *module) { GetKernel().AddModule(module); }
 
 [[nodiscard]] int Run() { return GetKernel().Run(); }
 
+void Exit() { GetKernel().Exit(); }
+
 [[nodiscard]] ThreadSignals GetThreadSignals(const ThreadId id) noexcept(
     false) {
   return GetKernel().GetThreadSignals(id);

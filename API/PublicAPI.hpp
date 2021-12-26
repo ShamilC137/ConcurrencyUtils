@@ -125,6 +125,11 @@ void AddModule(impl::AbstractModule *module);
 [[nodiscard]] int Run();
 
 /// <summary>
+///   Makes kernel to start finalize application.
+/// </summary>
+void Exit();
+
+/// <summary>
 ///   Sends the "Exit" signal to the thread with the given id.
 /// </summary>
 /// <param name="id">
