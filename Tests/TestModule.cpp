@@ -6,6 +6,7 @@ TestModule::~TestModule() noexcept {}
 // essentials
 
 impl::ModuleInitErrorStatus TestModule::Init() noexcept {
+  ForceConnections();
   api::CreateThread(false, &TerminateHandler, &TestRoutine,
                     this);  // main routine
   AddSlotToTable("void HelloSlot()",
@@ -18,7 +19,8 @@ impl::ModuleInitErrorStatus TestModule::Init() noexcept {
   AddSlotToTable("void RefParameterizedSlot(int)",
                  new api::Slot<const api::String&, int>(
                      this, &TestModule::ReturnRefParameterizedSlot));
-  Base::SetSlotsPriorities();
+  Base::SetSlotsPriorities();  // FIXME:
+  Base::slots_["void HelloSlot()"].get()->SetPriority("void Hello()", -1);
 
   return impl::ModuleInitErrorStatus::kOk;
 }
@@ -38,18 +40,24 @@ const api::String& TestModule::ReturnRefParameterizedSlot(int param) {
   return str_;
 }
 
+void TestModule::ForceConnections() {
+  auto& mng{api::kernel_api::GetKernel().task_manager_};
+  mng.connections_signatures_["void Hello()"] =
+      api::Vector<api::Pair<api::String, kernel::ModuleDescriptor*>>{
+          {"void HelloSlot()", mng.modules_[0]}};
+}
+
 void TestRoutine(TestModule* module) {
-  std::cout << "Hi!\n";
   try {
     decltype(auto) task{module->TryExtractTask()};
     module->ExecuteTask(task);
   } catch (api::PopFailed& ex) {
-    std::cout << "Logged\n";
+    std::cout << "Logged: " << ex.what() << '\n';
   }
 }
 
 void TerminateHandler(std::exception ex) {
-  std::cout << "Unexcepted exception logged\n";
+  std::cout << "Unexcepted exception logged " << ex.what() << '\n';
 }
 
 }  // namespace test

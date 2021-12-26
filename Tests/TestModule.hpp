@@ -8,6 +8,7 @@
 #include "../API/DataStructures/Slot.hpp"
 #include "../API/PublicAPI.hpp"
 #include "../ImplDetails/AbstractModule.hpp"
+#include "../Kernel/Kernel/Kernel.hpp"
 
 namespace test {
 
@@ -32,6 +33,9 @@ class TestModule : public impl::AbstractModule {
   void ParameterizedSlot(int, double);
 
   const api::String &ReturnRefParameterizedSlot(int);
+
+ private:
+  void ForceConnections();
 
  private:
   api::String str_;

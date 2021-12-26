@@ -8,8 +8,15 @@
 #include "../API/DataStructures/Multithreading/SharedLockGuard.hpp"
 #include "../API/DataStructures/Multithreading/UnboundedPriorityBlockingQueue.hpp"
 #include "../API/DataStructures/TaskWrapper.hpp"
+#include "../Config.hpp"
 #include "../ImplDetails/AbstractModule.hpp"
 #include "KernelUtilities.hpp"
+
+#if TEST_ENABLED
+namespace test {
+class TestModule;
+}
+#endif
 
 // FIXME: stub
 namespace api {
@@ -110,6 +117,10 @@ class TaskManager {
   /// <param name="id"> module identifier </param>
   /// <multithreading> safe </multithreading>
   ModuleDescriptor *FindDescriptor(const api::String &id);
+
+#if TEST_ENABLED
+  friend class test::TestModule;
+#endif
 
  private:
   // The kernel will take tasks from this queue. Modules will push tasks to the

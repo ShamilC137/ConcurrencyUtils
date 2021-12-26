@@ -4,12 +4,20 @@
 #include "API/PublicAPI.hpp"
 #include "Tests/TestModule.hpp"
 
+void TerminateHandler(std::exception& ex) {
+  std::cout << "PANIC: " << ex.what() << '\n';
+}
+
 int main() {
   test::TestModule md;
   api::AddModule(&md);
 
   std::thread t{api::Run};
-  std::this_thread::sleep_for(std::chrono::seconds(1));
+  for (std::size_t counter{}; counter < 10; ++counter) {
+    api::Emit<void>("void Hello()", false, api::TaskPriority::kLowPriority);
+  }
+  std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
   api::Exit();
   t.join();
   return 0;

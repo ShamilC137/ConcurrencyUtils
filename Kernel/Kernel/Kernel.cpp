@@ -56,14 +56,24 @@ api::ThreadSignals Kernel::GetThreadSignals(api::ThreadId id) const
 }
 
 bool Kernel::SendKillSignal(api::ThreadId id) noexcept {
+  if (exit_flag_.test(api::MemoryOrder::acquire)) {
+    return false;
+  }
   return thread_manager_.SendKillSignal(id);
 }
 
 bool Kernel::SendSuspendSignal(api::ThreadId id) noexcept {
+  if (exit_flag_.test(api::MemoryOrder::acquire)) {
+    return false;
+  }
   return thread_manager_.SetSuspendSignal(id);
 }
 
 bool Kernel::SuspendThisThread(const api::ThreadId *const id_hint) noexcept {
+  if (exit_flag_.test(api::MemoryOrder::acquire)) {
+    return false;
+  }
+
   try {
     thread_manager_.SuspendThisThread(id_hint);
   } catch (...) {
@@ -73,10 +83,16 @@ bool Kernel::SuspendThisThread(const api::ThreadId *const id_hint) noexcept {
 }
 
 bool Kernel::UnsetSignal(api::ThreadId id, api::ThreadSignal signal) noexcept {
+  if (exit_flag_.test(api::MemoryOrder::acquire)) {
+    return false;
+  }
   return thread_manager_.UnsetSignal(id, signal);
 }
 
 bool Kernel::Resume(api::ThreadId id) noexcept {
+  if (exit_flag_.test(api::MemoryOrder::acquire)) {
+    return false;
+  }
   return thread_manager_.ResumeThread(id);
 }
 
@@ -148,6 +164,7 @@ int Kernel::EventLoop() {
     }
   }
 
+  task_manager_.FillConnectionsTable();
   thread_manager_.StartAll();
 
   return EventLoop();

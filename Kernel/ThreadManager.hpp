@@ -10,7 +10,14 @@
 #include "../API/DataStructures/Multithreading/ScopedLock.hpp"
 #include "../API/DataStructures/Multithreading/SharedLockGuard.hpp"
 #include "../API/DataStructures/Multithreading/SharedMutex.hpp"
+#include "../Config.hpp"
 #include "../ImplDetails/Utility.hpp"
+
+#if TEST_ENABLED
+namespace test {
+class TestModule;
+}
+#endif
 
 namespace kernel {
 class ThreadManager {
@@ -151,6 +158,10 @@ class ThreadManager {
 
   mutable api::SharedMutex threads_mutex_;
   mutable api::Mutex closed_threads_mutex_;
+
+#if TEST_ENABLED
+  friend class test::TestModule;
+#endif
 };
 }  // namespace kernel
 #endif  // APPLICATION_KERNEL_THREADMANAGER_HPP_
