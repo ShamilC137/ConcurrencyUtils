@@ -1,4 +1,19 @@
-int main() { return 0; }
+#include <iostream>
+#include <thread>
+
+#include "API/PublicAPI.hpp"
+#include "Tests/TestModule.hpp"
+
+int main() {
+  test::TestModule md;
+  api::AddModule(&md);
+
+  std::thread t{api::Run};
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+  api::Exit();
+  t.join();
+  return 0;
+}
 
 /*
 #include <iostream>

@@ -72,6 +72,7 @@ void ThreadManager::UnsafeDeleteAll() {
     }
     delete entry.second;
   }
+  threads_.clear();
 
   for (auto &thread : closed_threads_) {
     if (thread->Joinable()) {
@@ -79,10 +80,12 @@ void ThreadManager::UnsafeDeleteAll() {
     }
     delete thread;
   }
+  closed_threads_.clear();
 }
 
 void ThreadManager::ForceDeleteAll() {
-  api::ScopedLock<api::SharedMutex> lock(threads_mutex_);
+  api::ScopedLock<api::SharedMutex> tlock(threads_mutex_);
+  api::ScopedLock<api::Mutex> clock(closed_threads_mutex_);
   UnsafeDeleteAll();
 }
 

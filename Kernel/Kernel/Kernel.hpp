@@ -80,6 +80,9 @@ class Kernel {
   /// <param name="nbytes">
   ///   Number of bytes to delete
   /// </param>
+  /// <protected>
+  ///   true
+  /// </protected>
   void Deallocate(void *ptr, const size_t nbytes) noexcept;
 
   // Thread manipulation functions
@@ -108,6 +111,9 @@ class Kernel {
   /// <exception "out_of_range">
   ///   Thrown if thread not belongs to kernel manipulated threads
   /// </exception>
+  /// <protected>
+  ///   true
+  /// </protected>
   void DeleteThread(const api::ThreadId id) noexcept(false);
 
   /// <summary>
@@ -122,6 +128,9 @@ class Kernel {
   /// <exception "out_of_range">
   ///   Thrown if thread not belongs to kernel manipulated threads
   /// </exception>
+  /// <protected>
+  ///   true
+  /// </protected>
   [[nodiscard]] api::ThreadSignals GetThreadSignals(api::ThreadId id) const
       noexcept(false);
 
@@ -134,6 +143,9 @@ class Kernel {
   /// <returns>
   ///   True if signal is sent and false otherwise.
   /// </returns>
+  /// <protected>
+  ///   true
+  /// </protected>
   bool SendKillSignal(api::ThreadId id) noexcept;
 
   /// <summary>
@@ -145,6 +157,9 @@ class Kernel {
   /// <returns>
   ///   True if signal is sent and false otherwise.
   /// </returns>
+  /// <protected>
+  ///   true
+  /// </protected>
   bool SendSuspendSignal(api::ThreadId id) noexcept;
 
   /// <summary>
@@ -156,6 +171,9 @@ class Kernel {
   /// <returns>
   ///   True if signal is sent and false otherwise.
   /// </returns>
+  /// <protected>
+  ///   true
+  /// </protected>
   bool SuspendThisThread(const api::ThreadId *const id_hint = nullptr) noexcept;
 
   /// <summary>
@@ -170,6 +188,9 @@ class Kernel {
   /// <returns>
   ///   True if signal is unsetted and false otherwise
   /// </returns>
+  /// <protected>
+  ///   true
+  /// </protected>
   bool UnsetSignal(api::ThreadId id, api::ThreadSignal signal) noexcept;
 
   /// <summary>
@@ -182,6 +203,9 @@ class Kernel {
   ///   True if thread has resumed and false otherwise. If the thread has not
   ///   been suspended, but the call succeeds - true is a valid return
   /// </returns>
+  /// <protected>
+  ///   true
+  /// </protected>
   bool Resume(api::ThreadId id) noexcept;
 
   // Task manipulation functions
